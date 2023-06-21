@@ -2,18 +2,18 @@
     push:
       branches: [main]
       paths:
-        - 'webapp'
+        - 'webapp/svelte'
     pull_request:
       branches:  [main]
       paths:
-        - 'webapp'
+        - 'webapp/svelte'
         - '.github/workflows/webapp-build.yml'
   jobs:
     deploy:
       runs-on: ubuntu-22.04
       defaults:
         run:
-          working-directory: ./webapp
+          working-directory: ./webapp/svelte
       steps:
         - uses: action/checkout@v3
         - name: Use Node.js v20
