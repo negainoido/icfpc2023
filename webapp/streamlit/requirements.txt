@@ -1,3 +1,5 @@
+numpy
+plotly
 PyMySQL
 requests
 streamlit
