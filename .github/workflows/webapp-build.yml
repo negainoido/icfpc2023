@@ -15,10 +15,11 @@
         run:
           working-directory: ./webapp/svelte
       steps:
-        - uses: action/checkout@v3
+        - uses: actions/checkout@v3
         - name: Use Node.js v20
           uses: actions/setup-node@v3
           with:
             node-version: 20
         - uses: dtolnay/rust-toolchain@stable
+        - run: cargo install wasm-pack
         - run: make
