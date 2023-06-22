@@ -1,4 +1,4 @@
-# ifcpfc-2023-sample
+# icfpfc-2023-sample
 
 ```bash
 gcloud auth login
