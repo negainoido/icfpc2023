@@ -11,4 +11,7 @@ export default defineConfig({
             allow: ['./wasm-sample/pkg'],
         },
     },
+    optimizeDeps: {
+        exclude: ['wasm-sample'],
+    },
 });
