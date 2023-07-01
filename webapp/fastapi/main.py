@@ -6,9 +6,11 @@ import pymysql
 from fastapi import FastAPI, HTTPException, Security
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel
+from google.cloud.sql.connector import Connector
 
 secrets = json.loads(os.environ.get("SECRET", ""))
 app = FastAPI()
+connector = Connector()
 
 
 def check(auth: str):
@@ -18,19 +20,35 @@ def check(auth: str):
 
 class Scores:
     def __init__(self):
-        self.host = secrets["database"]["host"]
+        self.con_type = secrets["database"]["type"]
+        if self.con_type == "cloudsql":
+            self.name = secrets["database"]["name"]
+        elif self.con_type == "tcp":
+            self.host = secrets["database"]["host"]
+
         self.user = secrets["database"]["user"]
         self.password = secrets["database"]["password"]
         self.database = secrets["database"]["database"]
         self._init_table()
 
     def con(self):
-        return pymysql.connect(
-            host=self.host,
-            user=self.user,
-            password=self.password,
-            database=self.database,
-        )
+        if self.con_type == "cloudsql":
+            return connector.connect(
+                self.name,
+                "pymysql",
+                user=self.user,
+                password=self.password,
+                db=self.database
+            )
+        elif self.con_type == "tcp":
+            return pymysql.connect(
+                host=self.host,
+                user=self.user,
+                password=self.password,
+                database=self.database,
+            )
+        else:
+            raise Exception('invalid db_type:', self.db_type)
 
     def _init_table(self):
         sql = """
