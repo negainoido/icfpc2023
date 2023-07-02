@@ -2,11 +2,11 @@
     push:
       branches: [main]
       paths:
-        - 'webapp/svelte'
+        - 'webapp/svelte/**'
     pull_request:
       branches:  [main]
       paths:
-        - 'webapp/svelte'
+        - 'webapp/svelte/**'
         - '.github/workflows/webapp-build.yml'
   jobs:
     deploy:
