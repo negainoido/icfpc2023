@@ -16,7 +16,7 @@ RUN npm ci \
 FROM node:20-bullseye-slim
 
 WORKDIR /app
-COPY --from=builder /workspace/package*.json .
+COPY --from=builder /workspace/package*.json ./
 COPY --from=builder /workspace/build ./build
 
 CMD ["node", "build"]
