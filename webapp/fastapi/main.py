@@ -95,12 +95,12 @@ class Scores:
 scores = Scores()
 
 
-@app.get("/hello")
+@app.get("/api/hello")
 def get_hello():
     return {"message": "Hello, World!"}
 
 
-@app.get("/scores/show")
+@app.get("/api/scores/show")
 def get_scores_show():
     return scores.show()
 
@@ -110,7 +110,7 @@ class ScoresAppend(BaseModel):
     score: int
 
 
-@app.post("/scores/append")
+@app.post("/api/scores/append")
 def post_scores_append(
     item: ScoresAppend, auth: HTTPAuthorizationCredentials = Security(HTTPBearer())
 ):
