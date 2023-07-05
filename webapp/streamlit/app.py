@@ -75,12 +75,11 @@ name = streamlit.text_input("name", str(file.name) if file else "")
 score = int(
     streamlit.number_input("score", min_value=0, max_value=1000, step=1, value=0)
 )
-auth = streamlit.text_input("auth", value="aaa")
 if streamlit.button("Submit"):
     if not name or not score:
         streamlit.warning("name and positive score are required")
         streamlit.stop()
-    res = api.append(name, score, auth=auth)
+    res = api.append(name, score, auth=secrets["auth"])
     streamlit.json(res)
     if res.get("status") == "OK":
         streamlit.balloons()
