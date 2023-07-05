@@ -2,3 +2,4 @@ fastapi
 pydantic
 PyMySQL
 uvicorn
+cloud-sql-python-connector[pymysql]
