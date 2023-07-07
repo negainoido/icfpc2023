@@ -182,7 +182,7 @@ impl Input {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, Default)]
+#[derive(Debug, Serialize, Deserialize, Default, Clone)]
 pub struct Solution {
     pub placements: Vec<Point>,
 }
