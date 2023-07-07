@@ -57,5 +57,13 @@
               ./webapp/svelte/wasm-sample
         - run: cargo install wasm-pack
         - run: make
-        - run: docker build -t gcr.io/negainoido-icfpc2023/sveltekit-webapp:${{ github.sha }} .
+        - run: docker build 
+            -t gcr.io/negainoido-icfpc2023/sveltekit-webapp:${{ github.sha }} 
+            .
+        - name: Push Docker Image
+          run: |
+            gcloud auth configure-docker  
+            docker push gcr.io/negainoido-icfpc2023/sveltekit-webapp:${{ github.sha }} 
+
+          
           
