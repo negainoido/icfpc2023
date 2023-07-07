@@ -61,7 +61,7 @@ jobs:
           workload_identity_provider: projects/558692735371/locations/global/workloadIdentityPools/my-pool/providers/my-provider
           service_account: github-actions@negainoido-icfpc2023.iam.gserviceaccount.com
       - name: Deploy to Staging environment
-        run: gcloud run deploy sveltekit-webapp-stg --image ${{ env.image_repo }}:${{ github.sha }}
+        run: gcloud run deploy sveltekit-webapp-stg --image ${{ env.image_repo }}:${{ github.sha }} --region asia-northeast1
 
       
 
