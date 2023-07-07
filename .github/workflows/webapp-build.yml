@@ -46,6 +46,11 @@ jobs:
         run: docker build -t ${{ env.image_repo }}:${{ github.sha }} .
       - name: Push Docker Image
         run: docker push ${{ env.image_repo }}:${{ github.sha }} 
+      - name: Push Docker Latest Image
+        if: github.event_name == 'push' 
+        run: |
+          docker tag ${{ env.image_repo }}:${{ github.sha }} ${{ env.image_repo }}:latest
+          docker push ${{ env.image_repo }}:latest
   deploy-stg:
     needs:
       - build
@@ -62,6 +67,22 @@ jobs:
           service_account: github-actions@negainoido-icfpc2023.iam.gserviceaccount.com
       - name: Deploy to Staging environment
         run: gcloud run deploy sveltekit-webapp-stg --image ${{ env.image_repo }}:${{ github.sha }} --region asia-northeast1
+  deploy-main:
+    needs:
+      - build
+    if: github.event_name == 'push' 
+    permissions:
+      id-token: 'write'
+    runs-on: ubuntu-22.04
+    steps:
+      - id: 'auth'
+        name: 'Authenticate to Google Cloud'
+        uses: 'google-github-actions/auth@v1'
+        with:
+          workload_identity_provider: projects/558692735371/locations/global/workloadIdentityPools/my-pool/providers/my-provider
+          service_account: github-actions@negainoido-icfpc2023.iam.gserviceaccount.com
+      - name: Deploy to Staging environment
+        run: gcloud run deploy sveltekit-webapp --image ${{ env.image_repo }}:${{ github.sha }} --region asia-northeast1
 
       
 
