@@ -21,5 +21,6 @@
           with:
             node-version: 20
         - uses: dtolnay/rust-toolchain@stable
+        - uses: Swatinem/rust-cache@v2
         - run: cargo install wasm-pack
         - run: make
