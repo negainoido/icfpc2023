@@ -1,16 +1,41 @@
 use anyhow::bail;
 use anyhow::Result;
+use geo::EuclideanDistance;
+use geo::Line;
+use geo::Point;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Serialize, Deserialize, Clone, Copy)]
-pub struct Pos {
-    pub x: f64,
-    pub y: f64,
+#[derive(Debug, Clone, Copy)]
+pub struct Segment {
+    p1: Point,
+    p2: Point,
 }
 
-impl Pos {
-    pub fn dist_sq(&self, other: &Pos) -> f64 {
-        (self.x - other.x).powi(2) + (self.y - other.y).powi(2)
+impl Segment {
+    fn dist(self, p: &Point) -> f64 {
+        /*
+            #define DI(l) ((l).second-(l).first)
+            double cross(const P &a, const P &b) { return imag(conj(a)*b); }
+            double dot(const P &a, const P &b) { return real(conj(a)*b); }
+            double distanceSP(const L &l, const P &p) {
+            P d = DI(l);
+            if (dot(p-l.second, d) >= 0) return abs(l.second-p);
+            if (dot(p-l.first, d) <= 0) return abs(l.first-p);
+            return abs(cross(d, p-l.first) / abs(d));
+        */
+
+        // TODO(udon): Is this correct?
+
+        let l = Line::new(self.p1, self.p2);
+        let d: Point = l.delta().into();
+        if (*p - l.end_point()).dot(d) >= 0.0 {
+            return l.end_point().euclidean_distance(p);
+        }
+        if (*p - l.start_point()).dot(d) <= 0.0 {
+            return l.start_point().euclidean_distance(p);
+        }
+
+        l.euclidean_distance(p)
     }
 }
 
@@ -29,11 +54,8 @@ impl Attendee {
         self.tastes[musician]
     }
 
-    pub fn pos(&self) -> Pos {
-        Pos {
-            x: self.x,
-            y: self.y,
-        }
+    pub fn pos(&self) -> Point {
+        Point::new(self.x, self.y)
     }
 }
 
@@ -43,20 +65,20 @@ pub struct Input {
     pub room_height: f64,
     pub stage_width: f64,
     pub stage_height: f64,
-    pub stage_bottom_left: Pos,
+    pub stage_bottom_left: Point,
     pub musicians: Vec<usize>,
     pub attendees: Vec<Attendee>,
 }
 
 impl Input {
-    fn in_stage(&self, p: &Pos) -> bool {
-        p.x >= self.stage_bottom_left.x
-            && p.x <= self.stage_bottom_left.x + self.stage_width
-            && p.y >= self.stage_bottom_left.y
-            && p.y <= self.stage_bottom_left.y + self.stage_height
+    fn in_stage(&self, p: &Point) -> bool {
+        p.x() >= self.stage_bottom_left.x()
+            && p.x() <= self.stage_bottom_left.x() + self.stage_width
+            && p.y() >= self.stage_bottom_left.y()
+            && p.y() <= self.stage_bottom_left.y() + self.stage_height
     }
 
-    pub fn is_valid_placements(&self, placements: &Vec<Pos>) -> Result<()> {
+    pub fn is_valid_placements(&self, placements: &Vec<Point>) -> Result<()> {
         if placements.len() != self.musicians.len() {
             bail!(
                 "placements.len() != musicians.len(): {} != {}",
@@ -71,13 +93,29 @@ impl Input {
             }
         }
 
-        const MUSICIAN_SPACE_DIST_SQ: f64 = 100.0;
+        // Check distance from room walls
+        const MUSICIAN_CLOSE_DIST: f64 = 10.0;
+        for i in 0..self.musicians.len() {
+            let pos = placements[i];
+            if !((MUSICIAN_CLOSE_DIST < pos.x() && pos.x() < self.room_width - MUSICIAN_CLOSE_DIST)
+                && (MUSICIAN_CLOSE_DIST < pos.y()
+                    && pos.y() < self.room_height - MUSICIAN_CLOSE_DIST))
+            {
+                bail!(
+                    "musician {} is too close to room walls: {:?}",
+                    i,
+                    placements[i],
+                );
+            }
+        }
+
+        // Check ditances between musicians
         for i in 0..(self.musicians.len() - 1) {
             for j in (i + 1)..self.musicians.len() {
-                let dist2 = placements[i].dist_sq(&placements[j]);
-                if dist2 <= MUSICIAN_SPACE_DIST_SQ {
+                let dist = placements[i].euclidean_distance(&placements[j]);
+                if dist <= MUSICIAN_CLOSE_DIST {
                     bail!(
-                        "musicians {} and {} are too close: {:?} {:?}: dist**2={dist2}",
+                        "musicians {} and {} are too close: {:?} {:?}: dist={dist}",
                         i,
                         j,
                         placements[i],
@@ -87,8 +125,6 @@ impl Input {
             }
         }
 
-        // TODO(udon): distance from room walls
-
         Ok(())
     }
 
@@ -97,19 +133,19 @@ impl Input {
         &self,
         attendee_id: AttendeeId,
         musician_id: MusicianId,
-        musician_pos: &Pos,
+        musician_pos: &Point,
     ) -> u64 {
         let instrument = self.musicians[musician_id];
         let attendee = &self.attendees[attendee_id];
-        let d2 = attendee.pos().dist_sq(musician_pos);
-        ((1_000_000 as f64) * attendee.tastes[instrument] / d2).ceil() as u64
+        let d = attendee.pos().euclidean_distance(musician_pos);
+        ((1_000_000 as f64) * attendee.tastes[instrument] / (d * d)).ceil() as u64
     }
 
     pub fn impact(
         &self,
         attendee_id: AttendeeId,
         musician_id: MusicianId,
-        placements: &Vec<Pos>,
+        placements: &Vec<Point>,
     ) -> Result<u64> {
         if placements.len() != self.musicians.len() {
             bail!(
@@ -119,10 +155,22 @@ impl Input {
             );
         }
 
-        //const BLOCKED_DIST_SQ: f64 = 25.0;
-        let is_blocked = false;
-
-        // TODO(udon): blocking check
+        const BLOCKED_DIST: f64 = 5.0;
+        let mut is_blocked = false;
+        let a_pos = self.attendees[attendee_id].pos();
+        let segment = Segment {
+            p1: a_pos,
+            p2: placements[musician_id],
+        };
+        for i in 0..placements.len() {
+            if i == musician_id {
+                continue;
+            }
+            if segment.dist(&placements[i]) < BLOCKED_DIST {
+                is_blocked = true;
+                break;
+            }
+        }
 
         if is_blocked {
             Ok(0)
@@ -131,7 +179,7 @@ impl Input {
         }
     }
 
-    pub fn score(&self, placements: &Vec<Pos>) -> Result<u64> {
+    pub fn score(&self, placements: &Vec<Point>) -> Result<u64> {
         let mut sum_impact = 0;
         for attendee_id in 0..self.attendees.len() {
             for musician_id in 0..self.musicians.len() {
@@ -144,7 +192,7 @@ impl Input {
 
 #[derive(Debug, Serialize, Deserialize, Default)]
 pub struct Solution {
-    pub placements: Vec<Pos>,
+    pub placements: Vec<Point>,
 }
 
 impl Solution {
