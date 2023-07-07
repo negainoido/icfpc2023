@@ -3,6 +3,7 @@ use anyhow::Result;
 use geo::EuclideanDistance;
 use geo::Line;
 use geo::Point;
+use rayon::prelude::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy)]
@@ -166,13 +167,18 @@ impl Input {
     }
 
     pub fn score(&self, placements: &Vec<Point>) -> Result<f64> {
-        let mut sum_impact = 0.0;
-        for attendee_id in 0..self.attendees.len() {
-            for musician_id in 0..self.musicians.len() {
-                sum_impact += self.impact(attendee_id, musician_id, placements)?;
-            }
-        }
-        Ok(sum_impact)
+        let ans = (0..self.attendees.len())
+            .into_par_iter()
+            .map(|attendee_id| {
+                let mut sum_impact = 0.0;
+                for musician_id in 0..self.musicians.len() {
+                    sum_impact += self.impact(attendee_id, musician_id, placements).unwrap();
+                }
+                sum_impact
+            })
+            .sum();
+
+        Ok(ans)
     }
 }
 
