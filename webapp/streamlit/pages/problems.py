@@ -33,15 +33,6 @@ class Problem:
 
 class Figure:
     @classmethod
-    def musicians_histogram(cls, data):
-        h = defaultdict(int)
-        for i in data.get("musicians"):
-            h[i] += 1
-        h = list(h.items())
-        h.sort()
-        return dict(h)
-
-    @classmethod
     def draw(cls, data):
         room = Image.new(
             "RGBA",
@@ -49,7 +40,7 @@ class Figure:
                 data.get("room_width"),
                 data.get("room_height"),
             ),
-            (200, 200, 200),
+            (210, 210, 210),
         )
         draw = ImageDraw.Draw(room)
         # stage
@@ -61,32 +52,40 @@ class Figure:
                     data.get("stage_bottom_left")[1] + data.get("stage_height"),
                 ),
             ),
-            fill=(220, 220, 220, 200),
+            outline=(0, 0, 0),
+            fill=(240, 240, 240),
         )
         # attendees
+        size = min(data.get("room_width"), data.get("room_height"))
+        w = size / 300
         for a in data.get("attendees"):
             x = a.get("x")
             y = a.get("y")
-            w = 8
-            draw.rectangle(((x - w, y - w), (x + w, y + w)), fill=(255, 0, 0))
+            draw.ellipse(((x - w, y - w), (x + w, y + w)), fill="#ff0000")
         return room
 
 
-problem_id = int(st.number_input("problem_id", value=1, min_value=1, max_value=100))
+problem_id = int(st.number_input("problem_id", value=1, min_value=1, max_value=45))
 data = Problem.get_from_file(problem_id)
 
 st.image(Figure.draw(data))
-
-st.write("### musicians")
-ms = data.get("musicians")
-st.plotly_chart(px.histogram(ms))
-st.write(Figure.musicians_histogram(data))
-
-st.write("### attendees")
 st.json(
     {
-        "num": len(data.get("attendees")),
+        "room_width": data.get("room_width"),
+        "room_height": data.get("room_height"),
+        "stage_width": data.get("stage_width"),
+        "stage_height": data.get("stage_height"),
+        "stage_bottom_left": data.get("stage_bottom_left"),
+        "num_attendees": len(data.get("attendees")),
+        "num_musicians": len(data.get("musicians")),
     }
+)
+
+ms = data.get("musicians")
+st.plotly_chart(
+    px.histogram(ms, title="musicians").update_layout(
+        xaxis_title="楽器種別", yaxis_title="度数"
+    )
 )
 
 st.write("### problem JSON spec")
