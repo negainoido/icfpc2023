@@ -1,29 +1,90 @@
-  on:
-    push:
-      branches: [main]
-      paths:
-        - 'webapp/svelte/**'
-    pull_request:
-      branches:  [main]
-      paths:
-        - 'webapp/svelte/**'
-        - '.github/workflows/webapp-build.yml'
-  jobs:
-    deploy:
-      runs-on: ubuntu-22.04
-      defaults:
-        run:
-          working-directory: ./webapp/svelte
-      steps:
-        - uses: actions/checkout@v3
-        - name: Use Node.js v20
-          uses: actions/setup-node@v3
-          with:
-            node-version: 20
-        - uses: dtolnay/rust-toolchain@stable
-        - uses: Swatinem/rust-cache@v2
-          with:
-            workspaces: |
-              ./webapp/svelte/wasm-sample
-        - run: cargo install wasm-pack
-        - run: make
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'webapp/svelte/**'
+      - '.github/workflows/webapp-build.yml'
+  pull_request:
+    branches:  [main]
+    paths:
+      - 'webapp/svelte/**'
+      - '.github/workflows/webapp-build.yml'
+env:
+  image_repo: gcr.io/negainoido-icfpc2023/sveltekit-webapp
+    
+jobs:
+  build:
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+    runs-on: ubuntu-22.04
+    defaults:
+      run:
+        working-directory: ./webapp/svelte
+    steps:
+      - uses: actions/checkout@v3
+      - id: 'auth'
+        name: 'Authenticate to Google Cloud'
+        uses: 'google-github-actions/auth@v1'
+        with:
+          workload_identity_provider: projects/558692735371/locations/global/workloadIdentityPools/my-pool/providers/my-provider
+          service_account: github-actions@negainoido-icfpc2023.iam.gserviceaccount.com
+      - name: 'configure docker credential helpers'
+        run: gcloud auth configure-docker  
+      - name: Use Node.js v20
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            ./webapp/svelte/wasm-sample
+      - run: cargo install wasm-pack
+      - run: make
+      - name: Build Docker Image
+        run: docker build -t ${{ env.image_repo }}:${{ github.sha }} .
+      - name: Push Docker Image
+        run: docker push ${{ env.image_repo }}:${{ github.sha }} 
+      - name: Push Docker Latest Image
+        if: github.event_name == 'push' 
+        run: |
+          docker tag ${{ env.image_repo }}:${{ github.sha }} ${{ env.image_repo }}:latest
+          docker push ${{ env.image_repo }}:latest
+  deploy-stg:
+    needs:
+      - build
+    if: github.event_name == 'pull_request' 
+    permissions:
+      id-token: 'write'
+    runs-on: ubuntu-22.04
+    steps:
+      - id: 'auth'
+        name: 'Authenticate to Google Cloud'
+        uses: 'google-github-actions/auth@v1'
+        with:
+          workload_identity_provider: projects/558692735371/locations/global/workloadIdentityPools/my-pool/providers/my-provider
+          service_account: github-actions@negainoido-icfpc2023.iam.gserviceaccount.com
+      - name: Deploy to Staging environment
+        run: gcloud run deploy sveltekit-webapp-stg --image ${{ env.image_repo }}:${{ github.sha }} --region asia-northeast1
+  deploy-main:
+    needs:
+      - build
+    if: github.event_name == 'push' 
+    permissions:
+      id-token: 'write'
+    runs-on: ubuntu-22.04
+    steps:
+      - id: 'auth'
+        name: 'Authenticate to Google Cloud'
+        uses: 'google-github-actions/auth@v1'
+        with:
+          workload_identity_provider: projects/558692735371/locations/global/workloadIdentityPools/my-pool/providers/my-provider
+          service_account: github-actions@negainoido-icfpc2023.iam.gserviceaccount.com
+      - name: Deploy to Staging environment
+        run: gcloud run deploy sveltekit-webapp --image ${{ env.image_repo }}:${{ github.sha }} --region asia-northeast1
+
+      
+
+          
+          

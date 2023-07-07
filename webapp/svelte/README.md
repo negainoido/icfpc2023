@@ -36,3 +36,13 @@ npm run build
 You can preview the production build with `npm run preview`.
 
 > To deploy your app, you may need to install an [adapter](https://kit.svelte.dev/docs/adapters) for your target environment.
+
+# デプロイ方法
+PRを作成すると svelte-webapp-stgにデプロイされます。
+以下のコマンドでローカルにCloud Run Proxyを建てて動作確認することができます。
+
+```
+make proxy
+```
+
+問題なければマージしてください。
