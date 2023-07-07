@@ -49,7 +49,7 @@ jobs:
   deploy-stg:
     needs:
       - build
-    if: github.event == 'pull_request' 
+    if: github.event_name == 'pull_request' 
     permissions:
       id-token: 'write'
     runs-on: ubuntu-22.04
