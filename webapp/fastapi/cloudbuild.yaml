@@ -1,11 +1,11 @@
 steps:
   # Build the container image
   - name: 'gcr.io/kaniko-project/executor:latest'
-    args: ['--destination=gcr.io/$PROJECT_ID/fastapi', '--cache=true', '--cache-ttl=24h', 'build', '-t', 'gcr.io/negainoido-icfpc2023/fastapi:$COMMIT_SHA', '.']
+    args: ['--destination=gcr.io/$PROJECT_ID/fastapi:$COMMIT_SHA', '--cache=true', '--cache-ttl=24h']
     dir: webapp/fastapi
   # Push the container image to Container Registry
   - name: 'gcr.io/kaniko-project/executor:latest'
-    args: ['--destination=gcr.io/$PROJECT_ID/fastapi', '--cache=true', '--cache-ttl=24h', 'push', 'gcr.io/negainoido-icfpc2023/fastapi:$COMMIT_SHA']
+    args: ['--destination=gcr.io/$PROJECT_ID/fastapi:$COMMIT_SHA', '--cache=true', '--cache-ttl=24h']
   # Deploy container image to Cloud Run
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: gcloud
