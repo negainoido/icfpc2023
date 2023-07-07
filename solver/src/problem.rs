@@ -13,21 +13,9 @@ pub struct Segment {
 
 impl Segment {
     fn dist(self, p: &Point) -> f64 {
-        /*
-            #define DI(l) ((l).second-(l).first)
-            double cross(const P &a, const P &b) { return imag(conj(a)*b); }
-            double dot(const P &a, const P &b) { return real(conj(a)*b); }
-            double distanceSP(const L &l, const P &p) {
-            P d = DI(l);
-            if (dot(p-l.second, d) >= 0) return abs(l.second-p);
-            if (dot(p-l.first, d) <= 0) return abs(l.first-p);
-            return abs(cross(d, p-l.first) / abs(d));
-        */
-
-        // TODO(udon): Is this correct?
-
         let l = Line::new(self.p1, self.p2);
         let d: Point = l.delta().into();
+
         if (*p - l.end_point()).dot(d) >= 0.0 {
             return l.end_point().euclidean_distance(p);
         }
@@ -87,6 +75,7 @@ impl Input {
             );
         }
 
+        // Check musicians are in stage
         for i in 0..self.musicians.len() {
             if !self.in_stage(&placements[i]) {
                 bail!("{i}-th musician is not in stage: {:?}", placements[i]);
@@ -166,6 +155,7 @@ impl Input {
             if i == musician_id {
                 continue;
             }
+
             if segment.dist(&placements[i]) < BLOCKED_DIST {
                 is_blocked = true;
                 break;
@@ -274,5 +264,17 @@ mod tests {
   ]
 }"#;
         let _solution: Solution = serde_json::from_str(solution).unwrap();
+    }
+
+    #[test]
+    fn test_segment_dist() {
+        let seg = Segment {
+            p1: Point::new(0.0, 0.0),
+            p2: Point::new(10.0, 0.0),
+        };
+
+        assert_eq!(seg.dist(&Point::new(5.0, 5.0)), 5.0);
+        assert_eq!(seg.dist(&Point::new(-1.0, 0.0)), 1.0);
+        assert!((seg.dist(&Point::new(-1.0, 1.0)) - 2.0f64.sqrt()).abs() < 0.00000001);
     }
 }
