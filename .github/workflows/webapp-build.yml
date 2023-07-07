@@ -30,7 +30,7 @@
         - run: cargo install wasm-pack
         - run: make
 
-    test-gcp-login:
+    deploy:
       permissions:
         contents: 'read'
         id-token: 'write'
@@ -46,3 +46,16 @@
           with:
             workload_identity_provider: projects/558692735371/locations/global/workloadIdentityPools/my-pool/providers/my-provider
             service_account: 'github-actions@my-project.iam.gserviceaccount.com'
+        - name: Use Node.js v20
+          uses: actions/setup-node@v3
+          with:
+            node-version: 20
+        - uses: dtolnay/rust-toolchain@stable
+        - uses: Swatinem/rust-cache@v2
+          with:
+            workspaces: |
+              ./webapp/svelte/wasm-sample
+        - run: cargo install wasm-pack
+        - run: make
+        - run: docker build -t gcr.io/negainoido-icfpc2023/sveltekit-webapp:${{ github.sha }} .
+          
