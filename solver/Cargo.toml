@@ -15,3 +15,7 @@ serde_json = "1.0.68"
 [[bin]]
 name = "sample"
 path = "src/bin/sample.rs"
+
+[[bin]]
+name = "random"
+path = "src/bin/randomrs"
