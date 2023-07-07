@@ -5,3 +5,4 @@ uvicorn
 google-cloud-storage
 cloud-sql-python-connector[pymysql]
 requests
+python-multipart
