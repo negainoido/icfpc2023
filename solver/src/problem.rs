@@ -2,23 +2,23 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Pos {
-    pub x: u64,
-    pub y: u64,
+    pub x: f64,
+    pub y: f64,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Attendee {
-    pub x: u64,
-    pub y: u64,
+    pub x: f64,
+    pub y: f64,
     pub tastes: Vec<i64>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Input {
-    pub room_width: u64,
-    pub room_height: u64,
-    pub stage_width: u64,
-    pub stage_height: u64,
+    pub room_width: f64,
+    pub room_height: f64,
+    pub stage_width: f64,
+    pub stage_height: f64,
     pub stage_bottom_left: Pos,
     pub musicians: Vec<u64>,
     pub attendees: Vec<Attendee>,
