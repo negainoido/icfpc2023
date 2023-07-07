@@ -38,10 +38,6 @@ type MusicianId = usize;
 type AttendeeId = usize;
 
 impl Attendee {
-    pub fn taste(&self, musician: MusicianId) -> f64 {
-        self.tastes[musician]
-    }
-
     pub fn pos(&self) -> Point {
         Point::new(self.x, self.y)
     }
@@ -123,11 +119,11 @@ impl Input {
         attendee_id: AttendeeId,
         musician_id: MusicianId,
         musician_pos: &Point,
-    ) -> u64 {
+    ) -> f64 {
         let instrument = self.musicians[musician_id];
         let attendee = &self.attendees[attendee_id];
         let d = attendee.pos().euclidean_distance(musician_pos);
-        ((1_000_000 as f64) * attendee.tastes[instrument] / (d * d)).ceil() as u64
+        ((1_000_000 as f64) * attendee.tastes[instrument] / (d * d)).ceil()
     }
 
     pub fn impact(
@@ -135,7 +131,7 @@ impl Input {
         attendee_id: AttendeeId,
         musician_id: MusicianId,
         placements: &Vec<Point>,
-    ) -> Result<u64> {
+    ) -> Result<f64> {
         if placements.len() != self.musicians.len() {
             bail!(
                 "placements.len() != musicians.len(): {} != {}",
@@ -156,21 +152,21 @@ impl Input {
                 continue;
             }
 
-            if segment.dist(&placements[i]) < BLOCKED_DIST {
+            if segment.dist(&placements[i]) <= BLOCKED_DIST {
                 is_blocked = true;
                 break;
             }
         }
 
         if is_blocked {
-            Ok(0)
+            Ok(0.0)
         } else {
             Ok(self.raw_impact(attendee_id, musician_id, &placements[musician_id]))
         }
     }
 
-    pub fn score(&self, placements: &Vec<Point>) -> Result<u64> {
-        let mut sum_impact = 0;
+    pub fn score(&self, placements: &Vec<Point>) -> Result<f64> {
+        let mut sum_impact = 0.0;
         for attendee_id in 0..self.attendees.len() {
             for musician_id in 0..self.musicians.len() {
                 sum_impact += self.impact(attendee_id, musician_id, placements)?;
@@ -186,7 +182,7 @@ pub struct Solution {
 }
 
 impl Solution {
-    pub fn score(&self, input: &Input) -> Result<u64> {
+    pub fn score(&self, input: &Input) -> Result<f64> {
         input.score(&self.placements)
     }
 }
@@ -276,5 +272,15 @@ mod tests {
         assert_eq!(seg.dist(&Point::new(5.0, 5.0)), 5.0);
         assert_eq!(seg.dist(&Point::new(-1.0, 0.0)), 1.0);
         assert!((seg.dist(&Point::new(-1.0, 1.0)) - 2.0f64.sqrt()).abs() < 0.00000001);
+    }
+
+    #[test]
+    fn sample_eval() {
+        let input_str = std::fs::read_to_string("./testdata/sample-input.json").unwrap();
+        let input: Input = serde_json::from_str(&input_str).unwrap();
+        let solution_str = std::fs::read_to_string("./testdata/sample-output.json").unwrap();
+        let solution: Solution = serde_json::from_str(&solution_str).unwrap();
+        let score = solution.score(&input).unwrap();
+        assert_eq!(score, 5343.0);
     }
 }
