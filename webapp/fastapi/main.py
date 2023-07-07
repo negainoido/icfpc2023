@@ -36,7 +36,7 @@ def submit_solution_to_icfpc(problem_id: int, contents: str):
     data = {"problem_id": problem_id, "contents": contents}
     resp = requests.post(
         "https://api.icfpcontest.com/submission",
-        data=json.dumps(data),
+        json=data,
         headers={
             "Content-Type": "application/json",
             "Authorization": f"Bearer {icfpc_token}",
