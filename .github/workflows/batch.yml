@@ -1,0 +1,32 @@
+on:
+  workflow_dispatch:
+    inputs:
+      solver: 
+        required: true
+        default: random
+        type: choice
+        options:
+          - random
+
+jobs:
+  eval-batch:
+    runs-on: [self-hosted, linux, x64]
+    defaults:
+      run:
+        working-directory: ./solver
+    steps:
+      - uses: actions/checkout@v3
+      - name: Print env variables
+        run: printenv
+      - name: Print gcloud accounts
+        run: gcloud auth list
+      - name: cargo build 
+        run: cargo build --release
+      - name: run batch
+        env:
+          PNUM: 4
+        run: bash ../tools/eval_batch.sh ${{ inputs.solver }}
+      - uses: actions/upload-artifact@v3
+        with:
+          name: submissions
+          path: ${{ github.workspace }}/output

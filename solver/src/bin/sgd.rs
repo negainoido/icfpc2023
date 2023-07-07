@@ -79,5 +79,5 @@ fn main() {
         }
     }
 
-    //    std::fs::write(args.output, serde_json::to_string(&best_solution).unwrap()).unwrap();
+    std::fs::write(args.output, serde_json::to_string(&best_solution).unwrap()).unwrap();
 }
