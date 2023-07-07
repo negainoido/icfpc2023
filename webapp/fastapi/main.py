@@ -22,7 +22,7 @@ def get_icfpc_token():
     }
     resp = requests.post(
         "https://api.icfpcontest.com/login",
-        data=json.dumps(data),
+        json=data,
         headers={"Content-Type": "application/json"},
     )
     json_resp = resp.json()
