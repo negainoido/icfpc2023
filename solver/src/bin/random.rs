@@ -1,7 +1,7 @@
 use clap::Parser;
 use geo::Point;
 use rand::seq::SliceRandom;
-use rand::thread_rng;
+use rand_pcg::Pcg64Mcg ;
 
 use solver::problem::*;
 
@@ -14,6 +14,12 @@ struct Args {
 
     #[arg(short, long)]
     output: String,
+
+    #[arg(short, long, default_value_t = 10)]
+    iteration: i32,
+
+    #[arg(short, long, default_value_t = 0)]
+    rand_seed: u128,
 }
 
 fn main() {
@@ -34,8 +40,24 @@ fn main() {
         }
     }
 
-    let mut rnd = thread_rng();
-    solution.placements.shuffle(&mut rnd);
+    let mut rnd = Pcg64Mcg::new(args.rand_seed);
+    let mut best_solution = solution.clone();
+    let mut best_score = solution.score(&input).unwrap();
+    println!("initial score: {}", best_score);
+    for i in 0..args.iteration {
+        solution.placements.shuffle(&mut rnd);
 
-    std::fs::write(args.output, serde_json::to_string(&solution).unwrap()).unwrap();
+        match solution.score(&input) {
+            Ok(score) => {
+                if score > best_score {
+                    best_score = score;
+                    best_solution = solution.clone();
+                    println!("iter {}, score: {}", i, best_score);
+                }
+            }
+            Err(_) => {}
+        }
+    }
+
+    std::fs::write(args.output, serde_json::to_string(&best_solution).unwrap()).unwrap();
 }
