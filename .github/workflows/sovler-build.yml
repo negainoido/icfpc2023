@@ -16,4 +16,5 @@
       steps:
         - uses: actions/checkout@v3
         - uses: dtolnay/rust-toolchain@stable
-        - run: cargo build
+        - uses: Swatinem/rust-cache@v2
+        - run: cargo test
