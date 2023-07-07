@@ -6,14 +6,14 @@
 
 ## How to run
 
-Run `./bin/sample.rs`
+### (buggy) Evaluator
 
 ```sh
-$ cargo run --bin sample -- --input ../problems/problem-1.json
+$ cargo run --bin evaluator --release -- --input ../problems/problem-1.json --solution solution.json
 ```
 
-Run `./bin/random.rs`
+### random.rs
 
 ```sh
-$ cargo run --bin random -- --input ../problems/problem-1.json --output solution.json
+$ cargo run --bin random --release -- --input ../problems/problem-1.json --output solution.json
 ```
