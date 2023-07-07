@@ -31,6 +31,9 @@
         - run: make
 
     test-gcp-login:
+      permissions:
+        contents: 'read'
+        id-token: 'write'
       runs-on: ubuntu-22.04
       defaults:
         run:
