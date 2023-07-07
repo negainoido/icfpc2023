@@ -39,6 +39,7 @@
         run:
           working-directory: ./webapp/svelte
       steps:
+        - uses: actions/checkout@v3
         - id: 'auth'
           name: 'Authenticate to Google Cloud'
           uses: 'google-github-actions/auth@v1'
