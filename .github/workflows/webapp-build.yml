@@ -46,8 +46,10 @@
           with:
             workload_identity_provider: projects/558692735371/locations/global/workloadIdentityPools/my-pool/providers/my-provider
             service_account: 'github-actions@my-project.iam.gserviceaccount.com'
-        - name: 'Set up Cloud SDK'
-          uses: 'google-github-actions/setup-gcloud@v1'
+        - name: 'Auth gcloud'
+          run: |
+            gcloud auth login --brief --cred-file="${{ steps.auth.outputs.credentials_file_path }}"
+            gcloud auth configure-docker  
         - name: Use Node.js v20
           uses: actions/setup-node@v3
           with:
@@ -64,7 +66,6 @@
             .
         - name: Push Docker Image
           run: |
-            gcloud auth configure-docker  
             docker push gcr.io/negainoido-icfpc2023/sveltekit-webapp:${{ github.sha }} 
 
           
