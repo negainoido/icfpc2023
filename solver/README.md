@@ -1,6 +1,13 @@
 # Solver
 
+## Source code
+
+- `/bin/`: solver binaries
+
+## How to run
+
+Run `./bin/sample.rs`
 
 ```sh
-$ cargo run -- --input ../problems/problem-1.json
+$ cargo run --bin sample -- --input ../problems/problem-1.json
 ```
