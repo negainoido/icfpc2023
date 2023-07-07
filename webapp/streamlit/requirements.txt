@@ -1,4 +1,5 @@
 numpy
+Pillow
 plotly
 PyMySQL
 requests
