@@ -25,11 +25,11 @@ fn main() {
     for _i in 0..input.musicians.len() {
         solution.placements.push(Pos { x: cx, y: cy });
         cx += 20.0;
-        if cx + 10.0 > input.stage_bottom_left.x + input.stage_height {
+        if cx + 10.0 > input.stage_bottom_left.x + input.stage_width {
             cx = input.stage_bottom_left.x + 10.0;
             cy += 20.0;
         }
     }
 
-    println!("Input: {:?}", input);
+    std::fs::write(args.output, serde_json::to_string(&solution).unwrap()).unwrap();
 }
