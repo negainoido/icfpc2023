@@ -1,4 +1,6 @@
 use clap::Parser;
+use rand::seq::SliceRandom;
+use rand::thread_rng;
 
 use solver::problem::*;
 
@@ -30,6 +32,9 @@ fn main() {
             cy += 20.0;
         }
     }
+
+    let mut rnd = thread_rng();
+    solution.placements.shuffle(&mut rnd);
 
     std::fs::write(args.output, serde_json::to_string(&solution).unwrap()).unwrap();
 }
