@@ -1,7 +1,9 @@
+import gc
 import json
 from collections import defaultdict
 
 import plotly.express as px
+import requests
 from PIL import Image, ImageDraw
 
 import streamlit as st
@@ -9,8 +11,23 @@ import streamlit as st
 
 class Problem:
     @classmethod
-    def get(cls, problem_id: int):
-        data = json.load(open(f"./resource/problems/problem-{problem_id}.json", "rt"))
+    def get_from_file(cls, problem_id: int):
+        with open(f"./resource/problems/problem-{problem_id}.json", "rt") as f:
+            data = json.load(f)
+            return data
+
+    @classmethod
+    def get_from_web(cls, problem_id: int):
+        res = requests.get(
+            "http://api.icfpcontest.com/problem",
+            json={"problem_id": problem_id},
+            headers={
+                "Accept": "application/json",
+            },
+        )
+        st.code(res.text)
+        data_raw = res.json().get("Success")
+        data = json.loads(data_raw)
         return data
 
 
@@ -56,7 +73,8 @@ class Figure:
 
 
 problem_id = int(st.number_input("problem_id", value=1, min_value=1, max_value=100))
-data = Problem.get(problem_id)
+data = Problem.get_from_file(problem_id)
+
 st.image(Figure.draw(data))
 
 st.write("### musicians")
@@ -73,3 +91,6 @@ st.json(
 
 st.write("### problem JSON spec")
 st.write(data)
+
+del data
+gc.collect()
