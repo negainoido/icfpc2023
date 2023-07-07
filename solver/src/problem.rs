@@ -24,7 +24,7 @@ pub struct Input {
     pub attendees: Vec<Attendee>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Default)]
 pub struct Solution {
     pub placements: Vec<Pos>,
 }
