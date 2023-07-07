@@ -8,7 +8,7 @@ steps:
       - --context=dir://webapp/streamlit/
   # Push the container image to Container Registry
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'gcr.io/negainoido-icfpc2023/streamlit:$COMMIT_SHA']
+    args: ['pull', 'gcr.io/negainoido-icfpc2023/streamlit:$COMMIT_SHA']
   # Deploy container image to Cloud Run
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: gcloud
