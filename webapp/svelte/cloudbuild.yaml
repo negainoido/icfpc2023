@@ -1,11 +1,14 @@
 steps:
   # Build the container image
-  - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', 'gcr.io/negainoido-icfpc2023/sveltekit-webapp:$COMMIT_SHA', '.']
-    dir: webapp/svelte
+  - name: 'gcr.io/kaniko-project/executor:latest'
+    args:
+      - --destination=gcr.io/negainoido-icfpc2023/sveltekit-webapp:$COMMIT_SHA
+      - --cache=true
+      - --cache-ttl=24h
+      - --context=dir://webapp/svelte/
   # Push the container image to Container Registry
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'gcr.io/negainoido-icfpc2023/sveltekit-webapp:$COMMIT_SHA']
+    args: ['pull', 'gcr.io/negainoido-icfpc2023/sveltekit-webapp:$COMMIT_SHA']
   # Deploy container image to Cloud Run
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: gcloud
