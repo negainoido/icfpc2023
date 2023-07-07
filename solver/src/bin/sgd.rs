@@ -1,5 +1,7 @@
+use std::ops::Mul;
+
 use clap::Parser;
-use geo::Point;
+use geo::{EuclideanDistance, Point};
 use rand::{seq::SliceRandom, Rng};
 use rand_pcg::Pcg64Mcg;
 
@@ -40,8 +42,42 @@ fn main() {
         solution.placements.push(Point::new(x, y));
     }
 
+    let mut best_solution = solution.clone();
     let mut best_score = solution.score(&input).unwrap();
     println!("initial score: {}", best_score);
+
+    let mut permutation = vec![];
+    for i in 0..input.attendees.len() {
+        for k in 0..input.musicians.len() {
+            permutation.push((i, k));
+        }
+    }
+
+    let mut rate = 0.1;
+    for i in 0..args.iteration {
+        permutation.shuffle(&mut rng);
+        for (i, k) in &permutation {
+            let a = &input.attendees[*i];
+            let a = Point::new(a.x, a.y);
+            let d = solution.placements[*k].euclidean_distance(&a);
+            let diff = solution.placements[*k] - a;
+            let g = diff.mul(-(2.0 / (d * d * d * d)) * rate);
+            solution.placements[*k] += g;
+        }
+
+        let score = solution.score(&input);
+        println!("iter {}, score: {:?}", i, score);
+        match score {
+            Ok(score) => {
+                if score > best_score {
+                    best_score = score;
+                    best_solution = solution.clone();
+                    println!("iter {}, score: {}", i, best_score);
+                }
+            }
+            Err(_) => {}
+        }
+    }
 
     //    std::fs::write(args.output, serde_json::to_string(&best_solution).unwrap()).unwrap();
 }
