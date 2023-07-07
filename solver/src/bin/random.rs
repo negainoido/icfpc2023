@@ -1,7 +1,7 @@
 use clap::Parser;
 use geo::Point;
 use rand::seq::SliceRandom;
-use rand_pcg::Pcg64Mcg ;
+use rand_pcg::Pcg64Mcg;
 
 use solver::problem::*;
 
