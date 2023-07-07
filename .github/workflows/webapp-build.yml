@@ -11,9 +11,6 @@ on:
       - '.github/workflows/webapp-build.yml'
 env:
   image_repo: gcr.io/negainoido-icfpc2023/sveltekit-webapp
-defaults:
-  run:
-    working-directory: ./webapp/svelte
     
 jobs:
   build:
@@ -21,6 +18,9 @@ jobs:
       contents: 'read'
       id-token: 'write'
     runs-on: ubuntu-22.04
+    defaults:
+      run:
+        working-directory: ./webapp/svelte
     steps:
       - uses: actions/checkout@v3
       - id: 'auth'
@@ -54,7 +54,6 @@ jobs:
       id-token: 'write'
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v3
       - id: 'auth'
         name: 'Authenticate to Google Cloud'
         uses: 'google-github-actions/auth@v1'
