@@ -46,6 +46,8 @@
           with:
             workload_identity_provider: projects/558692735371/locations/global/workloadIdentityPools/my-pool/providers/my-provider
             service_account: 'github-actions@my-project.iam.gserviceaccount.com'
+        - name: 'Set up Cloud SDK'
+          uses: 'google-github-actions/setup-gcloud@v1'
         - name: Use Node.js v20
           uses: actions/setup-node@v3
           with:
