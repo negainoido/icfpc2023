@@ -25,3 +25,6 @@ docker: webapp
 
 deploy: docker
 	gcloud run deploy sveltekit-webapp-stg --image gcr.io/$(PROJECT_NAME)/$(APP_NAME):dev --port 3000 --region $(REGION)
+
+proxy:
+	gcloud beta run services proxy sveltekit-webapp-stg --port=3000 --region asia-northeast1
