@@ -3,6 +3,7 @@ all: webapp wasm
 APP_NAME := sveltekit-webapp
 PROJECT_NAME := negainoido-icfpc2023
 REGION := asia-northeast1
+UNAME := $(shell uname)
 
 webapp: wasm
 	npm ci
@@ -15,10 +16,12 @@ fmt:
 	cd wasm-sample && cargo fmt
 	npm run format
 
-docker:
+docker: webapp
+	# Darwin is not supported
+	test $(UNAME) == "Linux"
 	docker build -t $(APP_NAME) .
-	docker tag $(APP_NAME) gcr.io/$(PROJECT_NAME)/$(APP_NAME)
-	docker push gcr.io/$(PROJECT_NAME)/$(APP_NAME)
+	docker tag $(APP_NAME) gcr.io/$(PROJECT_NAME)/$(APP_NAME):dev
+	docker push gcr.io/$(PROJECT_NAME)/$(APP_NAME):dev
 
 deploy: docker
-	gcloud run deploy sveltekit-webapp --image gcr.io/$(PROJECT_NAME)/$(APP_NAME):latest --port 3000 --region $(REGION)
+	gcloud run deploy sveltekit-webapp-stg --image gcr.io/$(PROJECT_NAME)/$(APP_NAME):dev --port 3000 --region $(REGION)
