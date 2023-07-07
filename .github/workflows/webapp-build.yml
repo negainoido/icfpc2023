@@ -3,14 +3,16 @@
       branches: [main]
       paths:
         - 'webapp/svelte/**'
+        - '.github/workflows/webapp-build.yml'
     pull_request:
       branches:  [main]
       paths:
         - 'webapp/svelte/**'
         - '.github/workflows/webapp-build.yml'
   jobs:
-    deploy:
+    build:
       runs-on: ubuntu-22.04
+      if: github.event == 'pull_request' 
       defaults:
         run:
           working-directory: ./webapp/svelte
@@ -27,3 +29,16 @@
               ./webapp/svelte/wasm-sample
         - run: cargo install wasm-pack
         - run: make
+
+    test-gcp-login:
+      runs-on: ubuntu-22.04
+      defaults:
+        run:
+          working-directory: ./webapp/svelte
+      steps:
+        - id: 'auth'
+          name: 'Authenticate to Google Cloud'
+          uses: 'google-github-actions/auth@v1'
+          with:
+            workload_identity_provider: projects/558692735371/locations/global/workloadIdentityPools/my-pool/providers/my-provider
+            service_account: 'github-actions@my-project.iam.gserviceaccount.com'
