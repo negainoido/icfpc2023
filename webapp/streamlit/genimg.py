@@ -2,7 +2,7 @@ import json
 
 from PIL import Image, ImageDraw
 
-NUM_PROBLEM = 55
+NUM_PROBLEM = 90
 
 
 class Problem:

@@ -6,7 +6,7 @@ from streamlit_agraph import Config, Edge, Node, agraph
 
 import streamlit as st
 
-NUM_PROBLEM = 55
+NUM_PROBLEM = 90
 
 
 st.write(

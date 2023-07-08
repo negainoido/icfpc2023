@@ -6,7 +6,7 @@ import requests
 import streamlit as st
 from streamlit.runtime.uploaded_file_manager import UploadedFile
 
-NUM_PROBLEM = 55
+NUM_PROBLEM = 90
 
 
 class API:
