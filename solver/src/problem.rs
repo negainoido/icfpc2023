@@ -322,7 +322,7 @@ impl Input {
     pub fn score_fast(&self, placements: &Vec<Point>) -> Result<f64> {
         let ans = (0..self.attendees.len())
             // .into_par_iter()
-            .into_iter()
+            .into_par_iter()
             .map(|attendee_id| self.score_attendee_fast(attendee_id, placements))
             .sum();
         Ok(ans)
