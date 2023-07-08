@@ -44,7 +44,11 @@ fn main() {
             break;
         }
     }
-    solution.placements = candidates.iter().take(input.musicians.len()).cloned().collect();
+    solution.placements = candidates
+        .iter()
+        .take(input.musicians.len())
+        .cloned()
+        .collect();
 
     let mut rnd = Pcg64Mcg::new(args.rand_seed);
     let mut best_solution = solution.clone();
@@ -52,7 +56,11 @@ fn main() {
     println!("initial score: {}", best_score);
     for i in 0..args.iteration {
         candidates.shuffle(&mut rnd);
-        solution.placements = candidates.iter().take(input.musicians.len()).cloned().collect();
+        solution.placements = candidates
+            .iter()
+            .take(input.musicians.len())
+            .cloned()
+            .collect();
 
         match solution.score(&input) {
             Ok(score) => {
