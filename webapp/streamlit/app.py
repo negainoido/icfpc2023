@@ -72,7 +72,7 @@ if st.checkbox("add filter", value=True):
 
 st.write(f"{len(df)} records")
 score_min = min(0, float(df["score"].min() or 0))
-score_max = float(df["score"].max() or 100) * 1.1
+score_max = max(1000, float(df["score"].max() or 1000) * 1.1)
 st.dataframe(
     df,
     hide_index=True,
