@@ -9,6 +9,7 @@ cd "$(dirname "$0")/.."
 
 BIN="./solver/target/release"
 SOLVER=${1:?is not set}
+SHA=${2:-""}
 PNUM=${PNUM:-4}
 
 mkdir -p output
@@ -26,7 +27,7 @@ function run_and_eval() {
     $BIN/$SOLVER --input $input --output $output
     $BIN/evaluator --input $input --solution $output | tee $score
     curl -X POST -F file=@"${output}" \
-        "http://localhost:8080/api/solutions/submit?id=${problem_id}&solver=${SOLVER}" \
+        "http://localhost:8080/api/solutions/submit?id=${problem_id}&solver=${SOLVER}%28${SHA:0:5}%29" \
         | tee $submission
     echo
     echo submitted
