@@ -1,4 +1,7 @@
 #!/bin/bash
+# Serverで実行する用のスクリプトです。
+# ローカルで実行する場合は以下のコマンドでcloud runのプロキシを立ててください
+# gcloud beta run services proxy fastapi-iam-auth --port=8080 --region asia-northeast1
 
 set -euo pipefail
 
