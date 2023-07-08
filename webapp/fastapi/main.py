@@ -7,8 +7,9 @@ from google.cloud import storage
 from google.cloud.sql.connector import Connector
 from pydantic import BaseModel
 
-from fastapi import FastAPI, UploadFile
+from fastapi import FastAPI, UploadFile, Response
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 
 secrets = json.loads(os.environ.get("SECRET", ""))
 app = FastAPI()
@@ -26,6 +27,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.add_middleware(GZipMiddleware, minimum_size=1000000)
 connector = Connector()
 storage_client = storage.Client()
 
@@ -286,7 +288,7 @@ def get_hello():
 @app.get("/api/problem")
 def get_problem(problem_id: int):
     with open(f"./resource/problems/problem-{problem_id}.json", "rt") as f:
-        return json.load(f)
+        return Response(content=f.read(), media_type="application/json")
 
 
 @app.get("/api/solutions/show")
