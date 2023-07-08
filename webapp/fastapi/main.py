@@ -322,6 +322,9 @@ def get_best_solutions(id: int):
 @app.post("/api/solutions/update_score")
 def update_score():
     rows = scores.get_empty_status_entries()
+    update_count = 0
+    processing_count = 0
+    error_count = 0
     for id, submission_id in rows:
         resp = get_submission_from_icfpc(submission_id)
         if "Success" not in resp:
@@ -330,18 +333,23 @@ def update_score():
                     scores.update_status(id, "submission_not_found")
                 else:
                     print("unknown status:", resp)
+            error_count += 1
             continue
         submission = resp["Success"]
         if submission["submission"]["score"] == "Processing":
             if submission["contents"] == "":
                 scores.update_status(id, "empty_submission")
+            processing_count += 1
         elif "Failure" in submission["submission"]["score"]:
             scores.update_status(id, "failed")
+            update_count += 1
         elif "Success" in submission["submission"]["score"]:
             scores.update_status(
                 id, "success", submission["submission"]["score"]["Success"]
             )
+            update_count += 1
         else:
             print("unknown status:", submission["submission"]["score"])
+            error_count += 1
 
-    return {"status": "ok"}
+    return {"updated": update_count, "processing": processing_count, "error": error_count}
