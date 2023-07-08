@@ -245,6 +245,23 @@ impl Input {
         angles.push(last_element);
 
         let mut is_blocked = vec![false; angles.len()];
+
+        // a(i): musician i's angle from the attendee
+        // d(i): musician i's distance from the attendee
+        // s(i), e(i):  musician i blocks the range of angle [s(i), e(i)]
+
+        // musician i is blocked iff there exists musician j satisfying at least one of
+        // the following two conditions
+        // Condition (1)
+        //  (1.1) d(i) >= d(j)
+        //  (1.2) a(i) >= a(j)
+        //  (1.3) a(i) <= e(j)
+        // Condition (2)
+        //  (1.1) d(i) >= d(j)
+        //  (1.2) a(i) >= a(j)
+        //  (1.3) a(i) >= s(j)
+
+
         let mut max_end_angle_stack = VecDeque::new();
         max_end_angle_stack.push_back((angles[0].dist_sq, angles[0].get_covered_angle_range().1));
         for i in 1..angles.len() {
