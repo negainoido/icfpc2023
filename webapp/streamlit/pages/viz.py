@@ -51,14 +51,12 @@ def viz(problem, solution):
     for i, a in enumerate(problem.get("attendees")):
         x = a["x"] * scale
         y = a["y"] * scale
-        nodes_a.append(Node(id=f"a-{i}", chosen=False, fixed=True, x=x, y=y, size=5))
+        nodes_a.append(Node(id=f"a-{i}", chosen=False, fixed=True, x=x, y=y, size=3))
     for i, m in enumerate(solution.get("placements")):
         x = m["x"] * scale
         y = m["y"] * scale
         nodes_m.append(
-            Node(
-                id=f"m-{i}", chosen=False, shape="square", fixex=True, x=x, y=y, size=5
-            )
+            Node(id=f"m-{i}", chosen=False, color="green", fixex=True, x=x, y=y, size=3)
         )
     mid = int(
         st.number_input("musician_id", value=0, min_value=0, max_value=len(nodes_m) - 1)
