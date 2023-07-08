@@ -1,4 +1,5 @@
 use clap::Parser;
+
 use geo::Point;
 use rand::seq::SliceRandom;
 use rand_pcg::Pcg64Mcg;
@@ -31,21 +32,27 @@ fn main() {
     let mut cx = input.stage_bottom_left.x() + 10.0;
     let mut cy = input.stage_bottom_left.y() + 10.0;
 
-    for _i in 0..input.musicians.len() {
-        solution.placements.push(Point::new(cx, cy));
+    let mut candidates = vec![];
+    loop {
+        candidates.push(Point::new(cx, cy));
         cx += 20.0;
         if cx + 10.0 > input.stage_bottom_left.x() + input.stage_width {
             cx = input.stage_bottom_left.x() + 10.0;
             cy += 20.0;
         }
+        if cy + 10.0 > input.stage_bottom_left.y() + input.stage_height {
+            break;
+        }
     }
+    solution.placements = candidates.iter().take(input.musicians.len()).cloned().collect();
 
     let mut rnd = Pcg64Mcg::new(args.rand_seed);
     let mut best_solution = solution.clone();
     let mut best_score = solution.score(&input).unwrap();
     println!("initial score: {}", best_score);
     for i in 0..args.iteration {
-        solution.placements.shuffle(&mut rnd);
+        candidates.shuffle(&mut rnd);
+        solution.placements = candidates.iter().take(input.musicians.len()).cloned().collect();
 
         match solution.score(&input) {
             Ok(score) => {
