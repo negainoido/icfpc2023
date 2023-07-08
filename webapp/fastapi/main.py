@@ -225,6 +225,36 @@ class Scores:
         with blob.open("w") as f:
             f.write(content)  # type: ignore
 
+    # problem_id ごとにscoreが最大のものを取ってくる
+    def get_best_solution(self, problem_id: int):
+        sql = """
+        SELECT id, problem_id, submission_id, solver, status, score, ts
+        FROM solutions
+        WHERE problem_id = %s AND status = 'success'
+        ORDER BY score DESC
+        LIMIT 1
+        """
+        with self.con() as con:
+            with con.cursor() as cur:
+                cur.execute(sql, (problem_id,))
+                row = cur.fetchone()
+            con.commit()
+        if row is None:
+            return None
+        
+        blob = storage_client.get_bucket(self.bucket_name).get_blob(f'{self.blob_prefix}/{row[0]}.json')
+
+        return {
+            "id": row[0],
+            "problem_id": row[1],
+            "submission_id": row[2],
+            "solver": row[3],
+            "status": row[4],
+            "score": row[5],
+            "ts": row[6],
+            "contents": blob.download_as_string().decode("utf-8"),
+        }
+
 
 scores = Scores()
 
@@ -250,6 +280,14 @@ def post_submit(id: int, file: UploadFile, solver: str = "unknown"):
 @app.get("/api/solutions")
 def get_solutions(id: int):
     item = scores.get_solution(id)
+    if item is None:
+        return {"message": "not found"}
+    return item
+
+
+@app.get("/api/best_solutions")
+def get_best_solutions(id: int):
+    item = scores.get_best_solution(id)
     if item is None:
         return {"message": "not found"}
     return item
