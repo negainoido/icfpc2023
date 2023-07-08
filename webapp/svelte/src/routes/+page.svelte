@@ -1,21 +1,26 @@
 <script>
     import { onMount } from 'svelte';
-    import { writable } from "svelte/store";
+    import {get, writable} from "svelte/store";
 
     let wasm;
     let problem_id = 1;
-    let problem = writable(null);
     let solution_id = 1;
-    let solution = writable(null);
     let records = [];
     let filteredRecords = [];
 
     let state = writable({
        problem: null,
        solution: null,
+        colorful: true,
     });
 
     state.subscribe((value) => {
+        if (value.problem) {
+            console.log("start draw...");
+            draw(value.problem, value.solution, value.colorful);
+        } else {
+            console.log("data not ready");
+        }
         if (value.problem && value.solution && wasm) {
             console.log(value.problem, value.solution);
             let score = wasm.calc_score(
@@ -34,7 +39,6 @@
         }
     });
 
-    let colorful = true;
     let colors = [
         '#11ff11',
         '#11dd33',
@@ -90,23 +94,21 @@
         if (!records) return;
         filteredRecords = [];
         clear();
+        state.update((prev) => ({ ...prev, problem: null, solution: null }));
         for (let r of records) {
             if (r[1] === problem_id) {
                 filteredRecords.push(r);
             }
         }
-        solution = null;
         fetch(`https://icfpc2023.negainoido.com/api/problem?problem_id=${problem_id}`)
             .then(data => data.json())
             .then(data => {
-                problem = data;
                 state.update((prev) => {
                     return {
                         ...prev,
                         problem: data,
                     };
                 });
-                draw();
             });
     }
 
@@ -117,19 +119,16 @@
             .then(response => {
                 if (response['message'] === 'not found') {
                     alert('not found');
-                    solution = null;
                     return;
                 }
                 let contents = response['contents'];
                 let data = JSON.parse(contents);
-                solution = data;
                 state.update((prev) => {
                     return {
                         ...prev,
                         solution: data,
                     };
                 });
-                draw();
             });
     }
 
@@ -144,7 +143,7 @@
         canvas.clearRect(0, 0, width, height);
     }
 
-    function draw() {
+    function draw(problem, solution, colorful) {
         if (!document) return;
         let obj = document.getElementById('c');
         if (!obj) return;
@@ -155,10 +154,11 @@
         let width = 1600;
         let height = 1200;
 
-        let minx = 10000;
-        let miny = 10000;
+        let minx = 0;
+        let miny = 0;
         let maxx = -10000;
         let maxy = -10000;
+        console.log("java", width, height, problem);
         for (let m of problem.attendees) {
             minx = Math.min(minx, m.x);
             miny = Math.min(miny, m.y);
@@ -306,7 +306,7 @@
 
 <div>
     <label>
-        <input type='checkbox' bind:checked={colorful} on:change={draw} />
+        <input type='checkbox' bind:checked={$state.colorful} />
         楽器で色を変える
     </label>
     <button on:click={fullScreen}>全画面表示</button>
