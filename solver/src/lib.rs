@@ -59,6 +59,7 @@ pub fn calc_score(
                 a
             })
             .collect(),
+        pillars: vec![],
     };
 
     solution
