@@ -70,6 +70,12 @@ pub struct AttendeeScoreDetail {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Pillar {
+    pub center: Point,
+    pub radius: f64,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Input {
     pub room_width: f64,
     pub room_height: f64,
@@ -78,6 +84,7 @@ pub struct Input {
     pub stage_bottom_left: Point,
     pub musicians: Vec<usize>,
     pub attendees: Vec<Attendee>,
+    pub pillars: Vec<Pillar>,
 }
 
 impl Input {
@@ -413,7 +420,8 @@ mod tests {
         1500
       ]
     }
-  ]
+  ],
+  "pillars": [ {"center": [500.0, 1000.0], "radius": 5.0}]
 }
         "#;
         let _input: Input = serde_json::from_str(input).unwrap();
