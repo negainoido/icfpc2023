@@ -1,5 +1,4 @@
 use clap::Parser;
-use geo::Point;
 use rand::seq::SliceRandom;
 use rand_pcg::Pcg64Mcg;
 
@@ -31,24 +30,11 @@ fn main() {
     let input: Input = serde_json::from_str(&input_str).unwrap();
     let now = std::time::SystemTime::now();
 
-    let mut solution: Solution = Default::default();
-    let musician_dist = 10.0;
-    let mut cx = input.stage_bottom_left.x() + musician_dist;
-    let mut cy = input.stage_bottom_left.y() + musician_dist;
-    let mut j = 0;
+    let generator = solver::PlacementGenerator::new(input.clone(), args.rand_seed);
 
-    for _i in 0..input.musicians.len() {
-        solution.placements.push(Point::new(cx, cy));
-        cx += musician_dist;
-        if cx + musician_dist > input.stage_bottom_left.x() + input.stage_width {
-            cx = input.stage_bottom_left.x() + musician_dist;
-            j += 1;
-            if j % 2 == 1 {
-                cx += musician_dist / 2.0;
-            }
-            cy += musician_dist * f64::sqrt(3.0 + 1e-7) / 2.0;
-        }
-    }
+    let mut solution: Solution = Default::default();
+
+    solution.placements = generator.honeycomb_candidates;
 
     let mut rnd = Pcg64Mcg::new(args.rand_seed);
     let mut best_solution = solution.clone();
