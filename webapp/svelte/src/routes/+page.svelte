@@ -106,6 +106,7 @@
                         problem: data,
                     };
                 });
+                draw();
             });
     }
 
@@ -133,6 +134,7 @@
     }
 
     function clear() {
+        if (!document) return;
         let obj = document.getElementById('c');
         if (!obj) return;
         let canvas = obj.getContext('2d');
@@ -143,6 +145,7 @@
     }
 
     function draw() {
+        if (!document) return;
         let obj = document.getElementById('c');
         if (!obj) return;
         let canvas = obj.getContext('2d');
@@ -162,19 +165,19 @@
             maxx = Math.max(maxx, m.x);
             maxy = Math.max(maxy, m.y);
         }
-        for (let m of solution.placements) {
-            minx = Math.min(minx, m.x);
-            miny = Math.min(miny, m.y);
-            maxx = Math.max(maxx, m.x);
-            maxy = Math.max(maxy, m.y);
+        if (solution) {
+            for (let m of solution.placements) {
+                minx = Math.min(minx, m.x);
+                miny = Math.min(miny, m.y);
+                maxx = Math.max(maxx, m.x);
+                maxy = Math.max(maxy, m.y);
+            }
         }
 
         let padding = 10;
         let offsetx = minx - padding;
         let offsety = miny - padding;
         let scale = Math.min(width / (maxx - minx + 2 * padding), height / (maxy - miny + 2 * padding));
-        //console.log(minx,miny,maxx,maxy);
-        //console.log(scale);
 
         canvas.clearRect(0, 0, width, height);
         canvas.strokeStyle = '#000';
@@ -198,7 +201,46 @@
             scale * problem.stage_width,
             scale * problem.stage_height
         );
-        canvas.strokeStyle = '#a11';
+        // musicians
+        if (solution) {
+            canvas.fillStyle = '#11a';
+            for (let i = 0; i < solution.placements.length; ++i) {
+                let m = solution.placements[i];
+                let inst = problem.musicians[i];
+                if (colorful) {
+                    canvas.fillStyle = colors[inst % colors.length];
+                }
+                canvas.beginPath();
+                canvas.arc(
+                    offsetx + scale * m.x,
+                    offsety + scale * m.y,
+                    1.6, 0, 7, false
+                );
+                canvas.fill();
+            }
+        }
+        // pillars
+        canvas.fillStyle = '#ddd';
+        canvas.strokeStyle = '#222';
+        for (let p of problem.pillars) {
+            console.log(p);
+            console.log(
+                offsetx + scale * p.center[0],
+                offsety + scale * p.center[1],
+                scale * p.radius,
+            );
+            canvas.beginPath();
+            canvas.arc(
+                offsetx + scale * p.center[0],
+                offsety + scale * p.center[1],
+                scale * p.radius,
+                0, 7, false
+            );
+            canvas.fill();
+            canvas.stroke();
+        }
+        // attendees
+        canvas.fillStyle = '#a11';
         for (let a of problem.attendees) {
             canvas.beginPath();
             canvas.arc(
@@ -206,21 +248,6 @@
                 offsety + scale * a.y,
                 1.2, 0, 7, false
             )
-            canvas.stroke();
-        }
-        canvas.fillStyle = '#11a';
-        for (let i = 0; i < solution.placements.length; ++i) {
-            let m = solution.placements[i];
-            let inst = problem.musicians[i];
-            if (colorful) {
-                canvas.fillStyle = colors[inst % colors.length];
-            }
-            canvas.beginPath();
-            canvas.arc(
-                offsetx + scale * m.x,
-                offsety + scale * m.y,
-                1.6, 0, 7, false
-            );
             canvas.fill();
         }
     }
