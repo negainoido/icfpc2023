@@ -10,7 +10,7 @@ for i in $(seq 1 55); do
     if [[ $score -ge $best ]]; then
         comment=$(printf "new best!(%.3e)" $(($score - $best)))
     else
-        comment="$(($score - $best))"
+        comment=$(printf "%.3e" $(($score - $best)))
     fi
   else
     comment=$score
