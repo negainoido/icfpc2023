@@ -1,13 +1,13 @@
-use std::collections::VecDeque;
-use std::f64::consts::PI;
 use anyhow::bail;
 use anyhow::Result;
 use geo::EuclideanDistance;
 use geo::Line;
 use geo::Point;
-use rayon::prelude::*;
 use ordered_float::OrderedFloat;
+use rayon::prelude::*;
 use serde::{Deserialize, Serialize};
+use std::collections::VecDeque;
+use std::f64::consts::PI;
 
 #[derive(Debug, Clone, Copy)]
 pub struct Segment {
@@ -57,7 +57,7 @@ struct AngleInfo {
 }
 
 impl AngleInfo {
-    fn get_covered_angle_range(&self)  -> (OrderedFloat<f64>, OrderedFloat<f64>) {
+    fn get_covered_angle_range(&self) -> (OrderedFloat<f64>, OrderedFloat<f64>) {
         let asin = (BLOCKED_DIST / self.dist_sq.sqrt()).asin();
         (self.angle - asin, self.angle + asin)
     }
@@ -76,11 +76,11 @@ pub struct Input {
 
 impl Input {
     fn in_stage(&self, p: &Point) -> bool {
-      const MUSICIAN_CLOSE_DIST: f64 = 10.0;
-        p.x() >= self.stage_bottom_left.x()+MUSICIAN_CLOSE_DIST
-            && p.x() <= self.stage_bottom_left.x() + self.stage_width-MUSICIAN_CLOSE_DIST
-            && p.y() >= self.stage_bottom_left.y()+MUSICIAN_CLOSE_DIST
-            && p.y() <= self.stage_bottom_left.y() + self.stage_height-MUSICIAN_CLOSE_DIST
+        const MUSICIAN_CLOSE_DIST: f64 = 10.0;
+        p.x() >= self.stage_bottom_left.x() + MUSICIAN_CLOSE_DIST
+            && p.x() <= self.stage_bottom_left.x() + self.stage_width - MUSICIAN_CLOSE_DIST
+            && p.y() >= self.stage_bottom_left.y() + MUSICIAN_CLOSE_DIST
+            && p.y() <= self.stage_bottom_left.y() + self.stage_height - MUSICIAN_CLOSE_DIST
     }
 
     pub fn is_valid_placements(&self, placements: &Vec<Point>) -> Result<()> {
@@ -194,13 +194,21 @@ impl Input {
         Ok(ans)
     }
 
-    fn score_attendee_fast(&self, attendee_id: usize, placements: &Vec<Point>)  -> f64{
+    fn score_attendee_fast(&self, attendee_id: usize, placements: &Vec<Point>) -> f64 {
         let mut sum_impact = 0.0;
         // Compute nearest musician
         let mut nearest_musician_id = 0;
-        let mut nearest_distance = OrderedFloat(self.attendees[attendee_id].pos().euclidean_distance(&placements[0]));
+        let mut nearest_distance = OrderedFloat(
+            self.attendees[attendee_id]
+                .pos()
+                .euclidean_distance(&placements[0]),
+        );
         for i in 1..placements.len() {
-            let distance = OrderedFloat(self.attendees[attendee_id].pos().euclidean_distance(&placements[i]));
+            let distance = OrderedFloat(
+                self.attendees[attendee_id]
+                    .pos()
+                    .euclidean_distance(&placements[i]),
+            );
             if distance < nearest_distance {
                 nearest_musician_id = i;
                 nearest_distance = distance
@@ -210,18 +218,17 @@ impl Input {
         // Compute relative angles for each musician based on
         let mut angles = vec![];
         for musician_id in 0..self.musicians.len() {
-            let dx: f64 = placements[musician_id].x()  - self.attendees[attendee_id].x;
-            let dy: f64 = placements[musician_id].y()  - self.attendees[attendee_id].y;
+            let dx: f64 = placements[musician_id].x() - self.attendees[attendee_id].x;
+            let dy: f64 = placements[musician_id].y() - self.attendees[attendee_id].y;
             let angle = dy.atan2(dx);
             let dist_sq = dx * dx + dy * dy;
             // angles.push((OrderedFloat(angle), dist_sq, musician_id));
             angles.push(AngleInfo {
                 angle: OrderedFloat(angle),
                 dist_sq: OrderedFloat(dist_sq),
-                musician_id
+                musician_id,
             });
         }
-
 
         let nearest_musician_angle = angles[nearest_musician_id].angle;
         for musician_id in 0..self.musicians.len() {
@@ -256,7 +263,6 @@ impl Input {
         //  (1.2) a(i) >= a(j)
         //  (1.3) a(i) >= s(j)
 
-
         let mut max_end_angle_stack = VecDeque::new();
         max_end_angle_stack.push_back((angles[0].dist_sq, angles[0].get_covered_angle_range().1));
         for i in 1..angles.len() {
@@ -269,7 +275,7 @@ impl Input {
                 }
             }
 
-            let max_end_angle =max_end_angle_stack.back().unwrap().1;
+            let max_end_angle = max_end_angle_stack.back().unwrap().1;
             if max_end_angle >= angle_info.angle {
                 is_blocked[i] = true;
             }
@@ -284,8 +290,8 @@ impl Input {
         let mut min_start_angle_stack = VecDeque::new();
         min_start_angle_stack.push_back((
             angles[angles.len() - 1].dist_sq,
-            angles[angles.len() - 1].get_covered_angle_range().0)
-        );
+            angles[angles.len() - 1].get_covered_angle_range().0,
+        ));
 
         for i in (0..angles.len() - 1).rev() {
             let angle_info = angles[i];
@@ -319,7 +325,6 @@ impl Input {
         sum_impact
     }
 
-
     pub fn score_fast(&self, placements: &Vec<Point>) -> Result<f64> {
         let ans = (0..self.attendees.len())
             // .into_par_iter()
@@ -327,8 +332,6 @@ impl Input {
             .map(|attendee_id| self.score_attendee_fast(attendee_id, placements))
             .sum();
         Ok(ans)
-
-
     }
 }
 
