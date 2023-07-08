@@ -34,6 +34,6 @@
     },
     "type": "module",
     "dependencies": {
-        "wasm-sample": "file:wasm-sample/pkg"
+        "solver": "file:../../solver/pkg"
     }
 }

@@ -8,10 +8,10 @@ export default defineConfig({
     },
     server: {
         fs: {
-            allow: ['./wasm-sample/pkg'],
+            allow: ['../../solver/pkg'],
         },
     },
     optimizeDeps: {
-        exclude: ['wasm-sample'],
+        exclude: ['../../solver'],
     },
 });

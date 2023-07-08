@@ -16,8 +16,6 @@ use rand_pcg::Pcg64Mcg;
 use crate::wasm_util::Placement;
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
-#[cfg(target_arch = "wasm32")]
-pub use wasm_bindgen_rayon::init_thread_pool;
 
 #[cfg(target_arch = "wasm32")]
 #[global_allocator]
