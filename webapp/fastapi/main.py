@@ -3,10 +3,11 @@ import os
 
 import pymysql
 import requests
-from fastapi import FastAPI, UploadFile
 from google.cloud import storage
 from google.cloud.sql.connector import Connector
 from pydantic import BaseModel
+
+from fastapi import FastAPI, UploadFile
 
 secrets = json.loads(os.environ.get("SECRET", ""))
 app = FastAPI()
@@ -123,7 +124,7 @@ class Scores:
           SELECT
             id, problem_id, submission_id, solver, status, score, ts,
             ROW_NUMBER() OVER(PARTITION BY problem_id ORDER BY score DESC) as rn
-          FROM your_table
+          FROM solutions
         ) t
         WHERE t.rn <= 20
         ;
