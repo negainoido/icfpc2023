@@ -160,7 +160,6 @@ impl Input {
             );
         }
 
-        let mut is_blocked = false;
         let a_pos = self.attendees[attendee_id].pos();
         let segment = Segment {
             p1: a_pos,
@@ -172,16 +171,11 @@ impl Input {
             }
 
             if segment.dist(&placements[i]) <= BLOCKED_DIST {
-                is_blocked = true;
-                break;
+                return Ok(0.0);
             }
         }
 
-        if is_blocked {
-            Ok(0.0)
-        } else {
-            Ok(self.raw_impact(attendee_id, musician_id, &placements[musician_id]))
-        }
+        Ok(self.raw_impact(attendee_id, musician_id, &placements[musician_id]))
     }
 
     pub fn score(&self, placements: &Vec<Point>) -> Result<f64> {
