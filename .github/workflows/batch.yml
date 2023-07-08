@@ -9,6 +9,7 @@ on:
           - random
           - random2
           - random_exact
+          - random_exact_rect
 
 jobs:
   eval-batch:

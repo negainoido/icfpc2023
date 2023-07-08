@@ -29,6 +29,10 @@ path = "src/bin/random2.rs"
 name = "random_exact"
 path = "src/bin/random_exact.rs"
 
+[[bin]]
+name = "random_exact_rect"
+path = "src/bin/random_exact_rect.rs"
+
 [dependencies]
 serde = { version = "1.0.130", features = ["derive"] }
 serde_json = "1.0.68"
