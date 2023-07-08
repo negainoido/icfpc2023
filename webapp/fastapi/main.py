@@ -56,7 +56,7 @@ def get_submission_from_icfpc(submission_id: str):
         },
     )
     json = resp.json()
-    # print(json)
+    print(json)
 
     return json["Success"]
 
@@ -74,7 +74,6 @@ class Scores:
         self.database = secrets["database"]["database"]
         self.bucket_name = secrets["bucket_name"]
         self.blob_prefix = secrets["blob_prefix"]
-        print(secrets["database"])
         self._init_table()
 
     def con(self):
@@ -193,7 +192,7 @@ def update_score():
         submission = get_submission_from_icfpc(submission_id)
         if submission["submission"]["score"] == "Processing":
             continue
-        if submission["submission"]["score"]["Success"] is None:
+        if "Failure" in submission["submission"]["score"]:
             status = "failed"
             sql = """
             UPDATE solutions
@@ -205,7 +204,7 @@ def update_score():
                 with con.cursor() as cur:
                     cur.execute(sql, (status, id))
                 con.commit()
-        else:
+        elif "Success" in submission["submission"]["score"]:
             status = "success"
             score = submission["submission"]["score"]["Success"]
             sql = """
@@ -218,5 +217,7 @@ def update_score():
                 with con.cursor() as cur:
                     cur.execute(sql, (status, score, id))
                 con.commit()
+        else:
+            print("unknown status:", submission["submission"]["score"])
 
     return {"status": "ok"}
