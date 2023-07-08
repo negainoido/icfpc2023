@@ -14,6 +14,10 @@ on:
         required: false
         default: false
         type: boolean
+      batch-size:
+        required: false
+        default: 4
+        type: number 
 
 jobs:
   eval-batch:
@@ -35,7 +39,7 @@ jobs:
       - name: run batch
         id: batch
         env:
-          PNUM: 4
+          PNUM: ${{ inputs.batch-size }}
           DRY_RUN: ${{ inputs.dry-run }}
         run: |
           bash ../tools/eval_batch.sh ${{ inputs.solver }} ${{ github.sha }}
