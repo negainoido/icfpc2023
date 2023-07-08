@@ -15,6 +15,7 @@ mkdir -p output
 
 function run_and_eval() {
     echo evaluating $1
+    set -euo pipefail
     problem=$(basename $1)
     problem_wo_ext=${problem%\.json}
     problem_id=${problem_wo_ext#problem-}
