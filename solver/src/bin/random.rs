@@ -19,7 +19,7 @@ struct Args {
     iteration: i32,
 
     #[arg(short, long)]
-    timeout: Option<i32>,
+    timeout: Option<u32>,
 
     #[arg(short, long, default_value_t = 0)]
     rand_seed: u128,
@@ -29,6 +29,7 @@ fn main() {
     let args = Args::parse();
     let input_str = std::fs::read_to_string(args.input).unwrap();
     let input: Input = serde_json::from_str(&input_str).unwrap();
+    let now = std::time::SystemTime::now();
 
     let mut solution: Solution = Default::default();
     let musician_dist = 10.0;
@@ -52,7 +53,8 @@ fn main() {
     let mut best_solution = solution.clone();
     let mut best_score = solution.score(&input).unwrap();
     println!("initial score: {}", best_score);
-    for i in 0..args.iteration {
+    let mut iter = 0;
+    loop {
         solution.placements.shuffle(&mut rnd);
 
         match solution.score(&input) {
@@ -60,11 +62,24 @@ fn main() {
                 if score > best_score {
                     best_score = score;
                     best_solution = solution.clone();
-                    println!("iter {}, score: {}", i, best_score);
+                    println!("iter {}, score: {}", iter, best_score);
                 }
             }
             Err(_) => {}
         }
+
+        if let Some(timeout_sec) = args.timeout {
+            if let Ok(elapsed) = now.elapsed() {
+                if elapsed.as_millis() > timeout_sec as u128 * 1000 {
+                    break;
+                }
+            }
+        } else {
+            if iter > args.iteration {
+                break;
+            }
+        }
+        iter += 1;
     }
 
     std::fs::write(args.output, serde_json::to_string(&best_solution).unwrap()).unwrap();
