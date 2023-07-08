@@ -146,6 +146,14 @@
         }
 
         canvas.clearRect(0, 0, width, height);
+        canvas.strokeStyle = '#000';
+        canvas.fillStyle = '#fff';
+        canvas.fillRect(
+            rescalex(0),
+            rescaley(0),
+            rescalex(problem.room_width),
+            rescaley(problem.room_height)
+        );
         canvas.strokeRect(
             rescalex(0),
             rescaley(0),
@@ -184,8 +192,20 @@
             );
             canvas.fill();
         }
+    }
 
-
+    function fullScreen() {
+        var canvas = document.getElementById("c");
+        if (!canvas) return;
+        if (canvas.requestFullscreen) {
+            canvas.requestFullscreen();
+        } else if (canvas.mozRequestFullScreen) { // Firefox
+            canvas.mozRequestFullScreen();
+        } else if (canvas.webkitRequestFullscreen) { // Chrome, Safari and Opera
+            canvas.webkitRequestFullscreen();
+        } else if (canvas.msRequestFullscreen) { // IE/Edge
+            canvas.msRequestFullscreen();
+        }
     }
 
     onMount(async () => {
@@ -231,5 +251,6 @@
         <input type='checkbox' bind:checked={colorful} on:change={draw} />
         楽器で色を変える
     </label>
+    <button on:click={fullScreen}>全画面表示</button>
     <canvas id="c" width="1600" height="1200" />
 </div>
