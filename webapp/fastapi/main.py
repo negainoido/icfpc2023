@@ -146,6 +146,31 @@ class Scores:
             con.commit()
         return rows
 
+
+    def update_status(self, id: int, status: str, score: int = None):
+        if score is None:
+            sql = """
+                    UPDATE solutions
+                    SET status = %s
+                    WHERE id = %s
+                    ;
+                    """
+            with scores.con() as con:
+                with con.cursor() as cur:
+                    cur.execute(sql, (status, id))
+                con.commit()
+        else:
+            sql = """
+                    UPDATE solutions
+                    SET status = %s, score = %s
+                    WHERE id = %s
+                    ;
+                    """
+            with scores.con() as con:
+                with con.cursor() as cur:
+                    cur.execute(sql, (status, score, id))
+                con.commit()
+
     def upload(self, problem_id: int, submission_id: str, solver: str, content: str):
         # insert into db and get id
         sql = """
@@ -192,36 +217,18 @@ def update_score():
         resp = get_submission_from_icfpc(submission_id)
         if "Success" not in resp:
             if "Failure" not in resp:
-                print("unknown status:", resp)
+                if resp["Failure"] == "Submission not found!":
+                    scores.update_status(id, "submission_not_found")
+                else:
+                    print("unknown status:", resp)
             continue
         submission = resp["Success"]
         if submission["submission"]["score"] == "Processing":
             continue
         if "Failure" in submission["submission"]["score"]:
-            status = "failed"
-            sql = """
-            UPDATE solutions
-            SET status = %s
-            WHERE id = %s
-            ;
-            """
-            with scores.con() as con:
-                with con.cursor() as cur:
-                    cur.execute(sql, (status, id))
-                con.commit()
+            scores.update_status(id, "failed")
         elif "Success" in submission["submission"]["score"]:
-            status = "success"
-            score = submission["submission"]["score"]["Success"]
-            sql = """
-            UPDATE solutions
-            SET status = %s, score = %s
-            WHERE id = %s
-            ;
-            """
-            with scores.con() as con:
-                with con.cursor() as cur:
-                    cur.execute(sql, (status, score, id))
-                con.commit()
+            scores.update_status(id, "success", submission["submission"]["score"]["Success"])
         else:
             print("unknown status:", submission["submission"]["score"])
 
