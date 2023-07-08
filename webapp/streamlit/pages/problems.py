@@ -8,7 +8,7 @@ from PIL import Image, ImageDraw
 
 import streamlit as st
 
-NUM_PROBLEM = 55
+NUM_PROBLEM = 90
 
 
 class Problem:
