@@ -75,7 +75,6 @@ fn main() {
 
         let mut solution: Solution = Default::default();
         solution.placements = placements.clone();
-        let original_score = solution.score(&input).unwrap();
         let (_, assignments) = kuhn_munkres(&matrix);
         let mut new_placements = vec![];
         for assignment in assignments {
@@ -83,16 +82,6 @@ fn main() {
         }
         solution.placements = new_placements.clone();
         let new_score = solution.score(&input).unwrap();
-        eprintln!(
-            "Placement original score (iteration = {}, input = {}): {}",
-            iteration_count, args.input, original_score
-        );
-        eprintln!(
-            "Placement optimized score (iteration = {}, input = {}): {}",
-            iteration_count,
-            args.input,
-            solution.score(&input).unwrap()
-        );
 
         if best_score < OrderedFloat(new_score) {
             eprintln!(
