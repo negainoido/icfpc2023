@@ -9,7 +9,7 @@ on:
           - random
 
 jobs:
-  test:
+  eval-batch:
     runs-on: [self-hosted, linux, x64]
     defaults:
       run:
@@ -25,8 +25,7 @@ jobs:
       - name: run batch
         env:
           PNUM: 4
-        run: |
-          bash ../script/eval_batch.sh ${{ inputs.solver }}
+        run: bash ../script/eval_batch.sh ${{ inputs.solver }}
       - uses: actions/upload-artifact@v3
         with:
           name: submissions
