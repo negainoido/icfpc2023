@@ -147,8 +147,9 @@ fn main() {
         let mut matrix = Matrix::new(input.musicians.len(), placements.len(), OrderedFloat(0.0));
         let mut reachable_placements = vec![];
         for attendee_id in 0..input.attendees.len() {
-            let detail = input.score_attendee_fast(attendee_id, &placements);
-            reachable_placements.push(detail.matched_musician_ids);
+            let non_blocked_placement_ids =
+                get_non_blocked_placement_ids(input.attendees[attendee_id].pos(), &placements);
+            reachable_placements.push(non_blocked_placement_ids);
         }
         for musician_id in 0..input.musicians.len() {
             for attendee_id in 0..input.attendees.len() {
