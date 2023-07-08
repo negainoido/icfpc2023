@@ -28,8 +28,16 @@ fn generate_first_level_candidates(input: &Input) -> Vec<Point> {
     dbg!(x_count, y_count);
 
     // Generate first level candidate
-    let x_gap = (input.stage_width - 20.0) / (x_count - 1) as f64;
-    let y_gap = (input.stage_height - 20.0) / (y_count - 1) as f64;
+    let x_gap = if x_count > 1 {
+        (input.stage_width - 20.0) / (x_count - 1) as f64
+    } else {
+        0.0
+    };
+    let y_gap = if y_count > 1 {
+        (input.stage_height - 20.0) / (y_count - 1) as f64
+    } else {
+        0.0
+    };
 
     // Prefer candidates closer to the stage borders
     let mut layered_candidates = vec![];
