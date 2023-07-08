@@ -9,6 +9,7 @@
     let records = [];
     let filteredRecords = [];
 
+    let colorful = true;
     let colors = [
         '#11ff11',
         '#11dd33',
@@ -50,6 +51,7 @@
 
     /// 良いレコード全部取得
     function fetchRecords() {
+        clear();
         fetch('https://icfpc2023.negainoido.com/api/solutions/show')
             .then(data => data.json())
             .then(data => {
@@ -62,6 +64,7 @@
     function filterRecords() {
         if (!records) return;
         filteredRecords = [];
+        clear();
         for (let r of records) {
             if (r[1] === problem_id) {
                 filteredRecords.push(r);
@@ -76,6 +79,7 @@
     }
 
     function fetchSolution(solution_id) {
+        clear();
         fetch(`https://icfpc2023.negainoido.com/api/solutions?id=${solution_id}`)
             .then(response => response.json())
             .then(response => {
@@ -90,37 +94,94 @@
             });
     }
 
-    function draw() {
-        let canvas = document.getElementById('c').getContext('2d');
+    function clear() {
+        let obj = document.getElementById('c');
+        if (!obj) return;
+        let canvas = obj.getContext('2d');
+        if (!canvas) return;
         let width = 1600;
         let height = 1200;
-        let scale = Math.min(width / problem.room_width, height / problem.room_height);
+        canvas.clearRect(0, 0, width, height);
+    }
+
+    function draw() {
+        let obj = document.getElementById('c');
+        if (!obj) return;
+        let canvas = obj.getContext('2d');
+        if (!canvas) return;
+
+        // canvas size
+        let width = 1600;
+        let height = 1200;
+
+        let minx = 10000;
+        let miny = 10000;
+        let maxx = -10000;
+        let maxy = -10000;
+        for (let m of problem.attendees) {
+            minx = Math.min(minx, m.x);
+            miny = Math.min(miny, m.y);
+            maxx = Math.max(maxx, m.x);
+            maxy = Math.max(maxy, m.y);
+        }
+        for (let m of solution.placements) {
+            minx = Math.min(minx, m.x);
+            miny = Math.min(miny, m.y);
+            maxx = Math.max(maxx, m.x);
+            maxy = Math.max(maxy, m.y);
+        }
+
+        let padding = 10;
+        let offsetx = minx - padding;
+        let offsety = miny - padding;
+        let scale = Math.min(width / (maxx - minx + 2 * padding), height / (maxy - miny + 2 * padding));
+        console.log(minx,miny,maxx,maxy);
+        console.log(scale);
+
+        function rescalex(x) {
+            return offsetx + x * scale;
+        }
+        function rescaley(y) {
+            return offsety + y * scale;
+        }
+
         canvas.clearRect(0, 0, width, height);
         canvas.strokeRect(
-            0,
-            0,
-            problem.room_width * scale,
-            problem.room_height * scale
+            rescalex(0),
+            rescaley(0),
+            rescalex(problem.room_width),
+            rescaley(problem.room_height)
         );
         canvas.fillStyle = '#999';
         canvas.fillRect(
-            scale * problem.stage_bottom_left[0],
-            scale * problem.stage_bottom_left[1],
-            scale * problem.stage_width,
-            scale * problem.stage_height
+            rescalex(problem.stage_bottom_left[0]),
+            rescaley(problem.stage_bottom_left[1]),
+            rescalex(problem.stage_width),
+            rescaley(problem.stage_height)
         );
         canvas.strokeStyle = '#a11';
         for (let a of problem.attendees) {
             canvas.beginPath();
-            canvas.arc(a.x * scale, a.y * scale, 1.2, 0, 7, false)
+            canvas.arc(
+                rescalex(a.x),
+                rescaley(a.y),
+                1.2, 0, 7, false
+            )
             canvas.stroke();
         }
+        canvas.fillStyle = '#11a';
         for (let i = 0; i < solution.placements.length; ++i) {
             let m = solution.placements[i];
             let inst = problem.musicians[i];
-            canvas.fillStyle = colors[inst % colors.length];
+            if (colorful) {
+                canvas.fillStyle = colors[inst % colors.length];
+            }
             canvas.beginPath();
-            canvas.arc(m.x * scale, m.y * scale, 1.6, 0, 7, false)
+            canvas.arc(
+                rescalex(m.x),
+                rescaley(m.y),
+                1.6, 0, 7, false
+            );
             canvas.fill();
         }
 
@@ -166,5 +227,9 @@
 </div>
 
 <div>
+    <label>
+        <input type='checkbox' bind:checked={colorful} on:change={draw} />
+        楽器で色を変える
+    </label>
     <canvas id="c" width="1600" height="1200" />
 </div>
