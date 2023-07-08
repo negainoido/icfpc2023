@@ -10,6 +10,10 @@ on:
           - random2
           - random_exact
           - random_exact_rect
+      dry-run:
+        required: false
+        default: false
+        type: boolean
 
 jobs:
   eval-batch:
@@ -32,6 +36,7 @@ jobs:
         id: batch
         env:
           PNUM: 4
+          DRY_RUN: ${{ inputs.dry-run }}
         run: |
           bash ../tools/eval_batch.sh ${{ inputs.solver }} ${{ github.sha }}
           echo report=$(cat ../output/summary.json) >> ${GITHUB_OUTPUT}
