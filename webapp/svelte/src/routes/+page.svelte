@@ -198,6 +198,7 @@
             scale * problem.stage_width,
             scale * problem.stage_height
         );
+        // attendees
         canvas.strokeStyle = '#a11';
         for (let a of problem.attendees) {
             canvas.beginPath();
@@ -208,6 +209,7 @@
             )
             canvas.stroke();
         }
+        // musicians
         canvas.fillStyle = '#11a';
         for (let i = 0; i < solution.placements.length; ++i) {
             let m = solution.placements[i];
@@ -223,7 +225,20 @@
             );
             canvas.fill();
         }
-    }
+        // pillars
+        canvas.fillStyle = '#fff';
+        canvas.strokeStyle = '#333';
+        for (let p of problem.pillars) {
+            canvas.beginPath();
+            canvas.arc(
+                offsetx + scale * p.center[0],
+                offsety + scale * p.center[1],
+                scale * p.radius,
+                0, 7, false
+            );
+            canvas.fill();
+        }
+    
 
     function fullScreen() {
         var canvas = document.getElementById("c");
