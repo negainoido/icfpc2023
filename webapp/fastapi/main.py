@@ -8,9 +8,24 @@ from google.cloud.sql.connector import Connector
 from pydantic import BaseModel
 
 from fastapi import FastAPI, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
 
 secrets = json.loads(os.environ.get("SECRET", ""))
 app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origines=[
+        "http://icfpc2023.negainoido.com",
+        "https://icfpc2023.negainoido.com",
+        "http://localhost",
+        "http://localhost:8000",
+        "http://localhost:8080",
+        "http://localhost:8888",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 connector = Connector()
 storage_client = storage.Client()
 
@@ -155,7 +170,9 @@ class Scores:
         if row is None:
             return None
 
-        blob = storage_client.get_bucket(self.bucket_name).get_blob(f'{self.blob_prefix}/{row[0]}.json')
+        blob = storage_client.get_bucket(self.bucket_name).get_blob(
+            f"{self.blob_prefix}/{row[0]}.json"
+        )
 
         return {
             "id": row[0],
@@ -241,8 +258,10 @@ class Scores:
             con.commit()
         if row is None:
             return None
-        
-        blob = storage_client.get_bucket(self.bucket_name).get_blob(f'{self.blob_prefix}/{row[0]}.json')
+
+        blob = storage_client.get_bucket(self.bucket_name).get_blob(
+            f"{self.blob_prefix}/{row[0]}.json"
+        )
 
         return {
             "id": row[0],
@@ -276,6 +295,7 @@ def post_submit(id: int, file: UploadFile, solver: str = "unknown"):
     submission_id = submit_solution_to_icfpc(id, content)
     scores.upload(id, submission_id, solver, content)
     return {"submission_id": submission_id}
+
 
 @app.get("/api/solutions")
 def get_solutions(id: int):
