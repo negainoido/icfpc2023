@@ -3,10 +3,11 @@
 
     let wasm;
     let problem_id = 1;
+    let problem = null;
     let solution_id = 1;
+    let solution = null;
     let records = [];
     let filteredRecords = [];
-    let solution = null;
 
     function updateAddition() {
         if (!wasm) return; // failed
@@ -32,6 +33,11 @@
             }
         }
         solution = null;
+        fetch(`https://icfpc2023.negainoido.com/api/problem?problem_id=${problem_id}`)
+            .then(data => data.json())
+            .then(data => {
+                problem = data;
+            });
     }
 
     function fetchSolution(solution_id) {
@@ -44,7 +50,6 @@
                     return;
                 }
                 let contents = response['contents'];
-                console.log(contents);
                 solution = JSON.parse(contents);
                 draw();
             });
@@ -52,9 +57,37 @@
 
     function draw() {
         let canvas = document.getElementById('c').getContext('2d');
-        let width = 1200;
-        let height = 800;
+        let width = 1600;
+        let height = 1200;
+        let scale = Math.min(width / problem.room_width, height / problem.room_height);
         canvas.clearRect(0, 0, width, height);
+        canvas.strokeRect(
+            0,
+            0,
+            problem.room_width * scale,
+            problem.room_height * scale
+        );
+        canvas.fillStyle = '#ddd';
+        canvas.fillRect(
+            scale * problem.stage_bottom_left[0],
+            scale * problem.stage_bottom_left[1],
+            scale * problem.stage_width,
+            scale * problem.stage_height
+        );
+        canvas.strokeStyle = '#a11';
+        for (let a of problem.attendees) {
+            canvas.beginPath();
+            canvas.arc(a.x * scale, a.y * scale, 1.2, 0, 7, false)
+            canvas.stroke();
+        }
+        canvas.strokeStyle = '#11a';
+        for (let m of solution.placements) {
+            canvas.beginPath();
+            canvas.arc(m.x * scale, m.y * scale, 1.2, 0, 7, false)
+            canvas.stroke();
+        }
+
+
     }
 
     onMount(async () => {
@@ -96,5 +129,5 @@
 </div>
 
 <div>
-  <canvas id="c" width="1200" height="800" style='border:1px black solid' />
+    <canvas id="c" width="1600" height="1200" />
 </div>
