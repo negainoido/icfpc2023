@@ -71,7 +71,8 @@ problem_id = int(
 )
 data = Problem.get_from_file(problem_id)
 
-st.image(Figure.draw(data))
+st.image(f"resource/img/{problem_id}.png")
+# st.image(Figure.draw(data))
 st.json(
     {
         "room_width": data.get("room_width"),
