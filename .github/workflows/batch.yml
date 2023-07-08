@@ -8,6 +8,7 @@ on:
         options:
           - random
           - random2
+          - random_exact
 
 jobs:
   eval-batch:
