@@ -137,6 +137,37 @@ class Scores:
             con.commit()
         return rows
 
+    # solutionsから特定IDのものを返す
+    # GCPのbucketからファイルの中身も取ってくる
+    def get_solution(self, id: int):
+        sql = """
+        SELECT id, problem_id, submission_id, solver, status, score, ts
+        FROM solutions
+        WHERE id = %s
+        LIMIT 1
+        ;
+        """
+        with self.con() as con:
+            with con.cursor() as cur:
+                cur.execute(sql, (id,))
+                row = cur.fetchone()
+            con.commit()
+        if row is None:
+            return None
+
+        blob = storage_client.get_bucket(self.bucket_name).get_blob(f'{self.blob_prefix}/{row[0]}.json')
+
+        return {
+            "id": row[0],
+            "problem_id": row[1],
+            "submission_id": row[2],
+            "solver": row[3],
+            "status": row[4],
+            "score": row[5],
+            "ts": row[6],
+            "contents": blob.download_as_string().decode("utf-8"),
+        }
+
     # solutionsのうち、scoreがnullのものを返す
     def get_empty_status_entries(self):
         sql = """
@@ -215,6 +246,13 @@ def post_submit(id: int, file: UploadFile, solver: str = "unknown"):
     submission_id = submit_solution_to_icfpc(id, content)
     scores.upload(id, submission_id, solver, content)
     return {"submission_id": submission_id}
+
+@app.get("/api/solutions")
+def get_solutions(id: int):
+    item = scores.get_solution(id)
+    if item is None:
+        return {"message": "not found"}
+    return item
 
 
 @app.post("/api/solutions/update_score")
