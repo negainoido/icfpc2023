@@ -4,3 +4,4 @@ plotly
 PyMySQL
 requests
 streamlit
+streamlit-agraph
