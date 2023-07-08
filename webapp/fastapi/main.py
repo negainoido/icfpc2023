@@ -116,7 +116,7 @@ class Scores:
 
     def show(self):
         sql = """
-        SELECT *
+        SELECT id, problem_id, submission_id, solver, status, score, ts
         FROM solutions
         ORDER BY score DESC
         LIMIT 100

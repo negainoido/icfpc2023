@@ -30,6 +30,12 @@ class API:
         )
         return response.json()
 
+    def update_score(self):
+        response = requests.post(
+            f"{self.url}/api/solutions/update_score",
+        )
+        return response.json()
+
 
 api = API()
 if st.button(":arrows_counterclockwise: refresh"):
@@ -42,7 +48,7 @@ st.write(f"{len(rows)} records")
 st.dataframe(
     pandas.DataFrame(
         rows,
-        columns=["id", "problem_id", "submittion_id", "solver", "score", "timestamp"],
+        columns=["id", "problem_id", "submittion_id", "solver", "status", "score", "timestamp"],
     ),
     hide_index=True,
     column_config={
@@ -53,6 +59,8 @@ st.dataframe(
         ),
     },
 )
+if st.button("update score"):
+    st.json(api.update_score())
 
 st.write("## Submit new file")
 problem_id = int(st.number_input("problem_id", value=1, min_value=1, max_value=45))
