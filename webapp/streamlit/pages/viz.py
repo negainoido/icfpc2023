@@ -9,6 +9,11 @@ import streamlit as st
 NUM_PROBLEM = 55
 
 
+st.write(
+    ":building_construction: [/svelte](https://icfpc2023.negainoido.com/streamlit/) でちゃんと作る"
+)
+
+
 class Problem:
     @classmethod
     def get_from_file(cls, problem_id: int):
