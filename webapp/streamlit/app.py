@@ -71,7 +71,7 @@ if st.checkbox("add filter", value=True):
     df = df[df["problem_id"] == filter_problem_id]
 
 st.write(f"{len(df)} records")
-score_min = float(df["score"].min() or 0) * 1.1
+score_min = min(0, float(df["score"].min() or 0))
 score_max = float(df["score"].max() or 100) * 1.1
 st.dataframe(
     df,
@@ -85,6 +85,13 @@ st.dataframe(
         ),
     },
 )
+with st.expander("debug"):
+    st.write((score_min, score_max))
+    st.write(df)
+
+st.write("## Update score")
+
+st.write("未取得なスコアをすべて更新するボタン")
 if st.button("update score"):
     st.json(api.update_score())
 
