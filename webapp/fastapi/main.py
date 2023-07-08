@@ -58,7 +58,7 @@ def get_submission_from_icfpc(submission_id: str):
     json = resp.json()
     print(json)
 
-    return json["Success"]
+    return json
 
 class Scores:
     def __init__(self):
@@ -189,7 +189,12 @@ def post_submit(id: int, file: UploadFile, solver: str = "unknown"):
 def update_score():
     rows = scores.get_empty_status_entries()
     for id, submission_id in rows:
-        submission = get_submission_from_icfpc(submission_id)
+        resp = get_submission_from_icfpc(submission_id)
+        if "Success" not in resp:
+            if "Failure" not in resp:
+                print("unknown status:", resp)
+            continue
+        submission = resp["Success"]
         if submission["submission"]["score"] == "Processing":
             continue
         if "Failure" in submission["submission"]["score"]:
