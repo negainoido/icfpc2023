@@ -120,7 +120,7 @@ impl Input {
         for i in 0..(self.musicians.len() - 1) {
             for j in (i + 1)..self.musicians.len() {
                 let dist = placements[i].euclidean_distance(&placements[j]);
-                if dist <= MUSICIAN_CLOSE_DIST {
+                if dist < MUSICIAN_CLOSE_DIST {
                     bail!(
                         "musicians {} and {} are too close: {:?} {:?}: dist={dist}",
                         i,
