@@ -1,6 +1,7 @@
 import gc
 import json
 
+import pandas
 import plotly.express as px
 import requests
 from PIL import Image, ImageDraw
@@ -85,6 +86,17 @@ st.json(
     }
 )
 
+st.write("##### attendees")
+st.dataframe(
+    pandas.DataFrame(data.get("attendees")),
+    # column_config={
+    #     "tastes": st.column_config.BarChartColumn(
+    #         "tastes",
+    #         width="medium",
+    #     ),
+    # },
+)
+
 ms = data.get("musicians")
 st.plotly_chart(
     px.histogram(ms, title="musicians").update_layout(
@@ -93,7 +105,7 @@ st.plotly_chart(
 )
 
 st.write("### problem JSON spec")
-st.write(data)
+st.json(data, expanded=False)
 
 del data
 gc.collect()
