@@ -224,8 +224,9 @@ def update_score():
             continue
         submission = resp["Success"]
         if submission["submission"]["score"] == "Processing":
-            continue
-        if "Failure" in submission["submission"]["score"]:
+            if submission["submission"]["contents"] == "":
+                scores.update_status(id, "empty_submission")
+        elif "Failure" in submission["submission"]["score"]:
             scores.update_status(id, "failed")
         elif "Success" in submission["submission"]["score"]:
             scores.update_status(id, "success", submission["submission"]["score"]["Success"])
