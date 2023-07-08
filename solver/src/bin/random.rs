@@ -32,8 +32,8 @@ fn main() {
 
     let mut solution: Solution = Default::default();
     let musician_dist = 10.0 + 1e-7;
-    let mut cx = input.stage_bottom_left.x() + musician_dist;
-    let mut cy = input.stage_bottom_left.y() + musician_dist;
+    let mut cx = f64::floor(input.stage_bottom_left.x() + musician_dist);
+    let mut cy = f64::floor(input.stage_bottom_left.y() + musician_dist);
     let mut j = 0;
     for _i in 0..input.musicians.len() {
         solution.placements.push(Point::new(cx, cy));
