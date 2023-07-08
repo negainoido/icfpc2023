@@ -58,7 +58,7 @@ df = pandas.DataFrame(
 )
 
 st.write("## Submission")
-if st.checkbox("add filter"):
+if st.checkbox("add filter", value=True):
     filter_problem_id = int(
         st.number_input(
             "problem_id",
@@ -71,7 +71,8 @@ if st.checkbox("add filter"):
     df = df[df["problem_id"] == filter_problem_id]
 
 st.write(f"{len(df)} records")
-score_max = df["score"].max() * 1.1
+score_min = float(df["score"].min() or 0) * 1.1
+score_max = float(df["score"].max() or 100) * 1.1
 st.dataframe(
     df,
     hide_index=True,
@@ -79,7 +80,7 @@ st.dataframe(
         "score": st.column_config.ProgressColumn(
             "score",
             format="%d",
-            min_value=0,
+            min_value=score_min,
             max_value=score_max,
         ),
     },

@@ -3,11 +3,10 @@ import os
 
 import pymysql
 import requests
+from fastapi import FastAPI, UploadFile
 from google.cloud import storage
 from google.cloud.sql.connector import Connector
 from pydantic import BaseModel
-
-from fastapi import FastAPI, UploadFile
 
 secrets = json.loads(os.environ.get("SECRET", ""))
 app = FastAPI()
@@ -43,11 +42,11 @@ def submit_solution_to_icfpc(problem_id: int, contents: str):
         },
     )
 
-    return resp.text.replace('"', '')
+    return resp.text.replace('"', "")
 
 
 def get_submission_from_icfpc(submission_id: str):
-    id = submission_id.replace('"', '')
+    id = submission_id.replace('"', "")
     resp = requests.get(
         f"https://api.icfpcontest.com/submission?submission_id={id}",
         headers={
@@ -59,6 +58,7 @@ def get_submission_from_icfpc(submission_id: str):
     print(json)
 
     return json
+
 
 class Scores:
     def __init__(self):
@@ -114,14 +114,21 @@ class Scores:
             con.commit()
 
     def show(self):
+        """
+        problem_id ごとに上位を取ってくる
+        """
         sql = """
         SELECT id, problem_id, submission_id, solver, status, score, ts
-        FROM solutions
-        ORDER BY score DESC
-        LIMIT 100
+        FROM (
+          SELECT
+            id, problem_id, submission_id, solver, status, score, ts,
+            ROW_NUMBER() OVER(PARTITION BY problem_id ORDER BY score DESC) as rn
+          FROM your_table
+        ) t
+        WHERE t.rn <= 20
         ;
         """
-        rows: list[tuple[int, str, int, str]]
+        rows: list[tuple[int, int, str, str, str, int, str]]
         with self.con() as con:
             with con.cursor() as cur:
                 cur.execute(sql)
@@ -138,14 +145,13 @@ class Scores:
         LIMIT 50
         ;
         """
-        rows: list[tuple[int, str]]
+        rows: list[tuple[int, int, str, str, str, int, str]]
         with self.con() as con:
             with con.cursor() as cur:
                 cur.execute(sql)
                 rows = cur.fetchall()
             con.commit()
         return rows
-
 
     def update_status(self, id: int, status: str, score: int = None):
         if score is None:
@@ -228,7 +234,9 @@ def update_score():
         if "Failure" in submission["submission"]["score"]:
             scores.update_status(id, "failed")
         elif "Success" in submission["submission"]["score"]:
-            scores.update_status(id, "success", submission["submission"]["score"]["Success"])
+            scores.update_status(
+                id, "success", submission["submission"]["score"]["Success"]
+            )
         else:
             print("unknown status:", submission["submission"]["score"])
 
