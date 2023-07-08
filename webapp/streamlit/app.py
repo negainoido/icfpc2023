@@ -32,6 +32,12 @@ class API:
         )
         return response.json()
 
+    def update_score(self):
+        response = requests.post(
+            f"{self.url}/api/solutions/update_score",
+        )
+        return response.json()
+
 
 api = API()
 if st.button(":arrows_counterclockwise: refresh"):
@@ -76,6 +82,8 @@ st.dataframe(
         ),
     },
 )
+if st.button("update score"):
+    st.json(api.update_score())
 
 st.write("## Submit new file")
 problem_id = int(

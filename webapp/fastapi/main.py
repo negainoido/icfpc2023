@@ -55,8 +55,8 @@ def get_submission_from_icfpc(submission_id: str):
             "Authorization": f"Bearer {icfpc_token}",
         },
     )
-    # json = resp.json()
-    print(json)
+    json = resp.json()
+    # print(json)
 
     return json["Success"]
 
@@ -116,7 +116,7 @@ class Scores:
 
     def show(self):
         sql = """
-        SELECT *
+        SELECT id, problem_id, submission_id, solver, status, score, ts
         FROM solutions
         ORDER BY score DESC
         LIMIT 100
