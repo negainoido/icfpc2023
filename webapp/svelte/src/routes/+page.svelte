@@ -9,6 +9,41 @@
     let records = [];
     let filteredRecords = [];
 
+    let colors = [
+        '#11ff11',
+        '#11dd33',
+        '#11bb55',
+        '#119977',
+        '#117799',
+        '#1155bb',
+        '#1133dd',
+        '#1111ff',
+        '#33ff11',
+        '#33dd33',
+        '#33bb55',
+        '#339977',
+        '#337799',
+        '#3355bb',
+        '#3333dd',
+        '#3311ff',
+        '#55ff11',
+        '#55dd33',
+        '#55bb55',
+        '#559977',
+        '#557799',
+        '#5555bb',
+        '#5533dd',
+        '#5511ff',
+        '#77ff11',
+        '#77dd33',
+        '#77bb55',
+        '#779977',
+        '#777799',
+        '#7755bb',
+        '#7733dd',
+        '#7711ff',
+    ]
+
     function updateAddition() {
         if (!wasm) return; // failed
     }
@@ -67,7 +102,7 @@
             problem.room_width * scale,
             problem.room_height * scale
         );
-        canvas.fillStyle = '#ddd';
+        canvas.fillStyle = '#999';
         canvas.fillRect(
             scale * problem.stage_bottom_left[0],
             scale * problem.stage_bottom_left[1],
@@ -80,11 +115,13 @@
             canvas.arc(a.x * scale, a.y * scale, 1.2, 0, 7, false)
             canvas.stroke();
         }
-        canvas.strokeStyle = '#11a';
-        for (let m of solution.placements) {
+        for (let i = 0; i < solution.placements.length; ++i) {
+            let m = solution.placements[i];
+            let inst = problem.musicians[i];
+            canvas.fillStyle = colors[inst % colors.length];
             canvas.beginPath();
-            canvas.arc(m.x * scale, m.y * scale, 1.2, 0, 7, false)
-            canvas.stroke();
+            canvas.arc(m.x * scale, m.y * scale, 1.6, 0, 7, false)
+            canvas.fill();
         }
 
 
