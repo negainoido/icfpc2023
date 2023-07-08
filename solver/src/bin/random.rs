@@ -31,7 +31,7 @@ fn main() {
     let input: Input = serde_json::from_str(&input_str).unwrap();
 
     let mut solution: Solution = Default::default();
-    let musician_dist = 10.0 + 1e-7;
+    let musician_dist = 10.0;
     let mut cx = input.stage_bottom_left.x() + musician_dist;
     let mut cy = input.stage_bottom_left.y() + musician_dist;
     let mut j = 0;
@@ -44,7 +44,7 @@ fn main() {
             if j % 2 == 1 {
                 cx += musician_dist / 2.0;
             }
-            cy += musician_dist * f64::sqrt(3.0) / 2.0;
+            cy += musician_dist * f64::sqrt(3.0 + 1e-7) / 2.0;
         }
     }
 
