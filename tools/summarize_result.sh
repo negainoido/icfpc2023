@@ -18,3 +18,4 @@ for i in $(seq 1 55); do
   fi
   printf "|$i|$score|$best|$comment|\n" >> summary.md
 done
+jq -Rs '.' summary.md | jq -c '{summary:"Batch Result", text:.}' > summary.json
