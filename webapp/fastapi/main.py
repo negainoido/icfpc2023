@@ -222,7 +222,7 @@ def update_score():
     for id, submission_id in rows:
         resp = get_submission_from_icfpc(submission_id)
         if "Success" not in resp:
-            if "Failure" not in resp:
+            if "Failure" in resp:
                 if resp["Failure"] == "Submission not found!":
                     scores.update_status(id, "submission_not_found")
                 else:
