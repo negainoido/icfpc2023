@@ -60,6 +60,8 @@ st.write("### Summary")
 df_summary = df.dropna(subset=["score"])
 df_summary = df_summary.loc[df_summary.groupby("problem_id")["score"].idxmax()]
 st.dataframe(df_summary, hide_index=True)
+score_sum = df_summary["score"][df_summary["score"] > 0].sum()
+st.info(f"Sum score = {score_sum:,}")
 
 st.write("### by problem")
 filter_problem_id = int(
