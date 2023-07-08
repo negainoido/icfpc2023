@@ -15,20 +15,33 @@ struct Args {
 
     #[arg(short, long)]
     output: String,
+
+    #[arg(short, long, default_value_t = 60.0)]
+    timeout: f64,
 }
 
 struct PlacementGenerator {
     input: Input,
+    cartesian_coordinate_candidates: Vec<Point>,
+    honeycomb_candidates: Vec<Point>,
 }
 
 impl PlacementGenerator {
     fn new(input: Input) -> Self {
-        PlacementGenerator { input }
+        let cartesian_coordinate_candidates =
+            PlacementGenerator::cartesian_coordinate_candidates(&input);
+
+        let honeycomb_candidates = PlacementGenerator::honeycomb_candidates(&input);
+
+        PlacementGenerator {
+            input,
+            cartesian_coordinate_candidates,
+            honeycomb_candidates,
+        }
     }
 
-    fn generate(&mut self) -> Vec<Point> {
+    fn cartesian_coordinate_candidates(input: &Input) -> Vec<Point> {
         let mut candidates = vec![];
-        let input = &self.input;
         let mut cx = input.stage_bottom_left.x() + 10.0;
         let mut cy = input.stage_bottom_left.y() + 10.0;
         loop {
@@ -43,10 +56,47 @@ impl PlacementGenerator {
             }
         }
         candidates
-            .iter()
-            .take(input.musicians.len())
-            .cloned()
-            .collect()
+    }
+
+    fn honeycomb_candidates(input: &Input) -> Vec<Point> {
+        let mut candidates = vec![];
+        let musician_dist = 10.0;
+        let mut cx = input.stage_bottom_left.x() + musician_dist;
+        let mut cy = input.stage_bottom_left.y() + musician_dist;
+        let mut j = 0;
+        loop {
+            candidates.push(Point::new(cx, cy));
+            cx += musician_dist;
+            if cx + musician_dist > input.stage_bottom_left.x() + input.stage_width {
+                cx = input.stage_bottom_left.x() + musician_dist;
+                j += 1;
+                if j % 2 == 1 {
+                    cx += musician_dist / 2.0;
+                }
+                cy += musician_dist * f64::sqrt(3.0 + 1e-7) / 2.0;
+            }
+
+            if cy + musician_dist > input.stage_bottom_left.y() + input.stage_height {
+                break;
+            }
+        }
+        candidates
+    }
+
+    fn generate(&mut self) -> Vec<Point> {
+        if self.cartesian_coordinate_candidates.len() < self.input.musicians.len() {
+            self.honeycomb_candidates
+                .iter()
+                .take(self.input.musicians.len())
+                .cloned()
+                .collect()
+        } else {
+            self.cartesian_coordinate_candidates
+                .iter()
+                .take(self.input.musicians.len())
+                .cloned()
+                .collect()
+        }
     }
 }
 
