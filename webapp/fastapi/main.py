@@ -42,8 +42,23 @@ def submit_solution_to_icfpc(problem_id: int, contents: str):
             "Authorization": f"Bearer {icfpc_token}",
         },
     )
-    return resp.text
 
+    return resp.text.replace('"', '')
+
+
+def get_submission_from_icfpc(submission_id: str):
+    id = submission_id.replace('"', '')
+    resp = requests.get(
+        f"https://api.icfpcontest.com/submission?submission_id={id}",
+        headers={
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {icfpc_token}",
+        },
+    )
+    # json = resp.json()
+    print(json)
+
+    return json["Success"]
 
 class Scores:
     def __init__(self):
@@ -87,6 +102,7 @@ class Scores:
         CREATE TABLE IF NOT EXISTS solutions(
             id INT(11) AUTO_INCREMENT NOT NULL PRIMARY KEY, 
             problem_id INT(11) NOT NULL,
+            status VARCHAR(255) NULL,
             submission_id VARCHAR(255) NOT NULL,
             solver VARCHAR(255) NOT NULL,
             score INT NULL,
@@ -111,6 +127,23 @@ class Scores:
             with con.cursor() as cur:
                 cur.execute(sql)
                 rows = cur.fetchall()  # type: ignore
+            con.commit()
+        return rows
+
+    # solutionsのうち、scoreがnullのものを返す
+    def get_empty_status_entries(self):
+        sql = """
+        SELECT id, submission_id
+        FROM solutions
+        WHERE status IS NULL
+        LIMIT 50
+        ;
+        """
+        rows: list[tuple[int, str]]
+        with self.con() as con:
+            with con.cursor() as cur:
+                cur.execute(sql)
+                rows = cur.fetchall()
             con.commit()
         return rows
 
@@ -150,4 +183,40 @@ def post_submit(id: int, file: UploadFile, solver: str = "unknown"):
     content = file.file.read().decode("utf-8")
     submission_id = submit_solution_to_icfpc(id, content)
     scores.upload(id, submission_id, solver, content)
-    return {"status": "OK"}
+    return {"submission_id": submission_id}
+
+
+@app.post("/api/solutions/update_score")
+def update_score():
+    rows = scores.get_empty_status_entries()
+    for id, submission_id in rows:
+        submission = get_submission_from_icfpc(submission_id)
+        if submission["submission"]["score"] == "Processing":
+            continue
+        if submission["submission"]["score"]["Success"] is None:
+            status = "failed"
+            sql = """
+            UPDATE solutions
+            SET status = %s
+            WHERE id = %s
+            ;
+            """
+            with scores.con() as con:
+                with con.cursor() as cur:
+                    cur.execute(sql, (status, id))
+                con.commit()
+        else:
+            status = "success"
+            score = submission["submission"]["score"]["Success"]
+            sql = """
+            UPDATE solutions
+            SET status = %s, score = %s
+            WHERE id = %s
+            ;
+            """
+            with scores.con() as con:
+                with con.cursor() as cur:
+                    cur.execute(sql, (status, score, id))
+                con.commit()
+
+    return {"status": "ok"}
