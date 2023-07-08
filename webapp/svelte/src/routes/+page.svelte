@@ -9,12 +9,49 @@
     let records = [];
     let filteredRecords = [];
 
+    let colorful = true;
+    let colors = [
+        '#11ff11',
+        '#11dd33',
+        '#11bb55',
+        '#119977',
+        '#117799',
+        '#1155bb',
+        '#1133dd',
+        '#1111ff',
+        '#33ff11',
+        '#33dd33',
+        '#33bb55',
+        '#339977',
+        '#337799',
+        '#3355bb',
+        '#3333dd',
+        '#3311ff',
+        '#55ff11',
+        '#55dd33',
+        '#55bb55',
+        '#559977',
+        '#557799',
+        '#5555bb',
+        '#5533dd',
+        '#5511ff',
+        '#77ff11',
+        '#77dd33',
+        '#77bb55',
+        '#779977',
+        '#777799',
+        '#7755bb',
+        '#7733dd',
+        '#7711ff',
+    ]
+
     function updateAddition() {
         if (!wasm) return; // failed
     }
 
     /// 良いレコード全部取得
     function fetchRecords() {
+        clear();
         fetch('https://icfpc2023.negainoido.com/api/solutions/show')
             .then(data => data.json())
             .then(data => {
@@ -27,6 +64,7 @@
     function filterRecords() {
         if (!records) return;
         filteredRecords = [];
+        clear();
         for (let r of records) {
             if (r[1] === problem_id) {
                 filteredRecords.push(r);
@@ -41,6 +79,7 @@
     }
 
     function fetchSolution(solution_id) {
+        clear();
         fetch(`https://icfpc2023.negainoido.com/api/solutions?id=${solution_id}`)
             .then(response => response.json())
             .then(response => {
@@ -55,39 +94,111 @@
             });
     }
 
-    function draw() {
-        let canvas = document.getElementById('c').getContext('2d');
+    function clear() {
+        let obj = document.getElementById('c');
+        if (!obj) return;
+        let canvas = obj.getContext('2d');
+        if (!canvas) return;
         let width = 1600;
         let height = 1200;
-        let scale = Math.min(width / problem.room_width, height / problem.room_height);
         canvas.clearRect(0, 0, width, height);
-        canvas.strokeRect(
-            0,
-            0,
-            problem.room_width * scale,
-            problem.room_height * scale
-        );
-        canvas.fillStyle = '#ddd';
+    }
+
+    function draw() {
+        let obj = document.getElementById('c');
+        if (!obj) return;
+        let canvas = obj.getContext('2d');
+        if (!canvas) return;
+
+        // canvas size
+        let width = 1600;
+        let height = 1200;
+
+        let minx = 10000;
+        let miny = 10000;
+        let maxx = -10000;
+        let maxy = -10000;
+        for (let m of problem.attendees) {
+            minx = Math.min(minx, m.x);
+            miny = Math.min(miny, m.y);
+            maxx = Math.max(maxx, m.x);
+            maxy = Math.max(maxy, m.y);
+        }
+        for (let m of solution.placements) {
+            minx = Math.min(minx, m.x);
+            miny = Math.min(miny, m.y);
+            maxx = Math.max(maxx, m.x);
+            maxy = Math.max(maxy, m.y);
+        }
+
+        let padding = 10;
+        let offsetx = minx - padding;
+        let offsety = miny - padding;
+        let scale = Math.min(width / (maxx - minx + 2 * padding), height / (maxy - miny + 2 * padding));
+        console.log(minx,miny,maxx,maxy);
+        console.log(scale);
+
+        canvas.clearRect(0, 0, width, height);
+        canvas.strokeStyle = '#000';
+        canvas.fillStyle = '#fff';
         canvas.fillRect(
-            scale * problem.stage_bottom_left[0],
-            scale * problem.stage_bottom_left[1],
+            offsetx,
+            offsety,
+            scale * problem.room_width,
+            scale * problem.room_height
+        );
+        canvas.strokeRect(
+            offsetx,
+            offsety,
+            scale * problem.room_width,
+            scale * problem.room_height
+        );
+        canvas.fillStyle = '#999';
+        canvas.fillRect(
+            offsetx + scale * problem.stage_bottom_left[0],
+            offsety + scale * problem.stage_bottom_left[1],
             scale * problem.stage_width,
             scale * problem.stage_height
         );
         canvas.strokeStyle = '#a11';
         for (let a of problem.attendees) {
             canvas.beginPath();
-            canvas.arc(a.x * scale, a.y * scale, 1.2, 0, 7, false)
+            canvas.arc(
+                offsetx + scale * a.x,
+                offsety + scale * a.y,
+                1.2, 0, 7, false
+            )
             canvas.stroke();
         }
-        canvas.strokeStyle = '#11a';
-        for (let m of solution.placements) {
+        canvas.fillStyle = '#11a';
+        for (let i = 0; i < solution.placements.length; ++i) {
+            let m = solution.placements[i];
+            let inst = problem.musicians[i];
+            if (colorful) {
+                canvas.fillStyle = colors[inst % colors.length];
+            }
             canvas.beginPath();
-            canvas.arc(m.x * scale, m.y * scale, 1.2, 0, 7, false)
-            canvas.stroke();
+            canvas.arc(
+                offsetx + scale * m.x,
+                offsety + scale * m.y,
+                1.6, 0, 7, false
+            );
+            canvas.fill();
         }
+    }
 
-
+    function fullScreen() {
+        var canvas = document.getElementById("c");
+        if (!canvas) return;
+        if (canvas.requestFullscreen) {
+            canvas.requestFullscreen();
+        } else if (canvas.mozRequestFullScreen) { // Firefox
+            canvas.mozRequestFullScreen();
+        } else if (canvas.webkitRequestFullscreen) { // Chrome, Safari and Opera
+            canvas.webkitRequestFullscreen();
+        } else if (canvas.msRequestFullscreen) { // IE/Edge
+            canvas.msRequestFullscreen();
+        }
     }
 
     onMount(async () => {
@@ -129,5 +240,10 @@
 </div>
 
 <div>
+    <label>
+        <input type='checkbox' bind:checked={colorful} on:change={draw} />
+        楽器で色を変える
+    </label>
+    <button on:click={fullScreen}>全画面表示</button>
     <canvas id="c" width="1600" height="1200" />
 </div>
