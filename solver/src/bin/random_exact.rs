@@ -75,7 +75,6 @@ fn main() {
 
         let mut solution: Solution = Default::default();
         solution.placements = placements.clone();
-        let original_score = solution.score(&input).unwrap();
         let (_, assignments) = kuhn_munkres(&matrix);
         let mut new_placements = vec![];
         for assignment in assignments {
