@@ -1,13 +1,10 @@
 use clap::Parser;
-use geo::Point;
 use ordered_float::{Float, OrderedFloat};
 use pathfinding::kuhn_munkres::kuhn_munkres;
 use pathfinding::matrix::Matrix;
-use rand::prelude::SliceRandom;
-use rand::Rng;
-use rand_pcg::Pcg64Mcg;
 
 use solver::problem::*;
+use solver::*;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -37,95 +34,6 @@ fn get_time() -> f64 {
             STIME = ms;
         }
         ms - STIME
-    }
-}
-
-struct PlacementGenerator {
-    input: Input,
-    cartesian_coordinate_candidates: Vec<Point>,
-    honeycomb_candidates: Vec<Point>,
-    rand_gen: Pcg64Mcg,
-}
-
-impl PlacementGenerator {
-    fn new(input: Input, rand_seed: u128) -> Self {
-        let rand_gen = Pcg64Mcg::new(rand_seed);
-        let cartesian_coordinate_candidates =
-            PlacementGenerator::cartesian_coordinate_candidates(&input);
-
-        let honeycomb_candidates = PlacementGenerator::honeycomb_candidates(&input);
-
-        PlacementGenerator {
-            input,
-            cartesian_coordinate_candidates,
-            honeycomb_candidates,
-            rand_gen: rand_gen,
-        }
-    }
-
-    fn cartesian_coordinate_candidates(input: &Input) -> Vec<Point> {
-        let mut candidates = vec![];
-        let mut cx = input.stage_bottom_left.x() + 10.0;
-        let mut cy = input.stage_bottom_left.y() + 10.0;
-        loop {
-            candidates.push(Point::new(cx, cy));
-            cx += 20.0;
-            if cx + 10.0 > input.stage_bottom_left.x() + input.stage_width {
-                cx = input.stage_bottom_left.x() + 10.0;
-                cy += 20.0;
-            }
-            if cy + 10.0 > input.stage_bottom_left.y() + input.stage_height {
-                break;
-            }
-        }
-        candidates
-    }
-
-    fn honeycomb_candidates(input: &Input) -> Vec<Point> {
-        let mut candidates = vec![];
-        let musician_dist = 10.0;
-        let mut cx = input.stage_bottom_left.x() + musician_dist;
-        let mut cy = input.stage_bottom_left.y() + musician_dist;
-        let mut j = 0;
-        loop {
-            candidates.push(Point::new(cx, cy));
-            cx += musician_dist;
-            if cx + musician_dist > input.stage_bottom_left.x() + input.stage_width {
-                cx = input.stage_bottom_left.x() + musician_dist;
-                j += 1;
-                if j % 2 == 1 {
-                    cx += musician_dist / 2.0;
-                }
-                cy += musician_dist * f64::sqrt(3.0 + 1e-7) / 2.0;
-            }
-
-            if cy + musician_dist > input.stage_bottom_left.y() + input.stage_height {
-                break;
-            }
-        }
-        candidates
-    }
-
-    fn generate(&mut self) -> Vec<Point> {
-        // self.rand_gen.gen_range()
-        let mut candidates =
-            if self.cartesian_coordinate_candidates.len() < self.input.musicians.len() {
-                self.honeycomb_candidates.clone()
-            } else if self.honeycomb_candidates.len() < self.input.musicians.len() {
-                self.cartesian_coordinate_candidates.clone()
-            } else {
-                if self.rand_gen.gen_bool(0.5) {
-                    self.honeycomb_candidates.clone()
-                } else {
-                    self.cartesian_coordinate_candidates.clone()
-                }
-            };
-        candidates.shuffle(&mut self.rand_gen);
-        candidates
-            .iter()
-            .take(self.input.musicians.len())
-            .cloned()
-            .collect()
     }
 }
 

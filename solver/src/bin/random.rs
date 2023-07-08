@@ -36,6 +36,7 @@ fn main() {
     let mut cx = input.stage_bottom_left.x() + musician_dist;
     let mut cy = input.stage_bottom_left.y() + musician_dist;
     let mut j = 0;
+
     for _i in 0..input.musicians.len() {
         solution.placements.push(Point::new(cx, cy));
         cx += musician_dist;
