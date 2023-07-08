@@ -203,13 +203,13 @@
 
     onMount(async () => {
         fetchRecords();
-        wasm = await import('wasm-sample');
+        wasm = await import('solver');
         await wasm.default();
     });
 </script>
 
-<label>problem_id</label>
-<input type='number' bind:value={problem_id} on:change={filterRecords} />
+<label for="problem_id">problem_id</label>
+<input id="problem_id" type='number' bind:value={problem_id} on:change={filterRecords} />
 
 <div>
 <p>{filteredRecords.length} records</p>

@@ -10,7 +10,7 @@ webapp: wasm
 	npm run build
 
 wasm:
-	cd wasm-sample && wasm-pack build --target web
+	cd ../../solver && make wasm
 
 fmt:
 	cd wasm-sample && cargo fmt

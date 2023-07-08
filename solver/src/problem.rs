@@ -4,6 +4,7 @@ use geo::EuclideanDistance;
 use geo::Line;
 use geo::Point;
 use ordered_float::OrderedFloat;
+#[cfg(not(target_arch = "wasm32"))]
 use rayon::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::collections::VecDeque;
@@ -309,6 +310,7 @@ impl Input {
         Ok(self.raw_impact(attendee_id, musician_id, &placements[musician_id]))
     }
 
+    #[cfg(not(target_arch = "wasm32"))]
     pub fn score(&self, placements: &Vec<Point>) -> Result<f64> {
         let ans = (0..self.attendees.len())
             .into_par_iter()
@@ -337,10 +339,17 @@ impl Input {
         sum_impact
     }
 
+    #[cfg(not(target_arch = "wasm32"))]
     pub fn score_fast(&self, placements: &Vec<Point>) -> Result<f64> {
         let ans = (0..self.attendees.len())
-            // .into_par_iter()
             .into_par_iter()
+            .map(|attendee_id| self.score_attendee_fast(attendee_id, placements))
+            .sum();
+        Ok(ans)
+    }
+    #[cfg(target_arch = "wasm32")]
+    pub fn score_fast(&self, placements: &Vec<Point>) -> Result<f64> {
+        let ans = (0..self.attendees.len())
             .map(|attendee_id| self.score_attendee_fast(attendee_id, placements))
             .sum();
         Ok(ans)
