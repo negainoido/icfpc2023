@@ -98,11 +98,19 @@ st.dataframe(
 )
 
 ms = data.get("musicians")
-st.plotly_chart(
-    px.histogram(ms, title="musicians").update_layout(
-        xaxis_title="楽器種別", yaxis_title="度数"
-    )
-)
+
+
+def histogram(ms):
+    from collections import defaultdict
+
+    hist = defaultdict(int)
+    for i in ms:
+        hist[i] += 1
+    hist = sorted(list(hist.items()))
+    return pandas.DataFrame([{"楽器": x, "度数": y} for x, y in hist])
+
+
+st.bar_chart(histogram(ms), x="楽器", y="度数")
 
 st.write("### problem JSON spec")
 st.json(data, expanded=False)
