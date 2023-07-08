@@ -14,7 +14,7 @@ secrets = json.loads(os.environ.get("SECRET", ""))
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
-    allow_origines=[
+    allow_origins=[
         "http://icfpc2023.negainoido.com",
         "https://icfpc2023.negainoido.com",
         "http://localhost",
