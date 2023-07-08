@@ -15,7 +15,7 @@ jobs:
     permissions:
       contents: read
       checks: write
-    runs-on: [self-hosted, linux, x64]
+    runs-on: [self-hosted, linux, x64, batch]
     defaults:
       run:
         working-directory: ./solver
