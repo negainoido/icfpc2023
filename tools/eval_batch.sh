@@ -11,6 +11,7 @@ BIN="./solver/target/release"
 SOLVER=${1:?is not set}
 SHA=${2:-""}
 PNUM=${PNUM:-4}
+DRY_RUN=${DRY_RUN:-""}
 
 mkdir -p output
 
@@ -26,18 +27,20 @@ function run_and_eval() {
     local submission="${output/\.json/.submission.json}"
     $BIN/$SOLVER --input $input --output $output
     $BIN/evaluator --input $input --solution $output | tee $score
-    curl -X POST -F file=@"${output}" \
-        "http://localhost:8080/api/solutions/submit?id=${problem_id}&solver=${SOLVER}%28${SHA:0:5}%29" \
-        | tee $submission
-    echo
-    echo submitted
+    if [[ "$DRY_RUN" == "false" ]]; then
+        curl -X POST -F file=@"${output}" \
+            "http://localhost:8080/api/solutions/submit?id=${problem_id}&solver=${SOLVER}%28${SHA:0:5}%29" \
+            | tee $submission
+        echo
+        echo submitted
+    fi
 }
 
 export -f run_and_eval 
 export BIN SOLVER SHA
 
 error=0
-(find problems -name '*.json' | xargs -P $PNUM -L 1 -I {} bash -c 'run_and_eval {}') \
+(find problems -name '*.json' | sort -V | head -n 90 | xargs -P $PNUM -L 1 -I {} bash -c 'run_and_eval {}') \
   || error=1
 cd output
 ../tools/summarize_result.sh
