@@ -8,7 +8,7 @@
       paths:
         - 'solver/**'
   jobs:
-    deploy:
+    build:
       runs-on: ubuntu-22.04
       defaults:
         run:
@@ -18,3 +18,27 @@
         - uses: dtolnay/rust-toolchain@stable
         - uses: Swatinem/rust-cache@v2
         - run: cargo test
+    build-wasm:
+      runs-on: ubuntu-22.04
+      defaults:
+        run:
+          working-directory: ./solver
+      env:
+        CARGO_UNSTABLE_SPARSE_REGISTRY: true
+        CARGO_REGISTRIES_CRATES_IO_PROTOCOL: "sparse"
+      steps:
+        - uses: actions/checkout@v3
+        - uses: dtolnay/rust-toolchain@master
+          with:
+            toolchain: nightly-2022-12-12
+            target: wasm32-unknown-unknown
+            components: rust-src,cargo
+        - uses: Swatinem/rust-cache@v2
+          with:
+            prefix-key: "wasm-"
+        - run: |
+            rustup override set nightly-2022-12-12
+            rustup component add rust-src --toolchain nightly-2022-12-12
+            cargo install wasm-pack
+
+        - run: make wasm
