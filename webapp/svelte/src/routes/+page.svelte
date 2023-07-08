@@ -1,13 +1,38 @@
 <script>
     import { onMount } from 'svelte';
+    import { writable } from "svelte/store";
 
     let wasm;
     let problem_id = 1;
-    let problem = null;
+    let problem = writable(null);
     let solution_id = 1;
-    let solution = null;
+    let solution = writable(null);
     let records = [];
     let filteredRecords = [];
+
+    let state = writable({
+       problem: null,
+       solution: null,
+    });
+
+    state.subscribe((value) => {
+        if (value.problem && value.solution && wasm) {
+            console.log(value.problem, value.solution);
+            let score = wasm.calc_score(
+                value.problem.room_width,
+                value.problem.room_height,
+                value.problem.stage_width,
+                value.problem.stage_height,
+                value.problem.stage_bottom_left,
+                value.problem.musicians,
+                value.problem.attendees,
+                value.solution.placements,
+            );
+            console.log(score);
+        } else {
+            console.log('not ready');
+        }
+    });
 
     let colorful = true;
     let colors = [
@@ -75,6 +100,12 @@
             .then(data => data.json())
             .then(data => {
                 problem = data;
+                state.update((prev) => {
+                    return {
+                        ...prev,
+                        problem: data,
+                    };
+                });
             });
     }
 
@@ -89,7 +120,14 @@
                     return;
                 }
                 let contents = response['contents'];
-                solution = JSON.parse(contents);
+                let data = JSON.parse(contents);
+                solution = data;
+                state.update((prev) => {
+                    return {
+                        ...prev,
+                        solution: data,
+                    };
+                });
                 draw();
             });
     }
@@ -135,8 +173,8 @@
         let offsetx = minx - padding;
         let offsety = miny - padding;
         let scale = Math.min(width / (maxx - minx + 2 * padding), height / (maxy - miny + 2 * padding));
-        console.log(minx,miny,maxx,maxy);
-        console.log(scale);
+        //console.log(minx,miny,maxx,maxy);
+        //console.log(scale);
 
         canvas.clearRect(0, 0, width, height);
         canvas.strokeStyle = '#000';
