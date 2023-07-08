@@ -17,6 +17,11 @@ path = "src/bin/evaluator.rs"
 name = "random"
 path = "src/bin/random.rs"
 
+[[bin]]
+name = "sgd"
+path = "src/bin/sgd.rs"
+
+
 [dependencies]
 clap = { version = "4.3.10", features = ["derive"] }
 rand = "0.8.5"
