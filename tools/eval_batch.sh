@@ -34,6 +34,6 @@ function run_and_eval() {
 }
 
 export -f run_and_eval 
-export BIN SOLVER
+export BIN SOLVER SHA
 
 find problems -name '*.json' | xargs -P $PNUM -L 1 -I {} bash -c 'run_and_eval {}'
