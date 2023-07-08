@@ -40,8 +40,6 @@ class API:
 
 
 api = API()
-if st.button(":arrows_counterclockwise: refresh"):
-    st.experimental_rerun()
 
 rows = api.show()
 df = pandas.DataFrame(
@@ -57,19 +55,23 @@ df = pandas.DataFrame(
     ],
 )
 
-st.write("## Submission")
-if st.checkbox("add filter", value=True):
-    filter_problem_id = int(
-        st.number_input(
-            "problem_id",
-            key="filter_problem_id",
-            value=1,
-            min_value=1,
-            max_value=NUM_PROBLEM,
-        )
-    )
-    df = df[df["problem_id"] == filter_problem_id]
+st.write("## Submissions")
+st.write("### Summary")
+df_summary = df.dropna(subset=["score"])
+df_summary = df_summary.loc[df_summary.groupby("problem_id")["score"].idxmax()]
+st.dataframe(df_summary, hide_index=True)
 
+st.write("### by problem")
+filter_problem_id = int(
+    st.number_input(
+        "problem_id",
+        key="filter_problem_id",
+        value=1,
+        min_value=1,
+        max_value=NUM_PROBLEM,
+    )
+)
+df = df[df["problem_id"] == filter_problem_id]
 st.write(f"{len(df)} records")
 score_min = min(0, float(df["score"].min() or 0))
 score_max = max(1000, float(df["score"].max() or 1000) * 1.1)
