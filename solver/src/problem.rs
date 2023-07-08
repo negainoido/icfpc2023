@@ -31,7 +31,7 @@ impl Segment {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Attendee {
     pub x: f64,
     pub y: f64,
@@ -63,7 +63,13 @@ impl AngleInfo {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+pub struct AttendeeScoreDetail {
+    pub attendee_id: usize,
+    pub matched_musician_ids: Vec<usize>,
+    pub score: f64,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Input {
     pub room_width: f64,
     pub room_height: f64,
@@ -195,7 +201,11 @@ impl Input {
         Ok(ans)
     }
 
-    fn score_attendee_fast(&self, attendee_id: usize, placements: &Vec<Point>) -> f64 {
+    pub fn score_attendee_fast(
+        &self,
+        attendee_id: usize,
+        placements: &Vec<Point>,
+    ) -> AttendeeScoreDetail {
         let mut sum_impact = 0.0;
         // Compute nearest musician
         let mut nearest_musician_id = 0;
@@ -317,20 +327,26 @@ impl Input {
             }
         }
 
+        let mut matched_musician_ids = vec![];
         for i in 0..angles.len() - 1 {
             if !is_blocked[i] {
                 let musician_id = angles[i].musician_id;
+                matched_musician_ids.push(musician_id);
                 sum_impact += self.raw_impact(attendee_id, musician_id, &placements[musician_id])
             }
         }
-        sum_impact
+        AttendeeScoreDetail {
+            score: sum_impact,
+            attendee_id,
+            matched_musician_ids,
+        }
     }
 
     pub fn score_fast(&self, placements: &Vec<Point>) -> Result<f64> {
         let ans = (0..self.attendees.len())
             // .into_par_iter()
             .into_par_iter()
-            .map(|attendee_id| self.score_attendee_fast(attendee_id, placements))
+            .map(|attendee_id| self.score_attendee_fast(attendee_id, placements).score)
             .sum();
         Ok(ans)
     }

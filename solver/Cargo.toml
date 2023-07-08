@@ -21,6 +21,11 @@ path = "src/bin/random.rs"
 name = "random2"
 path = "src/bin/random2.rs"
 
+
+[[bin]]
+name = "random_exact"
+path = "src/bin/random_exact.rs"
+
 [dependencies]
 clap = { version = "4.3.10", features = ["derive"] }
 rand = "0.8.5"
