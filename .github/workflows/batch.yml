@@ -29,6 +29,7 @@ jobs:
           PNUM: 4
         run: bash ../tools/eval_batch.sh ${{ inputs.solver }} ${{ github.sha }}
       - uses: actions/upload-artifact@v3
+        if: always()
         with:
           name: submissions
           path: ${{ github.workspace }}/output
