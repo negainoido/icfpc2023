@@ -57,10 +57,11 @@ pub struct Input {
 
 impl Input {
     fn in_stage(&self, p: &Point) -> bool {
-        p.x() >= self.stage_bottom_left.x()
-            && p.x() <= self.stage_bottom_left.x() + self.stage_width
-            && p.y() >= self.stage_bottom_left.y()
-            && p.y() <= self.stage_bottom_left.y() + self.stage_height
+      const MUSICIAN_CLOSE_DIST: f64 = 10.0;
+        p.x() >= self.stage_bottom_left.x()+MUSICIAN_CLOSE_DIST
+            && p.x() <= self.stage_bottom_left.x() + self.stage_width-MUSICIAN_CLOSE_DIST
+            && p.y() >= self.stage_bottom_left.y()+MUSICIAN_CLOSE_DIST
+            && p.y() <= self.stage_bottom_left.y() + self.stage_height-MUSICIAN_CLOSE_DIST
     }
 
     pub fn is_valid_placements(&self, placements: &Vec<Point>) -> Result<()> {

@@ -3,7 +3,6 @@ use std::ops::Mul;
 use clap::Parser;
 use geo::{EuclideanDistance, Point};
 use rand::{seq::SliceRandom, Rng};
-use rand_pcg::Pcg64Mcg;
 
 use solver::problem::*;
 
@@ -53,7 +52,7 @@ fn main() {
         }
     }
 
-    let mut rate = 0.1;
+    let rate = 0.1;
     for i in 0..args.iteration {
         permutation.shuffle(&mut rng);
         for (i, k) in &permutation {
