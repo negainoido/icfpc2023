@@ -33,7 +33,7 @@ jobs:
           PNUM: 4
         run: |
           bash ../tools/eval_batch.sh ${{ inputs.solver }} ${{ github.sha }}
-          echo report=$(cat output/summary.json) >> ${GITHUB_OUTPUT}
+          echo report=$(cat ../output/summary.json) >> ${GITHUB_OUTPUT}
       - uses: LouisBrunner/checks-action@v1.6.1
         if: always()
         with:
