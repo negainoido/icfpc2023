@@ -138,41 +138,34 @@
         console.log(minx,miny,maxx,maxy);
         console.log(scale);
 
-        function rescalex(x) {
-            return offsetx + x * scale;
-        }
-        function rescaley(y) {
-            return offsety + y * scale;
-        }
-
         canvas.clearRect(0, 0, width, height);
         canvas.strokeStyle = '#000';
         canvas.fillStyle = '#fff';
         canvas.fillRect(
-            rescalex(0),
-            rescaley(0),
-            rescalex(problem.room_width),
-            rescaley(problem.room_height)
+            offsetx,
+            offsety,
+            scale * problem.room_width,
+            scale * problem.room_height
         );
         canvas.strokeRect(
-            rescalex(0),
-            rescaley(0),
-            rescalex(problem.room_width),
-            rescaley(problem.room_height)
+            offsetx,
+            offsety,
+            scale * problem.room_width,
+            scale * problem.room_height
         );
         canvas.fillStyle = '#999';
         canvas.fillRect(
-            rescalex(problem.stage_bottom_left[0]),
-            rescaley(problem.stage_bottom_left[1]),
-            rescalex(problem.stage_width),
-            rescaley(problem.stage_height)
+            offsetx + scale * problem.stage_bottom_left[0],
+            offsety + scale * problem.stage_bottom_left[1],
+            scale * problem.stage_width,
+            scale * problem.stage_height
         );
         canvas.strokeStyle = '#a11';
         for (let a of problem.attendees) {
             canvas.beginPath();
             canvas.arc(
-                rescalex(a.x),
-                rescaley(a.y),
+                offsetx + scale * a.x,
+                offsety + scale * a.y,
                 1.2, 0, 7, false
             )
             canvas.stroke();
@@ -186,8 +179,8 @@
             }
             canvas.beginPath();
             canvas.arc(
-                rescalex(m.x),
-                rescaley(m.y),
+                offsetx + scale * m.x,
+                offsety + scale * m.y,
                 1.6, 0, 7, false
             );
             canvas.fill();
