@@ -103,9 +103,10 @@ impl Input {
         const MUSICIAN_CLOSE_DIST: f64 = 10.0;
         for i in 0..self.musicians.len() {
             let pos = placements[i];
-            if !((MUSICIAN_CLOSE_DIST < pos.x() && pos.x() < self.room_width - MUSICIAN_CLOSE_DIST)
-                && (MUSICIAN_CLOSE_DIST < pos.y()
-                    && pos.y() < self.room_height - MUSICIAN_CLOSE_DIST))
+            if !((MUSICIAN_CLOSE_DIST <= pos.x()
+                && pos.x() <= self.room_width - MUSICIAN_CLOSE_DIST)
+                && (MUSICIAN_CLOSE_DIST <= pos.y()
+                    && pos.y() <= self.room_height - MUSICIAN_CLOSE_DIST))
             {
                 bail!(
                     "musician {} is too close to room walls: {:?}",
@@ -119,7 +120,7 @@ impl Input {
         for i in 0..(self.musicians.len() - 1) {
             for j in (i + 1)..self.musicians.len() {
                 let dist = placements[i].euclidean_distance(&placements[j]);
-                if dist <= MUSICIAN_CLOSE_DIST {
+                if dist < MUSICIAN_CLOSE_DIST {
                     bail!(
                         "musicians {} and {} are too close: {:?} {:?}: dist={dist}",
                         i,
@@ -343,6 +344,7 @@ pub struct Solution {
 impl Solution {
     pub fn score(&self, input: &Input) -> Result<f64> {
         // input.score(&self.placements)
+        input.is_valid_placements(&self.placements)?;
         input.score_fast(&self.placements)
     }
 }
