@@ -283,6 +283,12 @@ def get_hello():
     return {"message": "Hello, World!"}
 
 
+@app.get("/api/problem")
+def get_problem(problem_id: int):
+    with open(f"./resource/problems/problem-{problem_id}.json", "rt") as f:
+        return json.load(f)
+
+
 @app.get("/api/solutions/show")
 def get_scores_show():
     return scores.show()
