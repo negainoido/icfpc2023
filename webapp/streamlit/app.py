@@ -6,6 +6,8 @@ import requests
 import streamlit as st
 from streamlit.runtime.uploaded_file_manager import UploadedFile
 
+NUM_PROBLEM = 55
+
 
 class API:
     def __init__(self):
@@ -42,14 +44,35 @@ if st.button(":arrows_counterclockwise: refresh"):
     st.experimental_rerun()
 
 rows = api.show()
+df = pandas.DataFrame(
+    rows,
+    columns=[
+        "id",
+        "problem_id",
+        "submittion_id",
+        "solver",
+        "score",
+        "timestamp",
+        "status",
+    ],
+)
 
 st.write("## Submission")
-st.write(f"{len(rows)} records")
+if st.checkbox("add filter"):
+    filter_problem_id = int(
+        st.number_input(
+            "problem_id",
+            key="filter_problem_id",
+            value=1,
+            min_value=1,
+            max_value=NUM_PROBLEM,
+        )
+    )
+    df = df[df["problem_id"] == filter_problem_id]
+
+st.write(f"{len(df)} records")
 st.dataframe(
-    pandas.DataFrame(
-        rows,
-        columns=["id", "problem_id", "submittion_id", "solver", "status", "score", "timestamp"],
-    ),
+    df,
     hide_index=True,
     column_config={
         "score": st.column_config.ProgressColumn(
@@ -63,7 +86,9 @@ if st.button("update score"):
     st.json(api.update_score())
 
 st.write("## Submit new file")
-problem_id = int(st.number_input("problem_id", value=1, min_value=1, max_value=45))
+problem_id = int(
+    st.number_input("problem_id", value=1, min_value=1, max_value=NUM_PROBLEM)
+)
 solver = st.text_input("solver name", value="default")
 jsonfile = st.file_uploader("JSON File")
 if problem_id and solver and jsonfile:

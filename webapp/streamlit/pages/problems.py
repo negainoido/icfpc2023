@@ -1,12 +1,13 @@
 import gc
 import json
-from collections import defaultdict
 
 import plotly.express as px
 import requests
 from PIL import Image, ImageDraw
 
 import streamlit as st
+
+NUM_PROBLEM = 55
 
 
 class Problem:
@@ -65,7 +66,9 @@ class Figure:
         return room
 
 
-problem_id = int(st.number_input("problem_id", value=1, min_value=1, max_value=45))
+problem_id = int(
+    st.number_input("problem_id", value=1, min_value=1, max_value=NUM_PROBLEM)
+)
 data = Problem.get_from_file(problem_id)
 
 st.image(Figure.draw(data))
