@@ -5,8 +5,11 @@ mod wasm_util;
 use geo::Point;
 use problem::*;
 
+#[cfg(not(target_arch = "wasm32"))]
 use rand::prelude::SliceRandom;
+#[cfg(not(target_arch = "wasm32"))]
 use rand::Rng;
+#[cfg(not(target_arch = "wasm32"))]
 use rand_pcg::Pcg64Mcg;
 
 #[cfg(target_arch = "wasm32")]
@@ -71,6 +74,7 @@ pub fn add(left: usize, right: usize) -> usize {
     left + right
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 pub struct PlacementGenerator {
     pub input: Input,
     pub cartesian_coordinate_candidates: Vec<Point>,
@@ -78,6 +82,7 @@ pub struct PlacementGenerator {
     rand_gen: Pcg64Mcg,
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 impl PlacementGenerator {
     pub fn new(input: Input, rand_seed: u128) -> Self {
         let rand_gen = Pcg64Mcg::new(rand_seed);
