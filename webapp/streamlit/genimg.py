@@ -44,10 +44,16 @@ class Figure:
             x = a.get("x")
             y = a.get("y")
             draw.ellipse(((x - w, y - w), (x + w, y + w)), fill="#ff0000")
+        # pillars
+        for p in data.get("pillars"):
+            x, y = p["center"]
+            r = p["radius"]
+            draw.ellipse(((x - r, y - r), (x + r, y + r)), fill="#eee", outline="#333")
         return room
 
 
-for i in range(1, 1 + NUM_PROBLEM):
+for i in reversed(range(1, 1 + NUM_PROBLEM)):
+    print(i)
     data = Problem.get_from_file(i)
     img = Figure.draw(data)
     img.save(f"./resource/img/{i}.png")
