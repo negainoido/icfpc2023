@@ -51,9 +51,9 @@ df = pandas.DataFrame(
         "problem_id",
         "submittion_id",
         "solver",
+        "status",
         "score",
         "timestamp",
-        "status",
     ],
 )
 
@@ -71,6 +71,7 @@ if st.checkbox("add filter"):
     df = df[df["problem_id"] == filter_problem_id]
 
 st.write(f"{len(df)} records")
+score_max = df["score"].max() * 1.1
 st.dataframe(
     df,
     hide_index=True,
@@ -79,6 +80,7 @@ st.dataframe(
             "score",
             format="%d",
             min_value=0,
+            max_value=score_max,
         ),
     },
 )
