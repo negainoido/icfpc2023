@@ -9,10 +9,12 @@
     let solution_id = 1;
     let records = [];
     let filteredRecords = [];
+    let openjson = false;
 
     let state = writable({
         problem: null,
         solution: null,
+        solution_json: "",
         colorful: true,
         ruler: false,
         zoom: 1.0,
@@ -192,6 +194,7 @@
                     return {
                         ...prev,
                         solution: solution,
+                        solution_json: JSON.stringify(solution, null, 2),
                     };
                 });
             });
@@ -493,6 +496,14 @@
         await wasm.default();
     });
 
+    function loadSolutionJSON() {
+        console.log('load', $state.solution_json);
+        state.update((prev) => ({
+            ...prev,
+            solution: JSON.parse(prev.solution_json),
+        }));
+    }
+
     function downloadSolution() {
         const solution = get(state).solution;
         if (!solution) {
@@ -562,6 +573,23 @@
             </table>
         {:else}
             No records!!
+        {/if}
+    </div>
+
+    <div class="container">
+        <label>
+            <input type="checkbox" bind:checked={openjson} />
+            Solution JSON
+        </label>
+        {#if openjson}
+            <div class="container">
+                <textarea
+                    style="width: 100%; height: 20vh"
+                    class="textarea is-primary"
+                    bind:value={$state.solution_json}
+                />
+                <button class="button" on:click={loadSolutionJSON}>show solution</button>
+            </div>
         {/if}
     </div>
 
