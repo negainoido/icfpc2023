@@ -4,6 +4,13 @@
 <div>
     <b>変更履歴</b>
     <dl>
+        <dt>07/09 16:28</dt>
+        <dd>トップページ
+            https://icfpc2023.negainoido.com
+            はダミーになりました.
+            https://icfpc2023.negainoido.com/1
+            のような問題ごとのページが生えてます
+        </dd>
         <dt>07/09 15:36</dt>
         <dd>URL の末尾が <code>/[problem_id]</code> になってます</dd>
         <dt>07/09 13:21</dt>
