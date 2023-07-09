@@ -74,7 +74,9 @@ def add_link(df: pandas.DataFrame):
 
 add_link(df_summary)
 
+df_nobishiro = pandas.read_csv("./static/nobishiro.csv")
 df_summary["score_ratio"] = df_summary["score"].astype(int) / score_sum * 100
+df_summary = pandas.merge(df_summary, df_nobishiro, on="problem_id")
 
 column_config = {
     "thumbnail": st.column_config.ImageColumn("thumbnail"),
@@ -83,6 +85,8 @@ column_config = {
 }
 st.dataframe(df_summary, column_config=column_config, hide_index=True)
 st.info(f"Sum score = {score_sum:,}")
+
+st.dataframe(df_nobishiro, column_config=column_config, hide_index=True)
 
 st.write("### by problem")
 filter_problem_id = int(
