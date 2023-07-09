@@ -1,14 +1,9 @@
-import os
-from io import StringIO
-
 import pandas
-import requests
 
 import streamlit as st
 import streamlit.components.v1 as components
 from api import API
 from streamlit.logger import get_logger
-from streamlit.runtime.uploaded_file_manager import UploadedFile
 
 st.set_page_config(layout="wide")
 
@@ -17,6 +12,7 @@ logger = get_logger(__name__)
 
 
 api = API()
+query_params = st.experimental_get_query_params()
 
 rows = api.show()
 df = pandas.DataFrame(
@@ -66,11 +62,12 @@ filter_problem_id = int(
     st.number_input(
         "problem_id",
         key="filter_problem_id",
-        value=1,
+        value=int(query_params.get("id", [1])[0]) or 1,
         min_value=1,
         max_value=NUM_PROBLEM,
     )
 )
+st.experimental_set_query_params(id=filter_problem_id)
 df = df[df["problem_id"] == filter_problem_id]
 st.write(f"{len(df)} records")
 score_min = min(0, float(df["score"].min() or 0))

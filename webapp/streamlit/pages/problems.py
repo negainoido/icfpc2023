@@ -9,6 +9,7 @@ from PIL import Image, ImageDraw
 import streamlit as st
 
 NUM_PROBLEM = 90
+query_params = st.experimental_get_query_params()
 
 
 class Problem:
@@ -68,8 +69,14 @@ class Figure:
 
 
 problem_id = int(
-    st.number_input("problem_id", value=1, min_value=1, max_value=NUM_PROBLEM)
+    st.number_input(
+        "problem_id",
+        value=int(query_params.get("id", [1])[0]) or 1,
+        min_value=1,
+        max_value=NUM_PROBLEM,
+    )
 )
+st.experimental_set_query_params(id=problem_id)
 data = Problem.get_from_file(problem_id)
 
 st.image(f"resource/img/{problem_id}.png")
