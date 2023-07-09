@@ -15,7 +15,7 @@ query_params = st.experimental_get_query_params()
 class Problem:
     @classmethod
     def get_from_file(cls, problem_id: int):
-        with open(f"./resource/problems/problem-{problem_id}.json", "rt") as f:
+        with open(f"./static/problems/problem-{problem_id}.json", "rt") as f:
             data = json.load(f)
             return data
 
@@ -79,7 +79,7 @@ problem_id = int(
 st.experimental_set_query_params(id=problem_id)
 data = Problem.get_from_file(problem_id)
 
-st.image(f"resource/img/{problem_id}.png")
+st.image(f"static/img/{problem_id}.png", width=640)
 # st.image(Figure.draw(data))
 st.json(
     {
@@ -104,7 +104,7 @@ st.dataframe(
     # },
 )
 st.write("##### tastes")
-st.image(f"resource/img/tastes-{problem_id}.png")
+st.image(f"static/img/tastes-{problem_id}.png")
 
 ms = data.get("musicians")
 
