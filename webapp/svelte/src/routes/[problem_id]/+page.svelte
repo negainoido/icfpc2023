@@ -590,7 +590,8 @@
 <section class="section">
     <div class="container">
         <h1 class="title" id="countdown">⏰</h1>
-        <a rel="external" data-sveltekit-reload href="https://icfpc2023.negainoido.com/streamlit/">streamlit</a>
+        <a rel="external" data-sveltekit-reload href="https://icfpc2023.negainoido.com/streamlit/?id={problem_id}">
+            🔗 streamlit/?id={problem_id}</a>
     </div>
 </section>
 
