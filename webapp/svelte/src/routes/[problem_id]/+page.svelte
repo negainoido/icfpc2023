@@ -47,10 +47,23 @@
                 is_full
             );
             console.log('wasm success:', score);
+            state.update((prev) => {
+                return {
+                    ...prev,
+                    log: [`score=${score}`],
+                };
+            });
+
         } catch (err) {
+            score = `failed`
+            state.update((prev) => {
+                return {
+                    ...prev,
+                    log: [`failed: ${err}`],
+                };
+            });
             console.warn(err);
-            wasm = null;
-            score = 'failed';
+            // wasm = null;
         }
     }
 
@@ -315,7 +328,9 @@
         if (log) {
             canvas.fillStyle = '#500';
             canvas.font = '24px monospace';
-            canvas.fillText(log.join('\n'), 12, 29);
+            for (let i = 0; i < log.length; ++i) {
+                canvas.fillText(log[i], 12, 29 * (i+1));
+            }
         }
     }
 
@@ -497,7 +512,7 @@
     });
 
     function loadSolutionJSON() {
-        console.log('load', $state.solution_json);
+        score = 0;
         state.update((prev) => ({
             ...prev,
             solution: JSON.parse(prev.solution_json),
@@ -577,32 +592,32 @@
     </div>
 
     <div class="container">
-        <label>
-            <input type="checkbox" bind:checked={openjson} />
-            Solution JSON
-        </label>
-        {#if openjson}
-            <div class="container">
-                <textarea
-                    style="width: 100%; height: 20vh"
-                    class="textarea is-primary"
-                    bind:value={$state.solution_json}
-                />
-                <button class="button" on:click={loadSolutionJSON}>show solution</button>
-            </div>
-        {/if}
-    </div>
-
-    <div class="container">
-        <label>
-            <input type="checkbox" bind:checked={$state.colorful} />
-            楽器で色を変える (C)
-        </label>
-        <label>
-            <input type="checkbox" bind:checked={$state.ruler} />
-            罫線 (幅=10) (R)
-        </label>
-        <br />
+        <div class="box">
+            <label>
+                <input type="checkbox" bind:checked={openjson} />
+                Solution JSON
+            </label>
+            {#if openjson}
+                <div class="container">
+                    <textarea
+                        style="width: 100%; height: 20vh"
+                        class="textarea is-primary"
+                        bind:value={$state.solution_json}
+                    />
+                    <button class="button" on:click={loadSolutionJSON}>show solution</button>
+                </div>
+            {/if}
+        </div>
+        <div class="box">
+            <label>
+                <input type="checkbox" bind:checked={$state.colorful} />
+                楽器で色を変える (C)
+            </label>
+            <label>
+                <input type="checkbox" bind:checked={$state.ruler} />
+                罫線 (幅=10) (R)
+            </label>
+            <br />
         <!--
         <button on:click={fullScreen}>全画面表示</button>
         <br />
@@ -632,16 +647,17 @@
             {/if}
         </label>
         -->
-        <nav class="breadcrumb is-centered has-bullet-separator" aria-label="breadcrumbs">
-            <ul>
-                <li class="is-active"><a>キー割当</a></li>
-                <li class="is-active"><a>WASD: 移動</a></li>
-                <li class="is-active"><a>E/Q: 拡大/縮小</a></li>
-                <li class="is-active"><a>C: 楽器の色表示</a></li>
-                <li class="is-active"><a>R: 罫線</a></li>
-                <li class="is-active"><a>0: 表示リセット</a></li>
-            </ul>
-        </nav>
+            <nav class="breadcrumb is-centered has-bullet-separator" aria-label="breadcrumbs">
+                <ul>
+                    <li class="is-active"><a>キー割当</a></li>
+                    <li class="is-active"><a>WASD: 移動</a></li>
+                    <li class="is-active"><a>E/Q: 拡大/縮小</a></li>
+                    <li class="is-active"><a>C: 楽器の色表示</a></li>
+                    <li class="is-active"><a>R: 罫線</a></li>
+                    <li class="is-active"><a>0: 表示リセット</a></li>
+                </ul>
+            </nav>
+        </div>
         <div>
             <canvas id="c" width="1600" height="1200" on:click={clickCanvas} />
         </div>
@@ -649,6 +665,13 @@
             <button disabled={$state.solution === null} on:click={downloadSolution}
                 >download solution</button
             >
+        </div>
+        <div class=box>
+            <textarea
+                style="width: 100%; height: 20vh"
+                class="textarea is-primary"
+                bind:value={$state.log}
+            />
         </div>
     </div>
 </section>
