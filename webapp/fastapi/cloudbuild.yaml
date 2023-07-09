@@ -1,16 +1,12 @@
 steps:
   # Build the container image
-  - name: 'gcr.io/kaniko-project/executor:latest'
+  - name: 'gcr.io/kaniko-project/executor:slim'
     args:
       - --destination=gcr.io/negainoido-icfpc2023/fastapi:$COMMIT_SHA
       - --cache=true
       - --cache-ttl=24h
       - --context=dir://webapp/fastapi/
-  # Push the container image to Container Registry
-  - name: 'gcr.io/cloud-builders/docker'
-    args: ['pull', 'gcr.io/negainoido-icfpc2023/fastapi:$COMMIT_SHA']
-  # Deploy container image to Cloud Run
-  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:alpine'
     entrypoint: gcloud
     args:
       - 'run'
@@ -20,5 +16,3 @@ steps:
       - 'gcr.io/negainoido-icfpc2023/fastapi:$COMMIT_SHA'
       - '--region'
       - 'asia-northeast1'
-images:
-  - 'gcr.io/negainoido-icfpc2023/fastapi:$COMMIT_SHA'
