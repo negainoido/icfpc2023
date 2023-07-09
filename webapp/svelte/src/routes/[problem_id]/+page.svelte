@@ -6,7 +6,6 @@
 
     let wasm;
     let problem_id = data.problem_id;
-    let solution_id = 1;
     let records = [];
     let filteredRecords = [];
     let openjson = false;
@@ -14,6 +13,7 @@
     let state = writable({
         problem: null,
         solution: null,
+        solution_id: -1,
         solution_json: "",
         colorful: true,
         ruler: false,
@@ -61,7 +61,7 @@
             state.update((prev) => {
                 return {
                     ...prev,
-                    log: [`score=${score}`],
+                    log: prev.log.concat('wasm done'),
                 };
             });
 
@@ -70,7 +70,7 @@
             state.update((prev) => {
                 return {
                     ...prev,
-                    log: [`failed: ${err}`],
+                    log: prev.log.concat(`wasm failed: ${err}`),
                 };
             });
             console.warn(err);
@@ -189,7 +189,7 @@
             .then((data) => data.json())
             .then((problem) => {
                 let [zoom, plusx, plusy] = baseDisplayParams(problem);
-                score = 0;
+                score = null;
                 state.update((prev) => {
                     return {
                         ...prev,
@@ -215,10 +215,11 @@
                 }
                 let contents = response['contents'];
                 let solution = JSON.parse(contents);
-                score = 0;
+                score = null;
                 state.update((prev) => {
                     return {
                         ...prev,
+                        solution_id: solution_id,
                         solution: solution,
                         solution_json: JSON.stringify(solution, null, 2),
                         target_musician_id: null,
@@ -342,8 +343,9 @@
         if (log) {
             canvas.fillStyle = '#500';
             canvas.font = '24px monospace';
-            for (let i = 0; i < log.length; ++i) {
-                canvas.fillText(log[i], 12, 29 * (i+1));
+            let lines = [`problem: ${problem_id}`, `solution: ${$state.solution_id}`, `score: ${score}`].concat(log);
+            for (let i = 0; i < lines.length; ++i) {
+                canvas.fillText(lines[i], 12, 29 * (i+1));
             }
         }
     }
