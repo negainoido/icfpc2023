@@ -26,6 +26,7 @@
             console.log('skip calc_score')
             return;
         }
+        const is_full = problem_id > 55;
         try {
             // console.log(problem, solution);
             score = wasm.calc_score(
@@ -36,9 +37,10 @@
                 problem.stage_bottom_left,
                 problem.musicians,
                 problem.attendees,
+                problem.pillars,
                 solution.placements,
+                is_full,
             );
-            console.log('wasm success:', score);
         } catch (err) {
             console.warn(err);
             wasm = null;
@@ -63,9 +65,9 @@
             console.log("data not ready; cannot draw");
         }
         if (value.problem && value.solution && wasm) {
-            setTimeout(async () => {
-                await calc_score(wasm, value.problem, value.solution);
-            }, 100);
+            calc_score(wasm, value.problem, value.solution).then(() => {
+                console.log('finish calc_score: ', score);
+            });
         } else {
             console.log('not ready; cannot calc_score');
         }
@@ -134,6 +136,7 @@
             plusx: 0.0,
             plusy: 0.0,
         }));
+        score = null;
         for (let r of records) {
             if (r[1] === problem_id) {
                 filteredRecords.push(r);
@@ -158,6 +161,7 @@
 
     function fetchSolution(solution_id) {
         clear();
+        score = null;
         fetch(`https://icfpc2023.negainoido.com/api/solutions?id=${solution_id}`)
             .then(response => response.json())
             .then(response => {
