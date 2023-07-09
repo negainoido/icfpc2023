@@ -26,6 +26,8 @@ fn generate_first_level_candidates(input: &Input) -> Vec<Point> {
     let y_count = (input.stage_height / 10.0).floor() as usize - 1;
     dbg!(x_count, y_count);
 
+    let candidates = solver::PlacementGenerator::honeycomb_candidates(input);
+
     // Generate first level candidate
     let x_gap = if x_count > 1 {
         (input.stage_width - 20.0) / (x_count - 1) as f64
@@ -40,24 +42,41 @@ fn generate_first_level_candidates(input: &Input) -> Vec<Point> {
 
     // Prefer candidates closer to the stage borders
     let mut layered_candidates = vec![];
-    for i in 0..x_count {
-        for j in 0..y_count {
-            let offset = Point::new(10.0 + i as f64 * x_gap, 10.0 + j as f64 * y_gap);
-            let pos = input.stage_bottom_left + offset;
-            let x_level = i.min(x_count - 1 - i);
-            let y_level = j.min(y_count - 1 - j);
-            let level = x_level.min(y_level);
-            while level + 1 > layered_candidates.len() {
-                layered_candidates.push(vec![]);
-            }
-            layered_candidates[level].push(pos);
+
+    for candidate in &candidates {
+        let x_level = ((candidate.x() - input.stage_bottom_left.x())
+            .min(input.stage_bottom_left.x() + input.stage_width - candidate.x())
+            .floor()
+            / 7.0) as usize;
+        let y_level = ((candidate.y() - input.stage_bottom_left.y())
+            .min(input.stage_bottom_left.y() + input.stage_height - candidate.y())
+            .floor()
+            / 7.0) as usize;
+        let level = x_level.min(y_level);
+        while level + 1 > layered_candidates.len() {
+            layered_candidates.push(vec![]);
         }
+        layered_candidates[level].push(candidate);
     }
 
+    /*     for i in 0..x_count {
+           for j in 0..y_count {
+               let offset = Point::new(10.0 + i as f64 * x_gap, 10.0 + j as f64 * y_gap);
+               let pos = input.stage_bottom_left + offset;
+               let x_level = i.min(x_count - 1 - i);
+               let y_level = j.min(y_count - 1 - j);
+               let level = x_level.min(y_level);
+               while level + 1 > layered_candidates.len() {
+                   layered_candidates.push(vec![]);
+               }
+               layered_candidates[level].push(pos);
+           }
+       }
+    */
     let mut candidates = vec![];
     for level in 0..layered_candidates.len() {
         candidates.extend(layered_candidates[level].clone());
-        if candidates.len() >= input.musicians.len() {
+        if candidates.len() >= input.musicians.len() * 2 {
             break;
         }
     }
