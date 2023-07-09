@@ -64,7 +64,7 @@ fn generate_first_level_candidates(input: &Input) -> Vec<Point> {
     candidates
 }
 
-fn exact_match_candidates(input: &Input, candidates: &Vec<Point>) -> (f64, Vec<Point>) {
+fn exact_match_candidates(input: &Input, candidates: &Vec<Point>) -> (f64, Vec<Point>, Vec<f64>) {
     let mut matrix = Matrix::new(input.musicians.len(), candidates.len(), OrderedFloat(0.0));
     let mut reachable_candidates = vec![];
     for attendee_id in 0..input.attendees.len() {
@@ -92,24 +92,44 @@ fn exact_match_candidates(input: &Input, candidates: &Vec<Point>) -> (f64, Vec<P
             }
         }
     }
+
+    for musician_id in 0..input.musicians.len() {
+        for candidate_id in 0..candidates.len() {
+            let e = matrix[(musician_id, candidate_id)].0;
+            if e < 0.0 {
+                matrix[(musician_id, candidate_id)] = OrderedFloat(0.0);
+            } else {
+                matrix[(musician_id, candidate_id)] *= OrderedFloat(10.0);
+            }
+        }
+    }
+
     let (score, assignments) = kuhn_munkres(&matrix);
     let mut filtered_candidates = vec![];
-    for assignment in assignments {
+    let mut volumes = vec![];
+    for assignment_id in 0..assignments.len() {
+        let assignment = assignments[assignment_id];
         filtered_candidates.push(candidates[assignment].clone());
+        if matrix[(assignment_id, assignment)].0 == 0.0 {
+            volumes.push(0.0);
+        } else {
+            volumes.push(10.0);
+        }
     }
-    (score.0, filtered_candidates)
+
+    (score.0, filtered_candidates, volumes)
 }
 
-fn solve(input: &Input) -> Vec<Point> {
+fn solve(input: &Input) -> (Vec<Point>, Vec<f64>) {
     let first_level_candidates = generate_first_level_candidates(input);
     // 最初はmusicianよりも多い候補地を用いて最適化を行い、その結果に基づき二段階目の最適化に使用する候補地を列挙
-    let (first_level_score, second_level_candidates) =
+    let (first_level_score, second_level_candidates, _) =
         exact_match_candidates(input, &first_level_candidates);
     dbg!(first_level_score);
-    let (second_level_score, best_placements) =
+    let (second_level_score, best_placements, best_volumes) =
         exact_match_candidates(input, &second_level_candidates);
     dbg!(second_level_score);
-    best_placements
+    (best_placements, best_volumes)
 }
 
 fn main() {
@@ -119,16 +139,17 @@ fn main() {
 
     let x_count = (input.stage_width / 10.0).floor() as usize - 1;
     let y_count = (input.stage_height / 10.0).floor() as usize - 1;
-    let best_placements = if x_count * y_count >= input.musicians.len() {
+    let (best_placements, best_volumes) = if x_count * y_count >= input.musicians.len() {
         // Use new strategy!
         solve(&input)
     } else {
         // Give up
         let mut generator = PlacementGenerator::new(&input, args.rand_seed);
-        generator.generate()
+        (generator.generate(), vec![10.0; input.musicians.len()])
     };
     let mut solution: Solution = Default::default();
     solution.placements = best_placements.clone();
+    solution.volumes = Some(best_volumes);
     input.is_valid_placements(&best_placements).unwrap();
     eprintln!("Solver score: {}", solution.score(&input, false).unwrap());
     std::fs::write(args.output, serde_json::to_string(&solution).unwrap()).unwrap();
