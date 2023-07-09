@@ -21,7 +21,6 @@ struct Args {
     rand_seed: u128,
 }
 
-
 fn generate_first_level_candidates(input: &Input) -> Vec<Point> {
     let x_count = (input.stage_width / 10.0).floor() as usize - 1;
     let y_count = (input.stage_height / 10.0).floor() as usize - 1;
@@ -74,7 +73,6 @@ fn exact_match_candidates(input: &Input, candidates: &Vec<Point>) -> Vec<Point> 
         reachable_candidates.push(non_blocked_candidate_ids);
     }
 
-
     for musician_id in 0..input.musicians.len() {
         for attendee_id in 0..input.attendees.len() {
             for &reachable_candidate_id in &reachable_candidates[attendee_id] {
@@ -96,15 +94,12 @@ fn exact_match_candidates(input: &Input, candidates: &Vec<Point>) -> Vec<Point> 
     filtered_candidates
 }
 
-
 fn solve(input: &Input) -> Vec<Point> {
     let first_level_candidates = generate_first_level_candidates(input);
     // 最初はmusicianよりも多い候補地を用いて最適化を行い、その結果に基づき二段階目の最適化に使用する候補地を列挙
     let second_level_candidates = exact_match_candidates(input, &first_level_candidates);
     exact_match_candidates(input, &second_level_candidates)
 }
-
-
 
 fn main() {
     let args = Args::parse();
