@@ -189,9 +189,10 @@
         maxx += padding;
         maxy += padding;
         console.log([width / (maxx - minx), height / (maxy - miny)]);
-        let scale = Math.min(width / (maxx - minx), height / (maxy - miny));
-        console.log( [scale, minx, miny]);
-        return [scale, minx, miny];
+        let zoom = Math.min(width / (maxx - minx), height / (maxy - miny));
+        let plusx = 800 - zoom * (minx + maxx) / 2;
+        let plusy = 600 - zoom * (miny + maxy) / 2;
+        return [zoom, plusx, plusy];
     }
 
     function draw(problem, solution, colorful, zoom, plusx, plusy, ruler) {
