@@ -423,10 +423,12 @@ impl Input {
     pub fn score_attendee_fast(
         &self,
         attendee_id: usize,
-        placements: &Vec<Point>,
+        solution: &Solution,
         impacts: &Vec<f64>,
     ) -> f64 {
         let mut sum_impact = 0.0;
+        let placements = &solution.placements;
+        let volumes = &solution.volumes;
 
         // Musicians同士の衝突のみを考慮
         let non_blocked_placement_ids =
@@ -440,8 +442,12 @@ impl Input {
         );
 
         for placement_id in non_blocked_placement_ids {
+            let volume = match volumes {
+                Some(v) => v[self.musicians[placement_id]],
+                None => 1.0,
+            };
             // placement_id equals musician_id here
-            sum_impact += (impacts[placement_id]
+            sum_impact += (volume * impacts[placement_id]
                 * self.raw_impact(attendee_id, placement_id, &placements[placement_id]))
             .ceil()
         }
@@ -482,27 +488,27 @@ impl Input {
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    pub fn score_fast(&self, placements: &Vec<Point>, full_div: bool) -> Result<f64> {
+    pub fn score_fast(&self, solution: &Solution, full_div: bool) -> Result<f64> {
         let impacts = if full_div {
-            self.calc_playing_together(placements)
+            self.calc_playing_together(&solution.placements)
         } else {
             vec![1.0; self.musicians.len()]
         };
         let ans = (0..self.attendees.len())
             .into_par_iter()
-            .map(|attendee_id| self.score_attendee_fast(attendee_id, placements, &impacts))
+            .map(|attendee_id| self.score_attendee_fast(attendee_id, &solution, &impacts))
             .sum();
         Ok(ans)
     }
     #[cfg(target_arch = "wasm32")]
-    pub fn score_fast(&self, placements: &Vec<Point>, full_div: bool) -> Result<f64> {
+    pub fn score_fast(&self, solution: &Solution, full_div: bool) -> Result<f64> {
         let impacts = if full_div {
-            self.calc_playing_together(placements)
+            self.calc_playing_together(&solution.placements)
         } else {
             vec![1.0; self.musicians.len()]
         };
         let ans = (0..self.attendees.len())
-            .map(|attendee_id| self.score_attendee_fast(attendee_id, placements, &impacts))
+            .map(|attendee_id| self.score_attendee_fast(attendee_id, &solution, &impacts))
             .sum();
         Ok(ans)
     }
@@ -511,13 +517,14 @@ impl Input {
 #[derive(Debug, Serialize, Deserialize, Default, Clone)]
 pub struct Solution {
     pub placements: Vec<Point>,
+    pub volumes: Option<Vec<f64>>,
 }
 
 impl Solution {
     pub fn score(&self, input: &Input, full_div: bool) -> Result<f64> {
         // input.score(&self.placements)
         input.is_valid_placements(&self.placements)?;
-        input.score_fast(&self.placements, full_div)
+        input.score_fast(&self, full_div)
     }
 }
 
