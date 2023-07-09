@@ -276,6 +276,53 @@
         }
     }
 
+    function onKeyDown(e) {
+        console.log(e);
+        console.log(e.key);
+        switch (e.key) {
+            case 'a':
+            case 'h':
+                state.update(prev => ({
+                    ...prev, 
+                    plusx: prev.plusx - 10,
+                }));
+            break;
+            case 'd':
+            case 'l':
+                state.update(prev => ({
+                    ...prev, 
+                    plusx: prev.plusx + 10,
+                }));
+            break;
+            case 'w':
+            case 'k':
+                state.update(prev => ({
+                    ...prev, 
+                    plusy: prev.plusy - 10,
+                }));
+            break;
+            case 's':
+            case 'j':
+                state.update(prev => ({
+                    ...prev, 
+                    plusy: prev.plusy + 10,
+                }));
+            break;
+            case 'q':
+                state.update(prev => ({
+                    ...prev, 
+                    zoom: Math.max(0, prev.zoom - 0.1),
+                }));
+            break;
+            case 'e':
+                state.update(prev => ({
+                    ...prev, 
+                    zoom: prev.zoom + 0.1,
+                }));
+            break;
+        }
+    }
+
     onMount(async () => {
         fetchRecords();
         wasm = await import('solver');
@@ -333,21 +380,35 @@
         <br />
         <label>
             x
-            <input type="range" min="-5000" max="5000" step="1" bind:value={$state.plusx} class="slider" />
-            +{$state.plusx}
+            <input type="range" min="-10000" max="10000" step="10" bind:value={$state.plusx} class="slider" />
+            {#if $state.plusx >= 0}
+                +{$state.plusx}
+            {:else}
+                {$state.plusx}
+            {/if}
         </label>
         <br />
         <label>
             y
-            <input type="range" min="-5000" max="5000" step="1" bind:value={$state.plusy} class="slider" />
-            +{$state.plusy}
+            <input type="range" min="-10000" max="10000" step="10" bind:value={$state.plusy} class="slider" />
+            {#if $state.plusy >= 0}
+                +{$state.plusy}
+            {:else}
+                {$state.plusy}
+            {/if}
         </label>
-        <br />
+        <div>
+            <ul>WASD: 移動</ul>
+            <ul>hjkl: 移動</ul>
+            <ul>E/Q: 拡大/縮小</ul>
+        </div>
     </div>
     <div>
         <canvas id="c" width="1600" height="1200" />
     </div>
 </div>
+
+<svelte:window on:keydown={onKeyDown} />
 
 <style>
     div.section {
