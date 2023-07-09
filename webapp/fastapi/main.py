@@ -139,7 +139,8 @@ class Scores:
         SELECT id, problem_id, submission_id, solver, status, score, ts
         FROM (
           SELECT
-            id, problem_id, submission_id, solver, status, score, ts,
+            id, problem_id, submission_id, solver, status, score,
+            CONVERT_TZ(ts, '+00:00', '+09:00') as ts,
             ROW_NUMBER() OVER(PARTITION BY problem_id ORDER BY score DESC) as rn
           FROM solutions
         ) t
@@ -354,4 +355,8 @@ def update_score():
             print("unknown status:", submission["submission"]["score"])
             error_count += 1
 
-    return {"updated": update_count, "processing": processing_count, "error": error_count}
+    return {
+        "updated": update_count,
+        "processing": processing_count,
+        "error": error_count,
+    }
