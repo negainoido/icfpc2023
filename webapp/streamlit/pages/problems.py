@@ -96,6 +96,8 @@ st.dataframe(
     #     ),
     # },
 )
+st.write("##### tastes")
+st.image(f"resource/img/tastes-{problem_id}.png")
 
 ms = data.get("musicians")
 
