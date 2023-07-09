@@ -127,11 +127,15 @@
         }
         fetch(`https://icfpc2023.negainoido.com/api/problem?problem_id=${problem_id}`)
             .then(data => data.json())
-            .then(data => {
+            .then(problem => {
+                let [zoom, plusx, plusy] = baseDisplayParams(problem);
                 state.update((prev) => {
                     return {
                         ...prev,
-                        problem: data,
+                        problem: problem,
+                        zoom: zoom,
+                        plusx: plusx,
+                        plusy: plusy,
                     };
                 });
             });
@@ -163,9 +167,31 @@
         if (!obj) return;
         let canvas = obj.getContext('2d');
         if (!canvas) return;
+        canvas.clearRect(0, 0, 5000, 5000);
+    }
+
+    function baseDisplayParams(problem) {
         let width = 1600;
         let height = 1200;
-        canvas.clearRect(0, 0, width, height);
+        let minx = problem.stage_bottom_left[0];
+        let miny = problem.stage_bottom_left[1];
+        let maxx = problem.stage_bottom_left[0] + problem.stage_width;
+        let maxy = problem.stage_bottom_left[1] + problem.stage_height;
+        for (let m of problem.attendees) {
+            minx = Math.min(minx, m.x);
+            miny = Math.min(miny, m.y);
+            maxx = Math.max(maxx, m.x);
+            maxy = Math.max(maxy, m.y);
+        }
+        let padding = 10;
+        minx -= padding;
+        miny -= padding;
+        maxx += padding;
+        maxy += padding;
+        console.log([width / (maxx - minx), height / (maxy - miny)]);
+        let scale = Math.min(width / (maxx - minx), height / (maxy - miny));
+        console.log( [scale, minx, miny]);
+        return [scale, minx, miny];
     }
 
     function draw(problem, solution, colorful, zoom, plusx, plusy, ruler) {
@@ -179,53 +205,28 @@
         let width = 1600;
         let height = 1200;
 
-        let minx = 0;
-        let miny = 0;
-        let maxx = -10000;
-        let maxy = -10000;
-        console.log("java", width, height, problem);
-        for (let m of problem.attendees) {
-            minx = Math.min(minx, m.x);
-            miny = Math.min(miny, m.y);
-            maxx = Math.max(maxx, m.x);
-            maxy = Math.max(maxy, m.y);
-        }
-        if (solution) {
-            for (let m of solution.placements) {
-                minx = Math.min(minx, m.x);
-                miny = Math.min(miny, m.y);
-                maxx = Math.max(maxx, m.x);
-                maxy = Math.max(maxy, m.y);
-            }
-        }
-
-        let padding = 10;
-        let offsetx = minx - padding + plusx;
-        let offsety = miny - padding + plusy;
-        let scale = Math.min(width / (maxx - minx + 2 * padding), height / (maxy - miny + 2 * padding));
-
         canvas.clearRect(0, 0, width, height);
         canvas.strokeStyle = '#000';
         canvas.fillStyle = '#fff';
         canvas.fillRect(
-            offsetx,
-            offsety,
-            zoom * scale * problem.room_width,
-            zoom * scale * problem.room_height
+            plusx,
+            plusy,
+            zoom * problem.room_width,
+            zoom * problem.room_height
         );
         canvas.strokeRect(
-            offsetx,
-            offsety,
-            zoom * scale * problem.room_width,
-            zoom * scale * problem.room_height
+            plusx,
+            plusy,
+            zoom * problem.room_width,
+            zoom * problem.room_height
         );
         // stage
         canvas.fillStyle = '#999';
         canvas.fillRect(
-            offsetx + zoom * scale * problem.stage_bottom_left[0],
-            offsety + zoom * scale * problem.stage_bottom_left[1],
-            zoom * scale * problem.stage_width,
-            zoom * scale * problem.stage_height
+            plusx + zoom * problem.stage_bottom_left[0],
+            plusy + zoom * problem.stage_bottom_left[1],
+            zoom * problem.stage_width,
+            zoom * problem.stage_height
         );
         // 罫線
         if (ruler) {
@@ -233,14 +234,14 @@
             canvas.strokeStyle = '#9cc';
             for (let x = 0; x <= problem.room_width; x += w) {
                 canvas.beginPath();
-                canvas.moveTo(offsetx + zoom * scale * x, offsety);
-                canvas.lineTo(offsetx + zoom * scale * x, offsety + zoom * scale * problem.room_height);
+                canvas.moveTo(plusx + zoom * x, plusy);
+                canvas.lineTo(plusx + zoom * x, plusy + zoom * problem.room_height);
                 canvas.stroke();
             }
             for (let y = 0; y <= problem.room_width; y += w) {
                 canvas.beginPath();
-                canvas.moveTo(offsetx, offsety + zoom * scale * y);
-                canvas.lineTo(offsetx + zoom * scale * problem.room_width, offsety + zoom * scale * y);
+                canvas.moveTo(plusx, plusy + zoom * y);
+                canvas.lineTo(plusx + zoom * problem.room_width, plusy + zoom * y);
                 canvas.stroke();
             }
         }
@@ -255,9 +256,9 @@
                 }
                 canvas.beginPath();
                 canvas.arc(
-                    offsetx + zoom * scale * m.x,
-                    offsety + zoom * scale * m.y,
-                    zoom * scale * 5,
+                    plusx + zoom * m.x,
+                    plusy + zoom * m.y,
+                    zoom * 5,
                     0, 7, false
                 );
                 canvas.fill();
@@ -269,9 +270,9 @@
         for (let p of problem.pillars) {
             canvas.beginPath();
             canvas.arc(
-                offsetx + zoom * scale * p.center[0],
-                offsety + zoom * scale * p.center[1],
-                zoom * scale * p.radius,
+                plusx + zoom * p.center[0],
+                plusy + zoom * p.center[1],
+                zoom * p.radius,
                 0, 7, false
             );
             canvas.fill();
@@ -282,9 +283,10 @@
         for (let a of problem.attendees) {
             canvas.beginPath();
             canvas.arc(
-                offsetx + zoom * scale * a.x,
-                offsety + zoom * scale * a.y,
-                1.2, 0, 7, false
+                plusx + zoom * a.x,
+                plusy + zoom * a.y,
+                1.2,
+                0, 7, false
             )
             canvas.fill();
         }
@@ -306,15 +308,17 @@
 
     function onKeyDown(e) {
         console.log(e);
-        console.log(e.key);
         switch (e.key) {
             case '0':
-                state.update(prev => ({
-                    ...prev,
-                    zoom: 1.0,
-                    plusx: 0.0,
-                    plusy: 0.0,
-                }));
+                state.update(prev => {
+                    let [zoom, plusx, plusy] = baseDisplayParams(prev.problem);
+                    return {
+                        ...prev,
+                        zoom: zoom,
+                        plusx: plusx,
+                        plusy: plusy,
+                    };
+                });
                 break;
             case 'c':
                 state.update(prev => ({
@@ -357,16 +361,32 @@
                 }));
             break;
             case 'q':
-                state.update(prev => ({
-                    ...prev, 
-                    zoom: prev.zoom - 0.1,
-                }));
+                state.update(prev => {
+                    let newzoom = Math.max(0.001, prev.zoom - 0.1);
+                    let ratio = newzoom / prev.zoom;
+                    let newplusx = ratio * prev.plusx + 800 * (1 - ratio);
+                    let newplusy = ratio * prev.plusy + 600 * (1 - ratio);
+                    return {
+                        ...prev,
+                        zoom: newzoom,
+                        plusx: newplusx,
+                        plusy: newplusy,
+                    };
+                });
             break;
             case 'e':
-                state.update(prev => ({
-                    ...prev, 
-                    zoom: prev.zoom + 0.1,
-                }));
+                state.update(prev => {
+                    let newzoom = prev.zoom + 0.1;
+                    let ratio = newzoom / prev.zoom;
+                    let newplusx = ratio * prev.plusx + 800 * (1 - ratio);
+                    let newplusy = ratio * prev.plusy + 600 * (1 - ratio);
+                    return {
+                        ...prev,
+                        zoom: newzoom,
+                        plusx: newplusx,
+                        plusy: newplusy,
+                    };
+                });
             break;
         }
     }
