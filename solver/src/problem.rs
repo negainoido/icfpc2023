@@ -65,7 +65,12 @@ impl AngleInfo {
     }
 }
 
-pub fn filter_placements_blocked_by_pillars(attendee_pos: Point, placements: &Vec<Point>, pillars: &Vec<Pillar>, prefiltered_ids: &Vec<usize>) -> Vec<usize> {
+pub fn filter_placements_blocked_by_pillars(
+    attendee_pos: Point,
+    placements: &Vec<Point>,
+    pillars: &Vec<Pillar>,
+    prefiltered_ids: &Vec<usize>,
+) -> Vec<usize> {
     let mut result = vec![];
 
     for &id in prefiltered_ids {
@@ -212,7 +217,6 @@ pub fn get_non_blocked_placement_ids(attendee_pos: Point, placements: &Vec<Point
     non_blocke_placement_ids
 }
 
-
 pub struct AttendeeScoreDetail {
     pub attendee_id: usize,
     pub matched_musician_ids: Vec<usize>,
@@ -334,7 +338,6 @@ impl Input {
             if segment.dist(&p.center) < p.radius {
                 return Ok(0.0);
             }
-
         }
         for i in 0..placements.len() {
             if i == musician_id {
@@ -361,7 +364,9 @@ impl Input {
             .map(|attendee_id| {
                 let mut sum_impact = 0.0;
                 for musician_id in 0..self.musicians.len() {
-                    sum_impact += (impacts[musician_id] * self.impact(attendee_id, musician_id, placements).unwrap()).ceil();
+                    sum_impact += (impacts[musician_id]
+                        * self.impact(attendee_id, musician_id, placements).unwrap())
+                    .ceil();
                 }
                 sum_impact
             })
@@ -370,7 +375,12 @@ impl Input {
         Ok(ans)
     }
 
-    pub fn score_attendee_fast(&self, attendee_id: usize, placements: &Vec<Point>, impacts: &Vec<f64>) -> f64 {
+    pub fn score_attendee_fast(
+        &self,
+        attendee_id: usize,
+        placements: &Vec<Point>,
+        impacts: &Vec<f64>,
+    ) -> f64 {
         let mut sum_impact = 0.0;
 
         // Musicians同士の衝突のみを考慮
@@ -386,7 +396,9 @@ impl Input {
 
         for placement_id in non_blocked_placement_ids {
             // placement_id equals musician_id here
-            sum_impact += (impacts[placement_id] * self.raw_impact(attendee_id, placement_id, &placements[placement_id])).ceil()
+            sum_impact += (impacts[placement_id]
+                * self.raw_impact(attendee_id, placement_id, &placements[placement_id]))
+            .ceil()
         }
         sum_impact
     }
