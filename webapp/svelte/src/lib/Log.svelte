@@ -1,14 +1,13 @@
-<script>
-</script>
-
 <div>
     <b>変更履歴</b>
     <dl>
         <dt>07/10 00:00</dt>
         <dd>問題番号とかスコアとかのログ情報がいつも canvas 左上に表示される</dd>
         <dt>07/09 19:04</dt>
-        <dd>チェックボックス Solution JSON で選んだソリューションの表示ができる。
-            編集して show solution したらそれも反映できる</dd>
+        <dd>
+            チェックボックス Solution JSON で選んだソリューションの表示ができる。 編集して show
+            solution したらそれも反映できる
+        </dd>
         <dt>07/09 17:21</dt>
         <dd>表示される提出一覧の上限を8くらいに絞った, 重複も勝手に取り除いてる</dd>
         <dt>07/09 17:21</dt>
@@ -16,11 +15,9 @@
         <dt>07/09 17:00くらい</dt>
         <dd>download solution ボタンが生えました</dd>
         <dt>07/09 16:28</dt>
-        <dd>トップページ
-            https://icfpc2023.negainoido.com
-            はダミーになりました.
-            https://icfpc2023.negainoido.com/1
-            のような問題ごとのページが生えてます
+        <dd>
+            トップページ https://icfpc2023.negainoido.com はダミーになりました.
+            https://icfpc2023.negainoido.com/1 のような問題ごとのページが生えてます
         </dd>
         <dt>07/09 15:36</dt>
         <dd>URL の末尾が <code>/[problem_id]</code> になってます</dd>
