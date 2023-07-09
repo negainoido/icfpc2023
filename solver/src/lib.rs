@@ -70,7 +70,7 @@ pub fn calc_score(
     };
 
     solution
-        .score(&input)
+        .score(&input, false)
         .map_err(|e| JsValue::from_str(&format!("{}", e)))
 }
 

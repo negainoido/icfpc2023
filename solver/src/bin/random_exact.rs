@@ -81,7 +81,7 @@ fn main() {
             new_placements.push(placements[assignment].clone());
         }
         solution.placements = new_placements.clone();
-        let new_score = solution.score(&input).unwrap();
+        let new_score = solution.score(&input, false).unwrap();
 
         if best_score < OrderedFloat(new_score) {
             eprintln!(
