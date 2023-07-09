@@ -33,6 +33,7 @@ pub fn calc_score(
     attendees: Vec<JsValue>,
     pillars: Vec<JsValue>,
     placement: Vec<JsValue>,
+    is_full: bool,
 ) -> Result<f64, JsValue> {
     use crate::problem::Attendee;
     use geo::Point;
@@ -70,7 +71,7 @@ pub fn calc_score(
     };
 
     solution
-        .score(&input, false)
+        .score(&input, is_full)
         .map_err(|e| JsValue::from_str(&format!("{}", e)))
 }
 
