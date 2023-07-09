@@ -16,7 +16,7 @@
 <section class="section">
     <div class="container">
         <ul>
-            <li><a href="https://icfpc2023.negainoido.com/1">ビジュアライザ/エディタ</a></li>
+            <li><a href="/1">ビジュアライザ/エディタ</a></li>
             <li><a href="https://icfpc2023.negainoido.com/streamlit">点数ボード</a></li>
             <li><a href="https://icfpc2023.negainoido.com/streamlit/problems">問題が少し詳しく見れる</a></li>
         </ul>

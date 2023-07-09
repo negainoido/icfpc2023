@@ -118,7 +118,7 @@
     /// 良いレコード全部取得
     function fetchRecords() {
         clear();
-        fetch('https://icfpc2023.negainoido.com/api/solutions/show')
+        fetch('https://icfpc2023.negainoido.com/api/solutions/show', { credentials: 'include' })
             .then(data => data.json())
             .then(data => {
                 records = data;
@@ -153,7 +153,7 @@
                 if (filterRecords.length >= 10) break;
             }
         }
-        fetch(`https://icfpc2023.negainoido.com/api/problem?problem_id=${problem_id}`)
+        fetch(`https://icfpc2023.negainoido.com/api/problem?problem_id=${problem_id}`, {credentials: 'include'})
             .then(data => data.json())
             .then(problem => {
                 let [zoom, plusx, plusy] = baseDisplayParams(problem);
@@ -172,7 +172,7 @@
 
     function fetchSolution(solution_id) {
         clear();
-        fetch(`https://icfpc2023.negainoido.com/api/solutions?id=${solution_id}`)
+        fetch(`https://icfpc2023.negainoido.com/api/solutions?id=${solution_id}`, { credentials: 'include' })
             .then(response => response.json())
             .then(response => {
                 if (response['message'] === 'not found') {
@@ -218,7 +218,6 @@
         miny -= padding;
         maxx += padding;
         maxy += padding;
-        console.log([width / (maxx - minx), height / (maxy - miny)]);
         let zoom = Math.min(width / (maxx - minx), height / (maxy - miny));
         let plusx = 800 - zoom * (minx + maxx) / 2;
         let plusy = 600 - zoom * (miny + maxy) / 2;
@@ -475,7 +474,9 @@
     </div>
 
     <div class="container">
-        <p>{filteredRecords.length} records</p>
+        <div>
+            {filteredRecords.length} records
+        </div>
 {#if filteredRecords.length > 0}
     <table class=table>
         <thead>
@@ -569,10 +570,7 @@
 
 <style>
     @import "https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css";
-    /* div.section { */
-    /*     padding: 10px; */
-    /* } */
-    /* input[type=range] { */
-    /*     width: 50%; */
-    /* } */
+    canvas {
+        border: 1px black solid;
+    }
 </style>
