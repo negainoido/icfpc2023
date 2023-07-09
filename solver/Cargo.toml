@@ -17,6 +17,10 @@ name = "evaluator"
 path = "src/bin/evaluator.rs"
 
 [[bin]]
+name = "nobishiro"
+path = "src/bin/nobishiro.rs"
+
+[[bin]]
 name = "random"
 path = "src/bin/random.rs"
 
