@@ -19,7 +19,7 @@ struct Args {
     #[arg(short, long)]
     output: String,
 
-    #[arg(long, default_value_t = 5)]
+    #[arg(long, default_value_t = 10)]
     iteration: i32,
 
     #[arg(short, long, default_value_t = 0)]
@@ -45,11 +45,6 @@ fn main() {
         musician_map[m].push(i);
     }
     println!("musicians: {:?}", musician_map);
-    // musiciansが多すぎるとかの場合はそんなにいいスコアでないので諦める
-    if musician_map.len() >= 30 {
-        println!("too many musicians or no pillars");
-        return;
-    }
     let full_div = input.pillars.len() > 0;
 
     // 各楽器のそれっぽい人気度を計算
@@ -94,7 +89,7 @@ fn main() {
         let mut current_solution_mid = vec![];
         // 楽器順に配置
         'inst_loop: for &instrument_id in instruments_ids.iter() {
-            println!("check for {instrument_id}");
+            //println!("check for {instrument_id}");
             let mut count = 0;
             while count < instruments[&instrument_id] {
                 let mut neighbors = HashSet::new();
