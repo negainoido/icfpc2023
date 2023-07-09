@@ -10,6 +10,7 @@ on:
           - random2
           - random_exact
           - random_exact_rect
+          - two_stage_exact_together
       dry-run:
         required: false
         default: false
