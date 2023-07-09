@@ -426,22 +426,6 @@
       }, 1000);
     }
 
-    function downloadSolution() {
-        const solution = get(state).solution;
-        if (!solution) {
-            console.warn("no solution");
-            return;
-        }
-        const a = document.createElement("a");
-        a.style = "display: none";
-        const json = JSON.stringify(solution);
-        const blob = new Blob([json], {type: "application/json"});
-        const url = window.URL.createObjectURL(blob);
-        a.download = `solution_${problem_id}.json`;
-        a.href = url;
-        a.click();
-        window.URL.revokeObjectURL(url);
-    }
 
     onMount(async () => {
         fetchRecords();
@@ -534,9 +518,6 @@
     </div>
     <div>
         <canvas id="c" width="1600" height="1200" />
-    </div>
-    <div>
-        <button disabled={$state.solution === null} on:click={downloadSolution}>download solution</button>
     </div>
 </div>
 

@@ -30,6 +30,7 @@
         }
         try {
             // console.log(problem, solution);
+            const is_full = problem_id > 55;
             score = wasm.calc_score(
                 problem.room_width,
                 problem.room_height,
@@ -38,7 +39,9 @@
                 problem.stage_bottom_left,
                 problem.musicians,
                 problem.attendees,
+                problem.pillars,
                 solution.placements,
+                is_full,
             );
             console.log('wasm success:', score);
         } catch (err) {
@@ -430,6 +433,23 @@
         wasm = await import('solver');
         await wasm.default();
     });
+
+    function downloadSolution() {
+        const solution = get(state).solution;
+        if (!solution) {
+            console.warn("no solution");
+            return;
+        }
+        const a = document.createElement("a");
+        a.style = "display: none";
+        const json = JSON.stringify(solution);
+        const blob = new Blob([json], {type: "application/json"});
+        const url = window.URL.createObjectURL(blob);
+        a.download = `solution_${problem_id}.json`;
+        a.href = url;
+        a.click();
+        window.URL.revokeObjectURL(url);
+    }
 </script>
 
 <div class="section">
@@ -515,6 +535,9 @@
     </div>
     <div>
         <canvas id="c" width="1600" height="1200" />
+    </div>
+    <div>
+        <button disabled={$state.solution === null} on:click={downloadSolution}>download solution</button>
     </div>
 </div>
 
