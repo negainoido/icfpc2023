@@ -2,6 +2,7 @@ pub mod problem;
 #[cfg(target_arch = "wasm32")]
 mod wasm_util;
 
+use anyhow::Context;
 use geo::Point;
 use problem::*;
 
@@ -174,5 +175,37 @@ impl<'a> PlacementGenerator<'a> {
             .take(self.input.musicians.len())
             .cloned()
             .collect()
+    }
+}
+
+pub fn get_id(input: &str) -> anyhow::Result<i32> {
+    let path = std::path::Path::new(&input);
+    let base = path.file_stem().context("no file_stem?")?;
+    let base = base.to_str().context("to_str failed")?;
+    let id = base
+        .strip_prefix("problem-")
+        .context("no problem- prefix?")?;
+    let id = id.parse::<i32>()?;
+    Ok(id)
+}
+
+pub fn is_lightning(path: &str) -> anyhow::Result<bool> {
+    let id = get_id(path)?;
+    Ok(id <= 55)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_get_id() {
+        assert_eq!(get_id("../problems/problem-42.json").unwrap(), 42);
+    }
+
+    #[test]
+    fn test_is_lightning() {
+        assert!(is_lightning("../problems/problem-55.json").unwrap());
+        assert!(!is_lightning("../problems/problem-56.json").unwrap());
     }
 }
