@@ -333,13 +333,13 @@
         <br />
         <label>
             x
-            <input type="range" min="-1000" max="1000" step="1" bind:value={$state.plusx} class="slider" />
+            <input type="range" min="-5000" max="5000" step="1" bind:value={$state.plusx} class="slider" />
             +{$state.plusx}
         </label>
         <br />
         <label>
             y
-            <input type="range" min="-1000" max="1000" step="1" bind:value={$state.plusy} class="slider" />
+            <input type="range" min="-5000" max="5000" step="1" bind:value={$state.plusy} class="slider" />
             +{$state.plusy}
         </label>
         <br />
