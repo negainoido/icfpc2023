@@ -14,7 +14,7 @@
         problem: null,
         solution: null,
         solution_id: -1,
-        solution_json: "",
+        solution_json: '',
         colorful: true,
         ruler: false,
         zoom: 1.0,
@@ -64,9 +64,8 @@
                     log: prev.log.concat('wasm done'),
                 };
             });
-
         } catch (err) {
-            score = `failed`
+            score = `failed`;
             state.update((prev) => {
                 return {
                     ...prev,
@@ -164,7 +163,7 @@
             ...prev,
             problem: null,
             solution: null,
-            solution_json: "",
+            solution_json: '',
             target_musician_id: null,
             zoom: 1.0,
             plusx: 0.0,
@@ -343,9 +342,13 @@
         if (log) {
             canvas.fillStyle = '#500';
             canvas.font = '24px monospace';
-            let lines = [`problem: ${problem_id}`, `solution: ${$state.solution_id}`, `score: ${score}`].concat(log);
+            let lines = [
+                `problem: ${problem_id}`,
+                `solution: ${$state.solution_id}`,
+                `score: ${score}`,
+            ].concat(log);
             for (let i = 0; i < lines.length; ++i) {
-                canvas.fillText(lines[i], 12, 29 * (i+1));
+                canvas.fillText(lines[i], 12, 29 * (i + 1));
             }
         }
     }
@@ -592,8 +595,13 @@
 <section class="section">
     <div class="container">
         <h1 class="title" id="countdown">⏰</h1>
-        <a rel="external" data-sveltekit-reload href="https://icfpc2023.negainoido.com/streamlit/?id={problem_id}">
-            🔗 streamlit/?id={problem_id}</a>
+        <a
+            rel="external"
+            data-sveltekit-reload
+            href="https://icfpc2023.negainoido.com/streamlit/?id={problem_id}"
+        >
+            🔗 streamlit/?id={problem_id}</a
+        >
     </div>
 </section>
 
@@ -617,10 +625,8 @@
                 <thead>
                     <tr>
                         <th>id</th>
-                        <th>problem_id</th>
                         <th>submission_id</th>
                         <th>solver</th>
-                        <th>status</th>
                         <th>score</th>
                         <th>ts</th>
                     </tr>
@@ -629,10 +635,8 @@
                     {#each filteredRecords as r}
                         <tr>
                             <td><button on:click={fetchSolution(r[0])}>{r[0]}</button></td>
-                            <td>{r[1]}</td>
                             <td>{r[2]}</td>
                             <td>{r[3]}</td>
-                            <td>{r[4]}</td>
                             <td>{r[5].toLocaleString()}</td>
                             <td>{r[6]}</td>
                         </tr>
@@ -658,10 +662,29 @@
                         bind:value={$state.solution_json}
                     />
                     <div>
-                        musician id: <input type="number" bind:value={$state.target_musician_id} on:change={updateSolutionJson} />
-                        x: <input type="number" bind:value={$state.target_musician_x} on:change={updateSolutionJson} />
-                        y: <input type="number" bind:value={$state.target_musician_y} on:change={updateSolutionJson}/>
-                        volume: <input type="number" bind:value={$state.target_musician_volume} on:change={updateSolutionJson} />
+                        musician id: <input
+                            type="number"
+                            bind:value={$state.target_musician_id}
+                            on:change={updateSolutionJson}
+                        />
+                        x:
+                        <input
+                            type="number"
+                            bind:value={$state.target_musician_x}
+                            on:change={updateSolutionJson}
+                        />
+                        y:
+                        <input
+                            type="number"
+                            bind:value={$state.target_musician_y}
+                            on:change={updateSolutionJson}
+                        />
+                        volume:
+                        <input
+                            type="number"
+                            bind:value={$state.target_musician_volume}
+                            on:change={updateSolutionJson}
+                        />
                     </div>
                     <button class="button" on:click={loadSolutionJSON}>show solution</button>
                 </div>
@@ -677,7 +700,7 @@
                 罫線 (幅=10) (R)
             </label>
             <br />
-        <!--
+            <!--
         <button on:click={fullScreen}>全画面表示</button>
         <br />
         <label>
@@ -725,7 +748,7 @@
                 >download solution</button
             >
         </div>
-        <div class=box>
+        <div class="box">
             <textarea
                 style="width: 100%; height: 20vh"
                 class="textarea is-primary"
