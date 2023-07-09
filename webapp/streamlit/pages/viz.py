@@ -9,9 +9,7 @@ import streamlit as st
 NUM_PROBLEM = 90
 
 
-st.write(
-    ":building_construction: [/svelte](https://icfpc2023.negainoido.com/streamlit/) でちゃんと作る"
-)
+st.write(":building_construction: [/svelte](https://icfpc2023.negainoido.com/) でちゃんと作る")
 
 
 class Problem:
