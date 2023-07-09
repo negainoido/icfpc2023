@@ -392,12 +392,30 @@
         }
     }
 
+    function clockInit() {
+      document.getElementById("countdown").style.color = "red";
+      setInterval(() => {
+          let targetTime = new Date('2023-07-10T21:00:00');
+          let now = new Date();
+          let diffMs = targetTime - now;
+          let h = Math.floor(diffMs / 3600000); // hours
+          let m = Math.floor((diffMs % 3600000) / 60000); // minutes
+          let s = Math.round(((diffMs % 3600000) % 60000) / 1000); // seconds
+          document.getElementById("countdown").innerText = `⏰ ${h}:${m}:${s}`;
+      }, 1000);
+    }
+
     onMount(async () => {
         fetchRecords();
+        clockInit();
         wasm = await import('solver');
         await wasm.default();
     });
 </script>
+
+<div class="section">
+    <h1 id="countdown">⏰</h1>
+</div>
 
 <div class="section">
     <label for="problem_id">problem_id</label>
