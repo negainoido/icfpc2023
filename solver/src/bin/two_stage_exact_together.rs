@@ -39,7 +39,6 @@ fn get_time() -> f64 {
     }
 }
 
-
 fn generate_first_level_candidates(input: &Input) -> Vec<Point> {
     let x_count = (input.stage_width / 10.0).floor() as usize - 1;
     let y_count = (input.stage_height / 10.0).floor() as usize - 1;
@@ -234,7 +233,11 @@ fn hill_climbing(input: &Input, placements: &Vec<Point>, timeout: f64) -> Vec<Po
             }
         }
     }
-    eprintln!("Finished hill-climbing: score = {}, elapsed-time = {}", final_score, get_time());
+    eprintln!(
+        "Finished hill-climbing: score = {}, elapsed-time = {}",
+        final_score,
+        get_time()
+    );
     let mut new_placements = vec![];
     for i in 0..assignments.len() {
         new_placements.push(placements[assignments[i]]);
