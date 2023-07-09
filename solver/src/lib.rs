@@ -64,8 +64,12 @@ pub fn calc_score(
         pillars: pillars
             .iter()
             .map(|p| {
-                let p: Pillar = serde_wasm_bindgen::from_value(p.into()).unwrap();
-                p
+                let p: crate::wasm_util::Pillar = serde_wasm_bindgen::from_value(p.into()).unwrap();
+
+                Pillar {
+                    center: Point::new(p.center[0], p.center[1]),
+                    radius: p.radius,
+                }
             })
             .collect(),
     };
