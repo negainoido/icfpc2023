@@ -64,6 +64,7 @@ fn main() {
             i,
         ));
     }
+    let popularity_clone = popularity.clone();
     // 人気度が高い楽器順のIDリスト生成
     popularity.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap());
     let instruments_ids = popularity.iter().map(|(_, i)| *i).collect::<Vec<_>>();
@@ -92,11 +93,14 @@ fn main() {
         let mut current_solution = vec![];
         let mut current_solution_mid = vec![];
         // 楽器順に配置
-        for &instrument_id in instruments_ids.iter() {
+        'inst_loop: for &instrument_id in instruments_ids.iter() {
             println!("check for {instrument_id}");
             let mut count = 0;
-            'inner: while count < instruments[&instrument_id] {
+            while count < instruments[&instrument_id] {
                 let mut neighbors = HashSet::new();
+                if available_points.is_empty() {
+                    break 'inst_loop;
+                }
 
                 // ステージ上の候補地点からランダムに良さそうな箇所を選ぶ
                 let mut best_point = available_points.iter().choose(&mut rnd).unwrap().clone();
@@ -136,7 +140,7 @@ fn main() {
                 while count < instruments[&instrument_id] {
                     if neighbors.is_empty() {
                         println!("couldn't find neighbor");
-                        break 'inner;
+                        break;
                     }
                     let pick_count = std::cmp::min(PICK_POINTS_COUNT, neighbors.len());
                     let (best_point, _) = neighbors
@@ -176,9 +180,18 @@ fn main() {
             continue;
         }
         solution.placements = vec![Point::new(0.0, 0.0); input.musicians.len()];
+        let mut volumes = vec![0.0; input.musicians.len()];
         for i in 0..current_solution.len() {
-            solution.placements[current_solution_mid[i]] = current_solution[i];
+            let mid = current_solution_mid[i];
+            let inst = input.musicians[mid];
+            solution.placements[mid] = current_solution[i];
+            if popularity_clone[inst].0 > 0.0 {
+                volumes[mid] = 10.0;
+            } else {
+                volumes[mid] = 0.0;
+            }
         }
+        solution.volumes = Some(volumes);
 
         match solution.score(&input, full_div) {
             Ok(score) => {
