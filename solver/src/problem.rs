@@ -302,7 +302,12 @@ impl Input {
         Ok(())
     }
 
-    pub fn raw_impact_for_instrument(&self, attendee_id: AttendeeId, instrument: usize, musician_pos: &Point) -> f64 {
+    pub fn raw_impact_for_instrument(
+        &self,
+        attendee_id: AttendeeId,
+        instrument: usize,
+        musician_pos: &Point,
+    ) -> f64 {
         let attendee = &self.attendees[attendee_id];
         let d = attendee.pos().euclidean_distance(musician_pos);
         ((1_000_000 as f64) * attendee.tastes[instrument] / (d * d)).ceil()
@@ -389,9 +394,14 @@ impl Input {
     }
 
     // 特定参加者から得られる特定地点で楽器を演奏した場合のスコア
-    pub fn raw_score_for_instrument(&self, point: Point, instrument: usize, attendee_ids: &Vec<AttendeeId>) -> f64 {
+    pub fn raw_score_for_instrument(
+        &self,
+        point: Point,
+        instrument: usize,
+        attendee_ids: &Vec<AttendeeId>,
+    ) -> f64 {
         let mut result = 0.0;
-        for &attendee_id in  attendee_ids {
+        for &attendee_id in attendee_ids {
             result += self.raw_impact_for_instrument(attendee_id, instrument, &point);
         }
         result
@@ -447,7 +457,8 @@ impl Input {
                 None => 1.0,
             };
             // placement_id equals musician_id here
-            sum_impact += (volume * impacts[placement_id]
+            sum_impact += (volume
+                * impacts[placement_id]
                 * self.raw_impact(attendee_id, placement_id, &placements[placement_id]))
             .ceil()
         }

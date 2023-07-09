@@ -1,11 +1,11 @@
-use std::collections::{HashMap, HashSet};
 use clap::Parser;
+use std::collections::{HashMap, HashSet};
 
 use geo::{EuclideanDistance, Point};
-use rand::seq::{IteratorRandom};
+use rand::seq::IteratorRandom;
 use rand_pcg::Pcg64Mcg;
-use solver::PlacementGenerator;
 use rayon::prelude::*;
+use solver::PlacementGenerator;
 
 use solver::problem::*;
 
@@ -59,7 +59,10 @@ fn main() {
     let stage_center = Point::new(stage_center_x, stage_center_y);
     let visible_attendees = input.get_visible_attendees(stage_center, &vec![]);
     for i in 0..instruments.keys().len() {
-        popularity.push((input.raw_score_for_instrument(stage_center, i, &visible_attendees), i));
+        popularity.push((
+            input.raw_score_for_instrument(stage_center, i, &visible_attendees),
+            i,
+        ));
     }
     // 人気度が高い楽器順のIDリスト生成
     popularity.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap());
@@ -70,7 +73,7 @@ fn main() {
     let candidates = point_generator.honeycomb_candidates;
     let mut candidates_graph = vec![vec![]; candidates.len()];
     for i in 0..candidates.len() {
-        for j in i+1..candidates.len() {
+        for j in i + 1..candidates.len() {
             if candidates[i].euclidean_distance(&candidates[j]) < 10.0 + 1e-4 {
                 candidates_graph[i].push(j);
                 candidates_graph[j].push(i);
@@ -78,7 +81,6 @@ fn main() {
         }
     }
     println!("generated candidates");
-
 
     let mut best_score = -100000000.0;
     let mut rnd = Pcg64Mcg::new(args.rand_seed);
@@ -94,17 +96,26 @@ fn main() {
             println!("check for {instrument_id}");
             let mut count = 0;
             'inner: while count < instruments[&instrument_id] {
-
                 let mut neighbors = HashSet::new();
 
                 // ステージ上の候補地点からランダムに良さそうな箇所を選ぶ
                 let mut best_point = available_points.iter().choose(&mut rnd).unwrap().clone();
-                let tmp_visible_attendees = input.get_visible_attendees(candidates[best_point], &current_solution);
-                let mut best_score = input.raw_score_for_instrument(candidates[best_point], instrument_id, &tmp_visible_attendees);
-                for _ in 0..PICK_POINTS_COUNT*10 {
+                let tmp_visible_attendees =
+                    input.get_visible_attendees(candidates[best_point], &current_solution);
+                let mut best_score = input.raw_score_for_instrument(
+                    candidates[best_point],
+                    instrument_id,
+                    &tmp_visible_attendees,
+                );
+                for _ in 0..PICK_POINTS_COUNT * 10 {
                     let point = available_points.iter().choose(&mut rnd).unwrap().clone();
-                    let tmp_visible_attendees = input.get_visible_attendees(candidates[point], &current_solution);
-                    let score = input.raw_score_for_instrument(candidates[point], instrument_id, &tmp_visible_attendees);
+                    let tmp_visible_attendees =
+                        input.get_visible_attendees(candidates[point], &current_solution);
+                    let score = input.raw_score_for_instrument(
+                        candidates[point],
+                        instrument_id,
+                        &tmp_visible_attendees,
+                    );
                     if score > best_score {
                         best_score = score;
                         best_point = point;
@@ -128,13 +139,22 @@ fn main() {
                         break 'inner;
                     }
                     let pick_count = std::cmp::min(PICK_POINTS_COUNT, neighbors.len());
-                    let (best_point, _) = neighbors.iter().choose_multiple(&mut rnd, pick_count)
+                    let (best_point, _) = neighbors
+                        .iter()
+                        .choose_multiple(&mut rnd, pick_count)
                         .into_par_iter()
                         .map(|&point| {
-                            let tmp_visible_attendees = input.get_visible_attendees(candidates[point], &current_solution);
-                            let score = input.raw_score_for_instrument(candidates[point], instrument_id, &tmp_visible_attendees);
+                            let tmp_visible_attendees =
+                                input.get_visible_attendees(candidates[point], &current_solution);
+                            let score = input.raw_score_for_instrument(
+                                candidates[point],
+                                instrument_id,
+                                &tmp_visible_attendees,
+                            );
                             (point, score)
-                        }).max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap()).unwrap();
+                        })
+                        .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+                        .unwrap();
                     current_solution.push(candidates[best_point]);
                     current_solution_mid.push(musician_map[instrument_id][count]);
                     used.insert(best_point);
@@ -151,7 +171,7 @@ fn main() {
                 }
             }
         }
-        if  current_solution.len() < input.musicians.len() {
+        if current_solution.len() < input.musicians.len() {
             println!("couldn't find solution");
             continue;
         }
