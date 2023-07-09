@@ -1,4 +1,5 @@
 from io import StringIO
+import os
 
 import pandas
 import requests
@@ -7,11 +8,17 @@ import streamlit as st
 from streamlit.runtime.uploaded_file_manager import UploadedFile
 
 NUM_PROBLEM = 90
+ENV = os.getenv("ENV") or "dev"
 
 
 class API:
     def __init__(self):
-        self.url = "https://icfpc2023.negainoido.com"
+        if ENV == "dev":
+            # ローカルで立てる時にはCloud Run Proxyを立ててください。
+            # gcloud beta run services proxy fastapi-iam-auth --port=8080 --region asia-northeast1
+            self.url = "http://localhost:8080"
+        else:
+            self.url = "https://fastapi-f4mnmafhja-an.a.run.app"
 
     def _get(self, endpoint: str, data=None):
         headers = {
