@@ -18,6 +18,7 @@
         zoom: 1.0,
         plusx: 0.0,
         plusy: 0.0,
+        log: [],
     });
     let score = null;
 
@@ -61,7 +62,8 @@
                 value.zoom,
                 value.plusx,
                 value.plusy,
-                value.ruler
+                value.ruler,
+                value.log
             );
             console.log("...finish draw");
         } else {
@@ -150,7 +152,7 @@
             } else {
                 used.push(key);
                 filteredRecords.push(r);
-                if (filterRecords.length >= 10) break;
+                if (filteredRecords.length >= 8) break;
             }
         }
         fetch(`https://icfpc2023.negainoido.com/api/problem?problem_id=${problem_id}`, {credentials: 'include'})
@@ -224,7 +226,7 @@
         return [zoom, plusx, plusy];
     }
 
-    async function draw(problem, solution, colorful, zoom, plusx, plusy, ruler) {
+    async function draw(problem, solution, colorful, zoom, plusx, plusy, ruler, log) {
         if (!document) return;
         let obj = document.getElementById('c');
         if (!obj) return;
@@ -320,6 +322,13 @@
             )
             canvas.fill();
         }
+        // log
+        if (log) {
+            canvas.fillStyle = '#500';
+            canvas.font = '24px monospace';
+            canvas.fillText(log.join('\n'), 12, 29);
+        }
+
     }
 
     function fullScreen() {
@@ -340,6 +349,8 @@
         console.log(e);
         switch (e.key) {
             case '0':
+            case 'o':
+            case 'O':
                 state.update(prev => {
                     let [zoom, plusx, plusy] = baseDisplayParams(prev.problem);
                     return {
@@ -351,18 +362,21 @@
                 });
                 break;
             case 'c':
+            case 'C':
                 state.update(prev => ({
                     ...prev,
                     colorful: !prev.colorful,
                 }));
                 break;
             case 'r':
+            case 'R':
                 state.update(prev => ({
                     ...prev,
                     ruler: !prev.ruler,
                 }));
                 break;
             case 'a':
+            case 'A':
             case 'h':
                 state.update(prev => ({
                     ...prev, 
@@ -370,6 +384,7 @@
                 }));
             break;
             case 'd':
+            case 'D':
             case 'l':
                 state.update(prev => ({
                     ...prev, 
@@ -377,6 +392,7 @@
                 }));
             break;
             case 'w':
+            case 'W':
             case 'k':
                 state.update(prev => ({
                     ...prev, 
@@ -384,6 +400,7 @@
                 }));
             break;
             case 's':
+            case 'S':
             case 'j':
                 state.update(prev => ({
                     ...prev, 
@@ -391,6 +408,7 @@
                 }));
             break;
             case 'q':
+            case 'Q':
                 state.update(prev => {
                     let newzoom = Math.max(0.001, prev.zoom - 0.1);
                     let ratio = newzoom / prev.zoom;
@@ -405,6 +423,7 @@
                 });
             break;
             case 'e':
+            case 'E':
                 state.update(prev => {
                     let newzoom = prev.zoom + 0.1;
                     let ratio = newzoom / prev.zoom;
@@ -419,6 +438,51 @@
                 });
             break;
         }
+    }
+
+    function clickCanvas(event) {
+        let canvas = document.getElementById('c');
+        let rect = canvas.getBoundingClientRect();
+        let x = event.clientX - rect.left;
+        let y = event.clientY - rect.top;
+        x = (x - $state.plusx) / $state.zoom;
+        y = (y - $state.plusy) / $state.zoom;
+        console.log('click', [x, y]);
+        let log = [];
+        if ($state.solution && $state.solution.placements) {
+            for (let i = 0; i < $state.solution.placements.length; ++i) {
+                let m = $state.solution.placements[i];
+                let inst = $state.problem.musicians[i];
+                if (Math.hypot(x - m.x, y - m.y) <= 5.0) {
+                    log.push(`musicians[${i}]=${inst}; (x,y)=(${m.x},${m.y})`);
+                    break;
+                }
+            }
+        }
+        if ($state.problem && $state.problem.pillars) {
+            for (let i = 0; i < $state.problem.pillars.length; ++i) {
+                let p = $state.problem.pillars[i];
+                if (Math.hypot(x - p.center[0], y - p.center[1]) <= p.radius) {
+                    log.push(`pillars[${i}]; (x,y,radius)=(${p.center[0]},${p.center[1]},${p.radius})`);
+                    break;
+                }
+
+            }
+        }
+        if ($state.problem) {
+            for (let i = 0; i < $state.problem.attendees.length; ++i) {
+                let m = $state.problem.attendees[i];
+                if (Math.hypot(x - m.x, y - m.y) <= 8.0) {
+                    log.push(`attendees[${i}]; (x,y)=(${m.x},${m.y})`);
+                    break;
+                }
+
+            }
+        }
+        state.update(prev => ({
+            ...prev,
+            log: log,
+        }));
     }
 
     function clockInit() {
@@ -474,9 +538,6 @@
     </div>
 
     <div class="container">
-        <div>
-            {filteredRecords.length} records
-        </div>
 {#if filteredRecords.length > 0}
     <table class=table>
         <thead>
@@ -504,11 +565,11 @@
         {/each}
         </tbody>
     </table>
+{:else}
+    No records!!
 {/if}
     </div>
-</section>
 
-<section class="section">
     <div class="container">
         <label>
             <input type='checkbox' bind:checked={$state.colorful} />
@@ -519,6 +580,7 @@
             罫線 (幅=10) (R)
         </label>
         <br />
+        <!--
         <button on:click={fullScreen}>全画面表示</button>
         <br />
         <label>
@@ -546,13 +608,19 @@
                 {$state.plusy}
             {/if}
         </label>
+        -->
+        <nav class="breadcrumb is-centered has-bullet-separator" aria-label="breadcrumbs">
+            <ul>
+                <li class="is-active"><a>キー割当</a></li>
+                <li class="is-active"><a>WASD: 移動</a></li>
+                <li class="is-active"><a>E/Q: 拡大/縮小</a></li>
+                <li class="is-active"><a>C: 楽器の色表示</a></li>
+                <li class="is-active"><a>R: 罫線</a></li>
+                <li class="is-active"><a>0: 表示リセット</a></li>
+            </ul>
+        </nav>
         <div>
-            <ul>WASD: 移動</ul>
-            <ul>hjkl: 移動</ul>
-            <ul>E/Q: 拡大/縮小</ul>
-        </div>
-        <div>
-            <canvas id="c" width="1600" height="1200" />
+            <canvas id="c" width="1600" height="1200" on:click={clickCanvas} />
         </div>
         <div>
             <button disabled={$state.solution === null} on:click={downloadSolution}>download solution</button>
