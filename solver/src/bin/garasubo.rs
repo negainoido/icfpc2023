@@ -92,7 +92,7 @@ fn main() {
         let mut current_solution = vec![];
         let mut current_solution_mid = vec![];
         // 楽器順に配置
-        'outer: for &instrument_id in instruments_ids.iter() {
+        for &instrument_id in instruments_ids.iter() {
             println!("check for {instrument_id}");
             let mut count = 0;
             'inner: while count < instruments[&instrument_id] {
