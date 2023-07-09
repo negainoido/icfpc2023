@@ -25,6 +25,7 @@ class API:
             "Content-Type": "application/json",
         }
         response = requests.get(f"{self.url}{endpoint}", data=data, headers=headers)
+        print("response:", response.text)
         return response.json()
 
     def show(self):
