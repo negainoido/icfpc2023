@@ -80,9 +80,6 @@ filter_problem_id = int(
         max_value=NUM_PROBLEM,
     )
 )
-st.markdown(
-    f":link: [svelte/{filter_problem_id}](https://icfpc2023.negainoido.com/{filter_problem_id})"
-)
 st.experimental_set_query_params(id=filter_problem_id)
 df = df[df["problem_id"] == filter_problem_id]
 st.write(f"{len(df)} records")
