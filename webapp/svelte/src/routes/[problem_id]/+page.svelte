@@ -38,7 +38,7 @@
             return;
         }
         try {
-            console.log(problem, solution);
+            // console.log(problem, solution);
             const is_full = problem_id > 55;
             if (!solution.volumes) {
                 solution.volumes = [];
@@ -377,7 +377,7 @@
             let lines = [
                 `problem: ${problem_id}`,
                 `solution: ${$state.solution_id}`,
-                `score: ${score ? score : "? (wasm running)"}`,
+                `score: ${score}`,
             ].concat(log);
             for (let i = 0; i < lines.length; ++i) {
                 canvas.fillText(lines[i], 12, 29 * (i + 1));
