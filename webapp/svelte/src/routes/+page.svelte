@@ -9,21 +9,30 @@
     let filteredRecords = [];
 
     let state = writable({
-       problem: null,
-       solution: null,
+        problem: null,
+        solution: null,
         colorful: true,
+        zoom: 1.0,
+        plusx: 0.0,
+        plusy: 0.0,
     });
+    let score = null;
 
     state.subscribe((value) => {
         if (value.problem) {
             console.log("start draw...");
-            draw(value.problem, value.solution, value.colorful);
+            draw(value.problem, value.solution, value.colorful, value.zoom, value.plusx, value.plusy);
+            console.log("...finish draw");
         } else {
-            console.log("data not ready");
+            console.log("data not ready; cannot draw");
         }
         if (value.problem && value.solution && wasm) {
-            console.log(value.problem, value.solution);
-            let score = wasm.calc_score(
+            if (score) {
+                // 計算済み
+                return;
+            }
+            // console.log(value.problem, value.solution);
+            score = wasm.calc_score(
                 value.problem.room_width,
                 value.problem.room_height,
                 value.problem.stage_width,
@@ -35,7 +44,7 @@
             );
             console.log(score);
         } else {
-            console.log('not ready');
+            console.log('not ready; cannot calc_score');
         }
     });
 
@@ -94,7 +103,14 @@
         if (!records) return;
         filteredRecords = [];
         clear();
-        state.update((prev) => ({ ...prev, problem: null, solution: null }));
+        state.update((prev) => ({
+            ...prev,
+            problem: null,
+            solution: null,
+            zoom: 1.0,
+            plusx: 0.0,
+            plusy: 0.0,
+        }));
         for (let r of records) {
             if (r[1] === problem_id) {
                 filteredRecords.push(r);
@@ -143,7 +159,7 @@
         canvas.clearRect(0, 0, width, height);
     }
 
-    function draw(problem, solution, colorful) {
+    function draw(problem, solution, colorful, zoom, plusx, plusy) {
         if (!document) return;
         let obj = document.getElementById('c');
         if (!obj) return;
@@ -175,8 +191,8 @@
         }
 
         let padding = 10;
-        let offsetx = minx - padding;
-        let offsety = miny - padding;
+        let offsetx = minx - padding + plusx;
+        let offsety = miny - padding + plusy;
         let scale = Math.min(width / (maxx - minx + 2 * padding), height / (maxy - miny + 2 * padding));
 
         canvas.clearRect(0, 0, width, height);
@@ -185,21 +201,21 @@
         canvas.fillRect(
             offsetx,
             offsety,
-            scale * problem.room_width,
-            scale * problem.room_height
+            zoom * scale * problem.room_width,
+            zoom * scale * problem.room_height
         );
         canvas.strokeRect(
             offsetx,
             offsety,
-            scale * problem.room_width,
-            scale * problem.room_height
+            zoom * scale * problem.room_width,
+            zoom * scale * problem.room_height
         );
         canvas.fillStyle = '#999';
         canvas.fillRect(
-            offsetx + scale * problem.stage_bottom_left[0],
-            offsety + scale * problem.stage_bottom_left[1],
-            scale * problem.stage_width,
-            scale * problem.stage_height
+            offsetx + zoom * scale * problem.stage_bottom_left[0],
+            offsety + zoom * scale * problem.stage_bottom_left[1],
+            zoom * scale * problem.stage_width,
+            zoom * scale * problem.stage_height
         );
         // musicians
         if (solution) {
@@ -212,8 +228,8 @@
                 }
                 canvas.beginPath();
                 canvas.arc(
-                    offsetx + scale * m.x,
-                    offsety + scale * m.y,
+                    offsetx + zoom * scale * m.x,
+                    offsety + zoom * scale * m.y,
                     1.6, 0, 7, false
                 );
                 canvas.fill();
@@ -223,17 +239,11 @@
         canvas.fillStyle = '#ddd';
         canvas.strokeStyle = '#222';
         for (let p of problem.pillars) {
-            console.log(p);
-            console.log(
-                offsetx + scale * p.center[0],
-                offsety + scale * p.center[1],
-                scale * p.radius,
-            );
             canvas.beginPath();
             canvas.arc(
-                offsetx + scale * p.center[0],
-                offsety + scale * p.center[1],
-                scale * p.radius,
+                offsetx + zoom * scale * p.center[0],
+                offsety + zoom * scale * p.center[1],
+                zoom * scale * p.radius,
                 0, 7, false
             );
             canvas.fill();
@@ -244,8 +254,8 @@
         for (let a of problem.attendees) {
             canvas.beginPath();
             canvas.arc(
-                offsetx + scale * a.x,
-                offsety + scale * a.y,
+                offsetx + zoom * scale * a.x,
+                offsety + zoom * scale * a.y,
                 1.2, 0, 7, false
             )
             canvas.fill();
@@ -273,10 +283,12 @@
     });
 </script>
 
-<label for="problem_id">problem_id</label>
-<input id="problem_id" type='number' bind:value={problem_id} on:change={filterRecords} />
+<div class="section">
+    <label for="problem_id">problem_id</label>
+    <input id="problem_id" type='number' bind:value={problem_id} on:change={filterRecords} />
+</div>
 
-<div>
+<div class="section">
 <p>{filteredRecords.length} records</p>
 {#if filteredRecords.length > 0}
     <table>
@@ -304,11 +316,44 @@
 {/if}
 </div>
 
-<div>
-    <label>
-        <input type='checkbox' bind:checked={$state.colorful} />
-        楽器で色を変える
-    </label>
-    <button on:click={fullScreen}>全画面表示</button>
-    <canvas id="c" width="1600" height="1200" />
+<div class="section">
+    <div>
+        <label>
+            <input type='checkbox' bind:checked={$state.colorful} />
+            楽器で色を変える
+        </label>
+        <br />
+        <button on:click={fullScreen}>全画面表示</button>
+        <br />
+        <label>
+            zoom
+            <input type="range" min="0.1" max="10" step="0.1" bind:value={$state.zoom} class="slider" />
+            x{$state.zoom}
+        </label>
+        <br />
+        <label>
+            x
+            <input type="range" min="-1000" max="1000" step="1" bind:value={$state.plusx} class="slider" />
+            +{$state.plusx}
+        </label>
+        <br />
+        <label>
+            y
+            <input type="range" min="-1000" max="1000" step="1" bind:value={$state.plusy} class="slider" />
+            +{$state.plusy}
+        </label>
+        <br />
+    </div>
+    <div>
+        <canvas id="c" width="1600" height="1200" />
+    </div>
 </div>
+
+<style>
+    div.section {
+        padding: 10px;
+    }
+    input[type=range] {
+        width: 50%;
+    }
+</style>
