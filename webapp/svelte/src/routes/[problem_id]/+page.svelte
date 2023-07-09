@@ -21,6 +21,10 @@
         plusx: 0.0,
         plusy: 0.0,
         log: [],
+        target_musician_id: null,
+        target_musician_x: 0.0,
+        target_musician_y: 0.0,
+        target_musician_volume: 1.0,
     });
     let score = null;
 
@@ -32,8 +36,14 @@
             return;
         }
         try {
-            // console.log(problem, solution);
+            console.log(problem, solution);
             const is_full = problem_id > 55;
+            if (!solution.volumes) {
+                solution.volumes = [];
+                for (let i = 0; i < solution.placements.length; i++) {
+                    solution.volumes.push(1.0);
+                }
+            }
             score = wasm.calc_score(
                 problem.room_width,
                 problem.room_height,
@@ -154,6 +164,8 @@
             ...prev,
             problem: null,
             solution: null,
+            solution_json: "",
+            target_musician_id: null,
             zoom: 1.0,
             plusx: 0.0,
             plusy: 0.0,
@@ -209,6 +221,7 @@
                         ...prev,
                         solution: solution,
                         solution_json: JSON.stringify(solution, null, 2),
+                        target_musician_id: null,
                     };
                 });
             });
@@ -460,8 +473,16 @@
             for (let i = 0; i < $state.solution.placements.length; ++i) {
                 let m = $state.solution.placements[i];
                 let inst = $state.problem.musicians[i];
+                const volume = $state.solution.volumes ? $state.solution.volumes[i] : 1.0;
                 if (Math.hypot(x - m.x, y - m.y) <= 5.0) {
                     log.push(`musicians[${i}]=${inst}; (x,y)=(${m.x},${m.y})`);
+                    state.update((prev) => ({
+                        ...prev,
+                        target_musician_id: i,
+                        target_musician_x: m.x,
+                        target_musician_y: m.y,
+                        target_musician_volume: volume,
+                    }));
                     break;
                 }
             }
@@ -520,6 +541,34 @@
         }));
     }
 
+    function updateSolutionJson() {
+        score = null;
+        console.log('called update');
+        state.update((prev) => {
+            console.log('update', prev);
+            if (prev.solution_json) {
+                const new_solution = JSON.parse(prev.solution_json);
+                if (prev.target_musician_id !== null) {
+                    new_solution.placements[prev.target_musician_id] = {
+                        x: prev.target_musician_x,
+                        y: prev.target_musician_y,
+                    };
+                    if (!new_solution.volumes) {
+                        new_solution.volumes = new Array(prev.solution.placements.length);
+                        new_solution.volumes.fill(1.0);
+                    }
+                    new_solution.volumes[prev.target_musician_id] = prev.target_musician_volume;
+                }
+                return {
+                    ...prev,
+                    solution_json: JSON.stringify(new_solution, null, 2),
+                };
+            }
+
+            return { ...prev };
+        });
+    }
+
     function downloadSolution() {
         const solution = get(state).solution;
         if (!solution) {
@@ -541,7 +590,8 @@
 <section class="section">
     <div class="container">
         <h1 class="title" id="countdown">⏰</h1>
-        <a href="https://icfpc2023.negainoido.com/streamlit/">streamlit</a>
+        <a rel="external" data-sveltekit-reload href="https://icfpc2023.negainoido.com/streamlit/?id={problem_id}">
+            🔗 streamlit/?id={problem_id}</a>
     </div>
 </section>
 
@@ -581,7 +631,7 @@
                             <td>{r[2]}</td>
                             <td>{r[3]}</td>
                             <td>{r[4]}</td>
-                            <td>{r[5]}</td>
+                            <td>{r[5].toLocaleString()}</td>
                             <td>{r[6]}</td>
                         </tr>
                     {/each}
@@ -605,6 +655,12 @@
                         class="textarea is-primary"
                         bind:value={$state.solution_json}
                     />
+                    <div>
+                        musician id: <input type="number" bind:value={$state.target_musician_id} on:change={updateSolutionJson} />
+                        x: <input type="number" bind:value={$state.target_musician_x} on:change={updateSolutionJson} />
+                        y: <input type="number" bind:value={$state.target_musician_y} on:change={updateSolutionJson}/>
+                        volume: <input type="number" bind:value={$state.target_musician_volume} on:change={updateSolutionJson} />
+                    </div>
                     <button class="button" on:click={loadSolutionJSON}>show solution</button>
                 </div>
             {/if}

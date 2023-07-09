@@ -1,16 +1,12 @@
-from io import StringIO
-import os
-
 import pandas
 import numpy as np
 import requests
 
+
 import streamlit as st
 import streamlit.components.v1 as components
-from streamlit.runtime.uploaded_file_manager import UploadedFile
-from streamlit.logger import get_logger
-
 from api import API
+from streamlit.logger import get_logger
 
 st.set_page_config(layout="wide")
 
@@ -19,6 +15,7 @@ logger = get_logger(__name__)
 
 
 api = API()
+query_params = st.experimental_get_query_params()
 
 rows = api.show()
 df = pandas.DataFrame(
@@ -53,7 +50,7 @@ components.html(html_string, height=70)
 with st.sidebar:
     components.html(html_string, height=70)
 
-st.markdown("[streamlit](https://icfpc2023.negainoido.com/1)")
+st.markdown("[svelte](https://icfpc2023.negainoido.com/1)")
 
 st.write("## Submissions")
 st.write("### Summary")
@@ -78,27 +75,17 @@ filter_problem_id = int(
     st.number_input(
         "problem_id",
         key="filter_problem_id",
-        value=1,
+        value=int(query_params.get("id", [1])[0]) or 1,
         min_value=1,
         max_value=NUM_PROBLEM,
     )
 )
+st.experimental_set_query_params(id=filter_problem_id)
 df = df[df["problem_id"] == filter_problem_id]
 st.write(f"{len(df)} records")
 score_min = min(0, float(df["score"].min() or 0))
 score_max = max(1000, float(df["score"].max() or 1000) * 1.1)
-st.dataframe(
-    df,
-    hide_index=True,
-    column_config={
-        "score": st.column_config.ProgressColumn(
-            "score",
-            format="%d",
-            min_value=score_min,
-            max_value=score_max,
-        ),
-    },
-)
+st.dataframe(df, hide_index=True)
 with st.expander("debug"):
     st.write((score_min, score_max))
     st.write(df)
