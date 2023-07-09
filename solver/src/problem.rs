@@ -65,6 +65,28 @@ impl AngleInfo {
     }
 }
 
+pub fn filter_placements_blocked_by_pillars(attendee_pos: Point, placements: &Vec<Point>, pillars: &Vec<Pillar>, prefiltered_ids: &Vec<usize>) -> Vec<usize> {
+    let mut result = vec![];
+
+    for &id in prefiltered_ids {
+        let mut is_blocked = false;
+        let segment = Segment {
+            p1: attendee_pos,
+            p2: placements[id],
+        };
+        for pillar in pillars {
+            if segment.dist(&pillar.center) < pillar.radius {
+                is_blocked = true;
+                break;
+            }
+        }
+        if !is_blocked {
+            result.push(id);
+        }
+    }
+
+    result
+}
 
 pub fn get_non_blocked_placement_ids(attendee_pos: Point, placements: &Vec<Point>) -> Vec<usize> {
     // Compute nearest musician
@@ -140,7 +162,7 @@ pub fn get_non_blocked_placement_ids(attendee_pos: Point, placements: &Vec<Point
         }
 
         let max_end_angle = max_end_angle_stack.back().unwrap().1;
-        if max_end_angle >= angle_info.angle {
+        if max_end_angle > angle_info.angle {
             is_blocked[i] = true;
         }
 
@@ -170,7 +192,7 @@ pub fn get_non_blocked_placement_ids(attendee_pos: Point, placements: &Vec<Point
         }
 
         let min_start_angle = min_start_angle_stack.back().unwrap().1;
-        if min_start_angle <= angle_info.angle {
+        if min_start_angle < angle_info.angle {
             is_blocked[i] = true;
         }
 
@@ -308,12 +330,18 @@ impl Input {
             p1: a_pos,
             p2: placements[musician_id],
         };
+        for p in self.pillars.iter() {
+            if segment.dist(&p.center) < p.radius {
+                return Ok(0.0);
+            }
+
+        }
         for i in 0..placements.len() {
             if i == musician_id {
                 continue;
             }
 
-            if segment.dist(&placements[i]) <= BLOCKED_DIST {
+            if segment.dist(&placements[i]) < BLOCKED_DIST {
                 return Ok(0.0);
             }
         }
@@ -322,13 +350,18 @@ impl Input {
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    pub fn score(&self, placements: &Vec<Point>) -> Result<f64> {
+    pub fn score(&self, placements: &Vec<Point>, full_div: bool) -> Result<f64> {
+        let impacts = if full_div {
+            self.calc_playing_together(placements)
+        } else {
+            vec![1.0; self.musicians.len()]
+        };
         let ans = (0..self.attendees.len())
             .into_par_iter()
             .map(|attendee_id| {
                 let mut sum_impact = 0.0;
                 for musician_id in 0..self.musicians.len() {
-                    sum_impact += self.impact(attendee_id, musician_id, placements).unwrap();
+                    sum_impact += (impacts[musician_id] * self.impact(attendee_id, musician_id, placements).unwrap()).ceil();
                 }
                 sum_impact
             })
@@ -344,7 +377,12 @@ impl Input {
         let non_blocked_placement_ids =
             get_non_blocked_placement_ids(self.attendees[attendee_id].pos(), &placements);
         // Pillarsによる妨害を考慮
-        println!("non_blocked_placement_ids: {:?}", non_blocked_placement_ids);
+        let non_blocked_placement_ids = filter_placements_blocked_by_pillars(
+            self.attendees[attendee_id].pos(),
+            &placements,
+            &self.pillars,
+            &non_blocked_placement_ids,
+        );
 
         for placement_id in non_blocked_placement_ids {
             // placement_id equals musician_id here
@@ -417,7 +455,7 @@ impl Solution {
     pub fn score(&self, input: &Input, full_div: bool) -> Result<f64> {
         // input.score(&self.placements)
         input.is_valid_placements(&self.placements)?;
-        input.score_fast(&self.placements, full_div)
+        input.score(&self.placements, full_div)
     }
 }
 
