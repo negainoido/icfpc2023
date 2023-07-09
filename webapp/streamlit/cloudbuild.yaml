@@ -15,7 +15,7 @@ steps:
     args:
       - 'run'
       - 'deploy'
-      - 'streamlit'
+      - '$_DEPLOY_TARGET'
       - '--image'
       - 'gcr.io/negainoido-icfpc2023/streamlit:$COMMIT_SHA'
       - '--region'
