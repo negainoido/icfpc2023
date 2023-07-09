@@ -6,6 +6,8 @@ from streamlit_agraph import Config, Edge, Node, agraph
 
 import streamlit as st
 
+from api import API
+
 NUM_PROBLEM = 90
 
 
@@ -18,26 +20,6 @@ class Problem:
         with open(f"./resource/problems/problem-{problem_id}.json", "rt") as f:
             data = json.load(f)
             return data
-
-
-class API:
-    def __init__(self):
-        self.url = "https://icfpc2023.negainoido.com"
-
-    def _get(self, endpoint: str, data=None):
-        headers = {
-            "Content-Type": "application/json",
-        }
-        response = requests.get(f"{self.url}{endpoint}", params=data, headers=headers)
-        return response.json()
-
-    def show(self):
-        data = self._get("/api/solutions/show")
-        return data
-
-    def solution(self, solution_id: int):
-        data = self._get("/api/solutions", data={"id": solution_id})
-        return data
 
 
 def viz(problem, solution):
