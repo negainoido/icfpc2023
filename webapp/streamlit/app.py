@@ -11,6 +11,8 @@ from streamlit.logger import get_logger
 
 from api import API
 
+st.set_page_config(layout="wide")
+
 NUM_PROBLEM = 90
 logger = get_logger(__name__)
 
