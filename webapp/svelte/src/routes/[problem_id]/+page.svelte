@@ -3,6 +3,7 @@
     import { onMount } from 'svelte';
     import { get, writable } from 'svelte/store';
     import Log from '$lib/Log.svelte';
+    import { page } from '$app/stores';
 
     let wasm;
     let problem_id = data.problem_id;
@@ -58,18 +59,18 @@
                 is_full
             );
             console.log('wasm success:', score);
-            state.update((prev) => {
+            state.update(prev => {
                 return {
                     ...prev,
-                    log: prev.log.concat('wasm done'),
+                    log: ['wasm done'],
                 };
             });
         } catch (err) {
             score = `failed`;
-            state.update((prev) => {
+            state.update(prev => {
                 return {
                     ...prev,
-                    log: prev.log.concat(`wasm failed: ${err}`),
+                    log: [`wasm failed: ${err}`],
                 };
             });
             console.warn(err);
@@ -198,11 +199,25 @@
                         plusy: plusy,
                     };
                 });
+                let query_solution_id = $page.url.searchParams.get('solution_id');
+                if (query_solution_id) {
+                    fetchSolution(parseInt(query_solution_id));
+                }
             });
     }
 
     function fetchSolution(solution_id) {
+        history.pushState({}, `/${problem_id}?solution_id=${solution_id}`, `/${problem_id}?solution_id=${solution_id}`);
         clear();
+        state.update(prev => {
+            return {
+                ...prev,
+                solution_id: solution_id,
+                soluiton: null,
+                solution_json: "",
+                log: [],
+            };
+        });
         fetch(`https://icfpc2023.negainoido.com/api/solutions?id=${solution_id}`, {
             credentials: 'include',
         })
