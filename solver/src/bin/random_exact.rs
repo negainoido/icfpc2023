@@ -2,6 +2,7 @@ use clap::Parser;
 use ordered_float::{Float, OrderedFloat};
 use pathfinding::kuhn_munkres::kuhn_munkres;
 use pathfinding::matrix::Matrix;
+use rand::Rng;
 
 use solver::problem::*;
 use solver::*;
@@ -19,8 +20,8 @@ struct Args {
     #[arg(short, long, default_value_t = 30.0)]
     timeout: f64,
 
-    #[arg(short, long, default_value_t = 0)]
-    rand_seed: u128,
+    #[arg(short, long)]
+    rand_seed: Option<u128>,
 }
 
 fn get_time() -> f64 {
@@ -41,7 +42,10 @@ fn main() {
     let args = Args::parse();
     let input_str = std::fs::read_to_string(args.input.clone()).unwrap();
     let input: Input = serde_json::from_str(&input_str).unwrap();
-    let mut generator = PlacementGenerator::new(input.clone(), args.rand_seed);
+    let mut rng = rand::thread_rng();
+    let seed = args.rand_seed.unwrap_or(rng.gen::<u128>());
+    eprintln!("rand seed: {}", seed);
+    let mut generator = PlacementGenerator::new(input.clone(), seed);
 
     let mut best_score = -OrderedFloat::infinity();
     let mut best_placements = vec![];
