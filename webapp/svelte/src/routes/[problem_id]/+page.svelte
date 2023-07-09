@@ -1,10 +1,11 @@
 <script>
+    export let data;
     import { onMount } from 'svelte';
     import {get, writable} from "svelte/store";
     import Log from '$lib/Log.svelte';
 
     let wasm;
-    let problem_id = 1;
+    let problem_id = data.problem_id;
     let solution_id = 1;
     let records = [];
     let filteredRecords = [];
