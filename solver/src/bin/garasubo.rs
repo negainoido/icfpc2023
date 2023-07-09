@@ -46,10 +46,11 @@ fn main() {
     }
     println!("musicians: {:?}", musician_map);
     // musiciansが多すぎるとかの場合はそんなにいいスコアでないので諦める
-    if musician_map.len() >= 30 || input.pillars.len() == 0 {
+    if musician_map.len() >= 30 {
         println!("too many musicians or no pillars");
         return;
     }
+    let full_div = input.pillars.len() > 0;
 
     // 各楽器のそれっぽい人気度を計算
     let mut popularity = Vec::with_capacity(instruments.keys().len());
@@ -79,7 +80,7 @@ fn main() {
     println!("generated candidates");
 
 
-    let mut best_score = 0.0;
+    let mut best_score = -100000000.0;
     let mut rnd = Pcg64Mcg::new(args.rand_seed);
     let mut best_solution = solution.clone();
     println!("initial score: {}", best_score);
@@ -91,47 +92,24 @@ fn main() {
         // 楽器順に配置
         'outer: for &instrument_id in instruments_ids.iter() {
             println!("check for {instrument_id}");
-            let mut neighbors = HashSet::new();
             let mut count = 0;
+            'inner: while count < instruments[&instrument_id] {
 
-            // ステージ上の候補地点からランダムに良さそうな箇所を選ぶ
-            let mut best_point = available_points.iter().choose(&mut rnd).unwrap().clone();
-            let tmp_visible_attendees = input.get_visible_attendees(candidates[best_point], &current_solution);
-            let mut best_score = input.raw_score_for_instrument(candidates[best_point], instrument_id, &tmp_visible_attendees);
-            for _ in 0..PICK_POINTS_COUNT {
-                let point = available_points.iter().choose(&mut rnd).unwrap().clone();
-                let tmp_visible_attendees = input.get_visible_attendees(candidates[point], &current_solution);
-                let score = input.raw_score_for_instrument(candidates[point], instrument_id, &tmp_visible_attendees);
-                if score > best_score {
-                    best_score = score;
-                    best_point = point;
-                }
-            }
-            current_solution.push(candidates[best_point]);
-            current_solution_mid.push(musician_map[instrument_id][count]);
-            used.insert(best_point);
-            available_points.remove(&best_point);
+                let mut neighbors = HashSet::new();
 
-            count += 1;
-            for &p in &candidates_graph[best_point] {
-                if used.contains(&p) {
-                    continue;
+                // ステージ上の候補地点からランダムに良さそうな箇所を選ぶ
+                let mut best_point = available_points.iter().choose(&mut rnd).unwrap().clone();
+                let tmp_visible_attendees = input.get_visible_attendees(candidates[best_point], &current_solution);
+                let mut best_score = input.raw_score_for_instrument(candidates[best_point], instrument_id, &tmp_visible_attendees);
+                for _ in 0..PICK_POINTS_COUNT*10 {
+                    let point = available_points.iter().choose(&mut rnd).unwrap().clone();
+                    let tmp_visible_attendees = input.get_visible_attendees(candidates[point], &current_solution);
+                    let score = input.raw_score_for_instrument(candidates[point], instrument_id, &tmp_visible_attendees);
+                    if score > best_score {
+                        best_score = score;
+                        best_point = point;
+                    }
                 }
-                neighbors.insert(p);
-            }
-            while count < instruments[&instrument_id] {
-                if neighbors.is_empty() {
-                    println!("couldn't find neighbor");
-                    break 'outer;
-                }
-                let pick_count = std::cmp::min(PICK_POINTS_COUNT, neighbors.len());
-                let (best_point, _) = neighbors.iter().choose_multiple(&mut rnd, pick_count)
-                    .into_par_iter()
-                    .map(|&point| {
-                        let tmp_visible_attendees = input.get_visible_attendees(candidates[point], &current_solution);
-                        let score = input.raw_score_for_instrument(candidates[point], instrument_id, &tmp_visible_attendees);
-                        (point, score)
-                    }).max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap()).unwrap();
                 current_solution.push(candidates[best_point]);
                 current_solution_mid.push(musician_map[instrument_id][count]);
                 used.insert(best_point);
@@ -144,6 +122,33 @@ fn main() {
                     }
                     neighbors.insert(p);
                 }
+                while count < instruments[&instrument_id] {
+                    if neighbors.is_empty() {
+                        println!("couldn't find neighbor");
+                        break 'inner;
+                    }
+                    let pick_count = std::cmp::min(PICK_POINTS_COUNT, neighbors.len());
+                    let (best_point, _) = neighbors.iter().choose_multiple(&mut rnd, pick_count)
+                        .into_par_iter()
+                        .map(|&point| {
+                            let tmp_visible_attendees = input.get_visible_attendees(candidates[point], &current_solution);
+                            let score = input.raw_score_for_instrument(candidates[point], instrument_id, &tmp_visible_attendees);
+                            (point, score)
+                        }).max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap()).unwrap();
+                    current_solution.push(candidates[best_point]);
+                    current_solution_mid.push(musician_map[instrument_id][count]);
+                    used.insert(best_point);
+                    available_points.remove(&best_point);
+                    neighbors.remove(&best_point);
+
+                    count += 1;
+                    for &p in &candidates_graph[best_point] {
+                        if used.contains(&p) {
+                            continue;
+                        }
+                        neighbors.insert(p);
+                    }
+                }
             }
         }
         if  current_solution.len() < input.musicians.len() {
@@ -155,7 +160,7 @@ fn main() {
             solution.placements[current_solution_mid[i]] = current_solution[i];
         }
 
-        match solution.score(&input, true) {
+        match solution.score(&input, full_div) {
             Ok(score) => {
                 if score > best_score {
                     best_score = score;
