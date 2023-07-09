@@ -86,8 +86,6 @@ column_config = {
 st.dataframe(df_summary, column_config=column_config, hide_index=True)
 st.info(f"Sum score = {score_sum:,}")
 
-st.dataframe(df_nobishiro, column_config=column_config, hide_index=True)
-
 st.write("### by problem")
 filter_problem_id = int(
     st.number_input(
