@@ -19,7 +19,7 @@ struct Args {
     #[arg(short, long)]
     output: String,
 
-    #[arg(long, default_value_t = 10)]
+    #[arg(long, default_value_t = 5)]
     iteration: i32,
 
     #[arg(short, long, default_value_t = 0)]
@@ -45,6 +45,11 @@ fn main() {
         musician_map[m].push(i);
     }
     println!("musicians: {:?}", musician_map);
+    // musiciansが多すぎるとかの場合はそんなにいいスコアでないので諦める
+    if musician_map.len() >= 30 || input.pillars.len() == 0 {
+        println!("too many musicians or no pillars");
+        return;
+    }
 
     // 各楽器のそれっぽい人気度を計算
     let mut popularity = Vec::with_capacity(instruments.keys().len());
