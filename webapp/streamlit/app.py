@@ -67,7 +67,7 @@ column_config = {
     "thumbnail": st.column_config.ImageColumn("thumbnail"),
     "tastes": st.column_config.ImageColumn("tastes"),
 }
-st.dataframe(df_summary, column_config=column_config)
+st.dataframe(df_summary, column_config=column_config, hide_index=True)
 st.info(f"Sum score = {score_sum:,}")
 
 st.write("### by problem")
