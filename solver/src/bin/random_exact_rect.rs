@@ -44,6 +44,15 @@ fn generate_first_level_candidates(input: &Input) -> Vec<Point> {
         for j in 0..y_count {
             let offset = Point::new(10.0 + i as f64 * x_gap, 10.0 + j as f64 * y_gap);
             let pos = input.stage_bottom_left + offset;
+            const WALL_DISTANCE_THRESHOLD: f64 = 40.0;
+            if pos.x() < WALL_DISTANCE_THRESHOLD
+                || input.room_width - WALL_DISTANCE_THRESHOLD < pos.x()
+                || pos.y() < WALL_DISTANCE_THRESHOLD
+                || input.room_height - WALL_DISTANCE_THRESHOLD < pos.y()
+            {
+                continue;
+            }
+
             let x_level = i.min(x_count - 1 - i);
             let y_level = j.min(y_count - 1 - j);
             let level = x_level.min(y_level);
