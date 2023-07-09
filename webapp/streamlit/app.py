@@ -1,7 +1,6 @@
-import pandas
 import numpy as np
+import pandas
 import requests
-
 
 import streamlit as st
 import streamlit.components.v1 as components
@@ -16,6 +15,7 @@ logger = get_logger(__name__)
 
 api = API()
 query_params = st.experimental_get_query_params()
+query_id = int(query_params.get("id", [1])[0]) or 1
 
 rows = api.show()
 df = pandas.DataFrame(
@@ -50,7 +50,7 @@ components.html(html_string, height=70)
 with st.sidebar:
     components.html(html_string, height=70)
 
-st.markdown("[svelte](https://icfpc2023.negainoido.com/1)")
+st.markdown(f":link: [svelte](https://icfpc2023.negainoido.com/{query_id})")
 
 st.write("## Submissions")
 st.write("### Summary")
@@ -90,12 +90,8 @@ st.write(f"{len(df)} records")
 score_min = min(0, float(df["score"].min() or 0))
 score_max = max(1000, float(df["score"].max() or 1000) * 1.1)
 st.dataframe(df, hide_index=True)
-with st.expander("debug"):
-    st.write((score_min, score_max))
-    st.write(df)
 
 st.write("## Update score")
-
 st.write("未取得なスコアをすべて更新するボタン")
 if st.button("update score"):
     st.json(api.update_score())
