@@ -34,6 +34,7 @@ pub fn calc_score(
     attendees: Vec<JsValue>,
     pillars: Vec<JsValue>,
     placement: Vec<JsValue>,
+    volumes: Option<Vec<f64>>,
     is_full: bool,
 ) -> Result<f64, JsValue> {
     use crate::problem::Attendee;
@@ -47,6 +48,7 @@ pub fn calc_score(
                 Point::new(p.x, p.y)
             })
             .collect(),
+        volumes,
     };
     let input = problem::Input {
         room_width,

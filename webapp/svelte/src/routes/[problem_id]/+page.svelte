@@ -44,6 +44,7 @@
                 problem.attendees,
                 problem.pillars,
                 solution.placements,
+                solution.volumes,
                 is_full
             );
             console.log('wasm success:', score);
