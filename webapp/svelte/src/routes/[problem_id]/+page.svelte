@@ -29,6 +29,12 @@
         target_musician_volume: 1.0,
     });
     let score = null;
+    let mouse = {
+        x: 0,
+        y: 0,
+        status: 'mouseup',  // 'mousedown'
+        target_musician_id: null,
+    };
 
     async function calc_score(wasm, problem, solution) {
         console.log('start calc_score');
@@ -97,9 +103,11 @@
             console.log('data not ready; cannot draw');
         }
         if (value.problem && value.solution && wasm) {
-            setTimeout(async () => {
-                await calc_score(wasm, value.problem, value.solution);
-            }, 100);
+            if (mouse.status === 'mouseup') {
+                setTimeout(async () => {
+                    await calc_score(wasm, value.problem, value.solution);
+                }, 100);
+            }
         } else {
             console.log('not ready; cannot calc_score');
         }
@@ -377,7 +385,7 @@
             let lines = [
                 `problem: ${problem_id}`,
                 `solution: ${$state.solution_id}`,
-                `score: ${score}`,
+                `score: ${score != null ? score.toLocaleString() : null}`,
             ].concat(log);
             for (let i = 0; i < lines.length; ++i) {
                 canvas.fillText(lines[i], 12, 29 * (i + 1));
@@ -403,7 +411,6 @@
     }
 
     function onKeyDown(e) {
-        console.log(e);
         switch (e.key) {
             case '0':
             case 'o':
@@ -475,7 +482,6 @@
             case 'Q':
                 state.update((prev) => {
                     let newzoom = Math.max(prev.zoom / 2, prev.zoom - 0.1);
-                    console.log(prev.zoom, newzoom);
                     let ratio = newzoom / prev.zoom;
                     let newplusx = ratio * prev.plusx + 800 * (1 - ratio);
                     let newplusy = ratio * prev.plusy + 600 * (1 - ratio);
@@ -491,7 +497,6 @@
             case 'E':
                 state.update((prev) => {
                     let newzoom = Math.min(prev.zoom + 0.05, prev.zoom * 2);
-                    console.log(prev.zoom, newzoom);
                     let ratio = newzoom / prev.zoom;
                     let newplusx = ratio * prev.plusx + 800 * (1 - ratio);
                     let newplusy = ratio * prev.plusy + 600 * (1 - ratio);
@@ -506,14 +511,18 @@
         }
     }
 
-    function clickCanvas(event) {
+    function mousePos(event) {
         let canvas = document.getElementById('c');
         let rect = canvas.getBoundingClientRect();
         let x = event.clientX - rect.left;
         let y = event.clientY - rect.top;
         x = (x - $state.plusx) / $state.zoom;
         y = (y - $state.plusy) / $state.zoom;
-        console.log('click', [x, y]);
+        return [x, y];
+    }
+
+    function clickCanvas(event) {
+        let [x, y] = mousePos(event);
         let log = [];
         if ($state.solution && $state.solution.placements) {
             for (let i = 0; i < $state.solution.placements.length; ++i) {
@@ -561,6 +570,59 @@
             ...prev,
             log: log,
         }));
+    }
+
+    function mousedownCanvas(event) {
+        if (!event.shiftKey) return;
+        let [x, y] = mousePos(event);
+        mouse = {
+            x: x,
+            y: y,
+            status: 'mousedown',
+            target_musician_id: null,
+        };
+        if ($state.solution && $state.solution.placements) {
+            for (let i = 0; i < $state.solution.placements.length; ++i) {
+                let m = $state.solution.placements[i];
+                let inst = $state.problem.musicians[i];
+                if (Math.hypot(x - m.x, y - m.y) <= 5.0) {
+                    mouse.target_musician_id = i;
+                }
+            }
+        }
+    }
+    function mouseupCanvas(event) {
+        if (!event.shiftKey) return;
+        let [x, y] = mousePos(event);
+        if (mouse.target_musician_id != null) {
+            let mid = mouse.target_musician_id;
+            score = null;
+            state.update(state => {
+                state.solution.placements[mid].x = x;
+                state.solution.placements[mid].y = y;
+                state.solution_json = JSON.stringify(state.solution, null, 2);
+                return state;
+            });
+        }
+        mouse = {
+            x: x,
+            y: y,
+            status: 'mouseup',
+            target_musician_id: null,
+        };
+    }
+    function mousemoveCanvas(event) {
+        if (!event.shiftKey) return;
+        let [x, y] = mousePos(event);
+        if (mouse.target_musician_id != null) {
+            let mid = mouse.target_musician_id;
+            score = null;
+            state.update(state => {
+                state.solution.placements[mid].x = x;
+                state.solution.placements[mid].y = y;
+                return state;
+            });
+        }
     }
 
     function clockInit() {
@@ -788,11 +850,17 @@
                     <li class="is-active"><a>R: 罫線</a></li>
                     <li class="is-active"><a>V: ボリューム表示</a></li>
                     <li class="is-active"><a>0: 表示リセット</a></li>
+                    <li class="is-active"><a>Shift+ドラッグ: 演奏者移動</a></li>
                 </ul>
             </nav>
         </div>
         <div>
-            <canvas id="c" width="1600" height="1200" on:click={clickCanvas} />
+            <canvas id="c" width="1600" height="1200"
+                on:click={clickCanvas}
+                on:mousedown={mousedownCanvas}
+                on:mouseup={mouseupCanvas}
+                on:mousemove={mousemoveCanvas}
+            />
         </div>
         <div>
             <button disabled={$state.solution === null} on:click={downloadSolution}
