@@ -19,10 +19,37 @@
     });
     let score = null;
 
-    state.subscribe((value) => {
+    async function calc_score(wasm, problem, solution) {
+        console.log('start calc_score')
+        if (score) {
+            // 計算済み
+            console.log('skip calc_score')
+            return;
+        }
+        try {
+            // console.log(problem, solution);
+            score = wasm.calc_score(
+                problem.room_width,
+                problem.room_height,
+                problem.stage_width,
+                problem.stage_height,
+                problem.stage_bottom_left,
+                problem.musicians,
+                problem.attendees,
+                solution.placements,
+            );
+            console.log('wasm success:', score);
+        } catch (err) {
+            console.warn(err);
+            wasm = null;
+            score = 'failed';
+        }
+    }
+
+    state.subscribe(async (value) => {
         if (value.problem) {
             console.log("start draw...");
-            draw(
+            await draw(
                 value.problem,
                 value.solution,
                 value.colorful,
@@ -36,25 +63,9 @@
             console.log("data not ready; cannot draw");
         }
         if (value.problem && value.solution && wasm) {
-            if (score) {
-                // 計算済み
-                return;
-            }
-            // console.log(value.problem, value.solution);
-            const is_full = problem_id > 55;
-            score = wasm.calc_score(
-                value.problem.room_width,
-                value.problem.room_height,
-                value.problem.stage_width,
-                value.problem.stage_height,
-                value.problem.stage_bottom_left,
-                value.problem.musicians,
-                value.problem.attendees,
-                value.problem.pillars,
-                value.solution.placements,
-                is_full,
-            );
-            console.log(score);
+            setTimeout(async () => {
+                await calc_score(wasm, value.problem, value.solution);
+            }, 100);
         } else {
             console.log('not ready; cannot calc_score');
         }
@@ -132,6 +143,7 @@
             .then(data => data.json())
             .then(problem => {
                 let [zoom, plusx, plusy] = baseDisplayParams(problem);
+                score = 0;
                 state.update((prev) => {
                     return {
                         ...prev,
@@ -154,11 +166,12 @@
                     return;
                 }
                 let contents = response['contents'];
-                let data = JSON.parse(contents);
+                let solution = JSON.parse(contents);
+                score = 0;
                 state.update((prev) => {
                     return {
                         ...prev,
-                        solution: data,
+                        solution: solution,
                     };
                 });
             });
@@ -198,7 +211,7 @@
         return [zoom, plusx, plusy];
     }
 
-    function draw(problem, solution, colorful, zoom, plusx, plusy, ruler) {
+    async function draw(problem, solution, colorful, zoom, plusx, plusy, ruler) {
         if (!document) return;
         let obj = document.getElementById('c');
         if (!obj) return;
