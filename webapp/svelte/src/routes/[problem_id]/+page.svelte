@@ -1,10 +1,11 @@
 <script>
+    export let data;
     import { onMount } from 'svelte';
     import {get, writable} from "svelte/store";
     import Log from '$lib/Log.svelte';
 
     let wasm;
-    let problem_id = 1;
+    let problem_id = data.problem_id;
     let solution_id = 1;
     let records = [];
     let filteredRecords = [];
@@ -27,7 +28,6 @@
             console.log('skip calc_score')
             return;
         }
-        const is_full = problem_id > 55;
         try {
             // console.log(problem, solution);
             score = wasm.calc_score(
@@ -38,10 +38,9 @@
                 problem.stage_bottom_left,
                 problem.musicians,
                 problem.attendees,
-                problem.pillars,
                 solution.placements,
-                is_full,
             );
+            console.log('wasm success:', score);
         } catch (err) {
             console.warn(err);
             wasm = null;
@@ -66,9 +65,9 @@
             console.log("data not ready; cannot draw");
         }
         if (value.problem && value.solution && wasm) {
-            calc_score(wasm, value.problem, value.solution).then(() => {
-                console.log('finish calc_score: ', score);
-            });
+            setTimeout(async () => {
+                await calc_score(wasm, value.problem, value.solution);
+            }, 100);
         } else {
             console.log('not ready; cannot calc_score');
         }
@@ -138,7 +137,6 @@
             plusx: 0.0,
             plusy: 0.0,
         }));
-        score = null;
         for (let r of records) {
             if (r[1] === problem_id) {
                 filteredRecords.push(r);
@@ -163,7 +161,6 @@
 
     function fetchSolution(solution_id) {
         clear();
-        score = null;
         fetch(`https://icfpc2023.negainoido.com/api/solutions?id=${solution_id}`)
             .then(response => response.json())
             .then(response => {
