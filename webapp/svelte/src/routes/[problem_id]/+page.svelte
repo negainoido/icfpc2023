@@ -46,7 +46,6 @@
                     solution.volumes.push(1.0);
                 }
             }
-            return;
             score = wasm.calc_score(
                 problem.room_width,
                 problem.room_height,
