@@ -178,7 +178,7 @@ impl<'a> PlacementGenerator<'a> {
     }
 }
 
-pub fn get_id(input: &str) -> anyhow::Result<i32> {
+fn get_id(input: &str) -> anyhow::Result<i32> {
     let path = std::path::Path::new(&input);
     let base = path.file_stem().context("no file_stem?")?;
     let base = base.to_str().context("to_str failed")?;
