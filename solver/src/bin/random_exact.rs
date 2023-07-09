@@ -56,7 +56,7 @@ fn main() {
         let mut reachable_placements = vec![];
         for attendee_id in 0..input.attendees.len() {
             let non_blocked_placement_ids =
-                get_non_blocked_placement_ids(input.attendees[attendee_id].pos(), &placements, &input.pillars);
+                get_non_blocked_placement_ids(input.attendees[attendee_id].pos(), &placements);
             reachable_placements.push(non_blocked_placement_ids);
         }
         for musician_id in 0..input.musicians.len() {

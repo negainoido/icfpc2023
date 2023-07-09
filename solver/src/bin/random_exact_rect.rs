@@ -70,7 +70,7 @@ fn exact_match_candidates(input: &Input, candidates: &Vec<Point>) -> Vec<Point> 
     let mut reachable_candidates = vec![];
     for attendee_id in 0..input.attendees.len() {
         let non_blocked_candidate_ids =
-            get_non_blocked_placement_ids(input.attendees[attendee_id].pos(), &candidates, &input.pillars);
+            get_non_blocked_placement_ids(input.attendees[attendee_id].pos(), &candidates);
         reachable_candidates.push(non_blocked_candidate_ids);
     }
 
