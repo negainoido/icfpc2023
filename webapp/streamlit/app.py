@@ -61,10 +61,20 @@ df_summary["tastes"] = (
     "./app/static/img/tastes-" + df["problem_id"].astype(str) + ".png"
 )
 score_sum = df_summary["score"][df_summary["score"] > 0].sum()
+
+
+def add_link(df: pandas.DataFrame):
+    df["link"] = (
+        "https://icfpc2023.negainoido.com/"
+        + df["problem_id"].astype(str)
+        + "?solution_id="
+        + df["id"].astype(str)
+    )
+
+
+add_link(df_summary)
+
 df_summary["score_ratio"] = df_summary["score"].astype(int) / score_sum * 100
-df_summary["link"] = "https://icfpc2023.negainoido.com/" + df_summary[
-    "problem_id"
-].astype(str)
 
 column_config = {
     "thumbnail": st.column_config.ImageColumn("thumbnail"),
@@ -89,7 +99,9 @@ df = df[df["problem_id"] == filter_problem_id]
 st.write(f"{len(df)} records")
 score_min = min(0, float(df["score"].min() or 0))
 score_max = max(1000, float(df["score"].max() or 1000) * 1.1)
-st.dataframe(df, hide_index=True)
+add_link(df)
+
+st.dataframe(df, hide_index=True, column_config=column_config)
 
 st.write("## Update score")
 st.write("未取得なスコアをすべて更新するボタン")
