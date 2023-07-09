@@ -202,12 +202,17 @@
                 });
                 let query_solution_id = $page.url.searchParams.get('solution_id');
                 if (query_solution_id) {
-                    fetchSolution(parseInt(query_solution_id));
+                    let solution_id = parseInt(query_solution_id);
+                    let known_score = null;
+                    for (let r of records) {
+                        if (r[0] == solution_id) known_score = r[5];
+                    }
+                    fetchSolution(solution_id, known_score);
                 }
             });
     }
 
-    function fetchSolution(solution_id) {
+    function fetchSolution(solution_id, known_score) {
         history.pushState({}, `/${problem_id}?solution_id=${solution_id}`, `/${problem_id}?solution_id=${solution_id}`);
         clear();
         state.update(prev => {
@@ -230,7 +235,11 @@
                 }
                 let contents = response['contents'];
                 let solution = JSON.parse(contents);
-                score = null;
+                if (known_score) {
+                    score = known_score;
+                } else {
+                    score = null; // to be calced by wasm
+                }
                 state.update((prev) => {
                     return {
                         ...prev,
@@ -368,7 +377,7 @@
             let lines = [
                 `problem: ${problem_id}`,
                 `solution: ${$state.solution_id}`,
-                `score: ${score}`,
+                `score: ${score ? score : "? (wasm running)"}`,
             ].concat(log);
             for (let i = 0; i < lines.length; ++i) {
                 canvas.fillText(lines[i], 12, 29 * (i + 1));
@@ -575,9 +584,10 @@
     });
 
     function loadSolutionJSON() {
-        score = 0;
+        score = null;
         state.update((prev) => ({
             ...prev,
+            solution_id: -1,
             solution: JSON.parse(prev.solution_json),
         }));
     }
@@ -670,7 +680,7 @@
                 <tbody>
                     {#each filteredRecords as r}
                         <tr>
-                            <td><button on:click={fetchSolution(r[0])}>{r[0]}</button></td>
+                            <td><button on:click={fetchSolution(r[0], r[5])}>{r[0]}</button></td>
                             <td>{r[2]}</td>
                             <td>{r[3]}</td>
                             <td>{r[5].toLocaleString()}</td>
