@@ -102,9 +102,6 @@ score_max = max(1000, float(df["score"].max() or 1000) * 1.1)
 add_link(df)
 
 st.dataframe(df, hide_index=True, column_config=column_config)
-with st.expander("debug"):
-    st.write((score_min, score_max))
-    st.write(df)
 
 st.write("## Update score")
 st.write("未取得なスコアをすべて更新するボタン")
