@@ -308,6 +308,14 @@
         console.log(e);
         console.log(e.key);
         switch (e.key) {
+            case '0':
+                state.update(prev => ({
+                    ...prev,
+                    zoom: 1.0,
+                    plusx: 0.0,
+                    plusy: 0.0,
+                }));
+                break;
             case 'c':
                 state.update(prev => ({
                     ...prev,
@@ -455,6 +463,8 @@
 <div>
     <b>変更履歴</b>
     <dl>
+        <dt>07/09 12:46</dt>
+        <dd>表示リセットは 0 (ゼロ) キー</dd>
         <dt>07/09 12:32</dt>
         <dd>ミュージシャンは常に半径 5 で表示される。観客はちっちゃい点のままです</dd>
         <dt>07/09 12:30</dt>
