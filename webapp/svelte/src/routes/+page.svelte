@@ -12,6 +12,7 @@
         problem: null,
         solution: null,
         colorful: true,
+        ruler: false,
         zoom: 1.0,
         plusx: 0.0,
         plusy: 0.0,
@@ -21,7 +22,15 @@
     state.subscribe((value) => {
         if (value.problem) {
             console.log("start draw...");
-            draw(value.problem, value.solution, value.colorful, value.zoom, value.plusx, value.plusy);
+            draw(
+                value.problem,
+                value.solution,
+                value.colorful,
+                value.zoom,
+                value.plusx,
+                value.plusy,
+                value.ruler
+            );
             console.log("...finish draw");
         } else {
             console.log("data not ready; cannot draw");
@@ -159,7 +168,7 @@
         canvas.clearRect(0, 0, width, height);
     }
 
-    function draw(problem, solution, colorful, zoom, plusx, plusy) {
+    function draw(problem, solution, colorful, zoom, plusx, plusy, ruler) {
         if (!document) return;
         let obj = document.getElementById('c');
         if (!obj) return;
@@ -210,6 +219,7 @@
             zoom * scale * problem.room_width,
             zoom * scale * problem.room_height
         );
+        // stage
         canvas.fillStyle = '#999';
         canvas.fillRect(
             offsetx + zoom * scale * problem.stage_bottom_left[0],
@@ -217,6 +227,23 @@
             zoom * scale * problem.stage_width,
             zoom * scale * problem.stage_height
         );
+        // 罫線
+        if (ruler) {
+            let w = 10;
+            canvas.strokeStyle = '#9cc';
+            for (let x = 0; x <= problem.room_width; x += w) {
+                canvas.beginPath();
+                canvas.moveTo(offsetx + zoom * scale * x, offsety);
+                canvas.lineTo(offsetx + zoom * scale * x, offsety + zoom * scale * problem.room_height);
+                canvas.stroke();
+            }
+            for (let y = 0; y <= problem.room_width; y += w) {
+                canvas.beginPath();
+                canvas.moveTo(offsetx, offsety + zoom * scale * y);
+                canvas.lineTo(offsetx + zoom * scale * problem.room_width, offsety + zoom * scale * y);
+                canvas.stroke();
+            }
+        }
         // musicians
         if (solution) {
             canvas.fillStyle = '#11a';
@@ -230,7 +257,7 @@
                 canvas.arc(
                     offsetx + zoom * scale * m.x,
                     offsety + zoom * scale * m.y,
-                    1.6, 0, 7, false
+                    5, 0, 7, false
                 );
                 canvas.fill();
             }
@@ -280,38 +307,50 @@
         console.log(e);
         console.log(e.key);
         switch (e.key) {
+            case 'c':
+                state.update(prev => ({
+                    ...prev,
+                    colorful: !prev.colorful,
+                }));
+                break;
+            case 'r':
+                state.update(prev => ({
+                    ...prev,
+                    ruler: !prev.ruler,
+                }));
+                break;
             case 'a':
             case 'h':
                 state.update(prev => ({
                     ...prev, 
-                    plusx: prev.plusx - 10,
+                    plusx: prev.plusx + 40,
                 }));
             break;
             case 'd':
             case 'l':
                 state.update(prev => ({
                     ...prev, 
-                    plusx: prev.plusx + 10,
+                    plusx: prev.plusx - 40,
                 }));
             break;
             case 'w':
             case 'k':
                 state.update(prev => ({
                     ...prev, 
-                    plusy: prev.plusy - 10,
+                    plusy: prev.plusy + 40,
                 }));
             break;
             case 's':
             case 'j':
                 state.update(prev => ({
                     ...prev, 
-                    plusy: prev.plusy + 10,
+                    plusy: prev.plusy - 40,
                 }));
             break;
             case 'q':
                 state.update(prev => ({
                     ...prev, 
-                    zoom: Math.max(0, prev.zoom - 0.1),
+                    zoom: prev.zoom - 0.1,
                 }));
             break;
             case 'e':
@@ -367,7 +406,11 @@
     <div>
         <label>
             <input type='checkbox' bind:checked={$state.colorful} />
-            楽器で色を変える
+            楽器で色を変える (C)
+        </label>
+        <label>
+            <input type='checkbox' bind:checked={$state.ruler} />
+            罫線 (幅=10) (R)
         </label>
         <br />
         <button on:click={fullScreen}>全画面表示</button>
