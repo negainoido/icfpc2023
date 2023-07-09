@@ -41,6 +41,7 @@
                 return;
             }
             // console.log(value.problem, value.solution);
+            const is_full = problem_id > 55;
             score = wasm.calc_score(
                 value.problem.room_width,
                 value.problem.room_height,
@@ -51,6 +52,7 @@
                 value.problem.attendees,
                 value.problem.pillars,
                 value.solution.placements,
+                is_full,
             );
             console.log(score);
         } else {
