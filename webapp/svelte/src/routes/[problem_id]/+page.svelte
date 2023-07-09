@@ -255,21 +255,21 @@
     function baseDisplayParams(problem) {
         let width = 1600;
         let height = 1200;
-        let minx = problem.stage_bottom_left[0];
-        let miny = problem.stage_bottom_left[1];
-        let maxx = problem.stage_bottom_left[0] + problem.stage_width;
-        let maxy = problem.stage_bottom_left[1] + problem.stage_height;
-        for (let m of problem.attendees) {
-            minx = Math.min(minx, m.x);
-            miny = Math.min(miny, m.y);
-            maxx = Math.max(maxx, m.x);
-            maxy = Math.max(maxy, m.y);
-        }
-        let padding = 10;
-        minx -= padding;
-        miny -= padding;
-        maxx += padding;
-        maxy += padding;
+        let minx = problem.stage_bottom_left[0] - problem.stage_width * 0.5;
+        let miny = problem.stage_bottom_left[1] - problem.stage_height * 0.5;
+        let maxx = problem.stage_bottom_left[0] + problem.stage_width * 1.5;
+        let maxy = problem.stage_bottom_left[1] + problem.stage_height * 1.5;
+        // for (let m of problem.attendees) {
+        //     minx = Math.min(minx, m.x);
+        //     miny = Math.min(miny, m.y);
+        //     maxx = Math.max(maxx, m.x);
+        //     maxy = Math.max(maxy, m.y);
+        // }
+        // let padding = 10;
+        // minx -= padding;
+        // miny -= padding;
+        // maxx += padding;
+        // maxy += padding;
         let zoom = Math.min(width / (maxx - minx), height / (maxy - miny));
         let plusx = 800 - (zoom * (minx + maxx)) / 2;
         let plusy = 600 - (zoom * (miny + maxy)) / 2;
