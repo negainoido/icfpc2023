@@ -119,6 +119,6 @@ fn main() {
     let mut solution: Solution = Default::default();
     solution.placements = best_placements.clone();
     input.is_valid_placements(&best_placements).unwrap();
-    eprintln!("Solver score: {}", solution.score(&input).unwrap());
+    eprintln!("Solver score: {}", solution.score(&input, false).unwrap());
     std::fs::write(args.output, serde_json::to_string(&solution).unwrap()).unwrap();
 }

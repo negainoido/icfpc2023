@@ -52,7 +52,7 @@ fn main() {
 
     let mut rnd = Pcg64Mcg::new(args.rand_seed);
     let mut best_solution = solution.clone();
-    let mut best_score = solution.score(&input).unwrap();
+    let mut best_score = solution.score(&input, false).unwrap();
     println!("initial score: {}", best_score);
     for i in 0..args.iteration {
         candidates.shuffle(&mut rnd);
@@ -62,7 +62,7 @@ fn main() {
             .cloned()
             .collect();
 
-        match solution.score(&input) {
+        match solution.score(&input, false) {
             Ok(score) => {
                 if score > best_score {
                     best_score = score;

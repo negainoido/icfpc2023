@@ -7,7 +7,7 @@ use ordered_float::OrderedFloat;
 #[cfg(not(target_arch = "wasm32"))]
 use rayon::prelude::*;
 use serde::{Deserialize, Serialize};
-use std::collections::VecDeque;
+use std::collections::{HashMap, VecDeque};
 use std::f64::consts::PI;
 
 #[derive(Debug, Clone, Copy)]
@@ -55,13 +55,37 @@ struct AngleInfo {
     dist_sq: OrderedFloat<f64>,
     angle: OrderedFloat<f64>,
     placement_id: usize,
+    radius: f64,
 }
 
 impl AngleInfo {
     fn get_covered_angle_range(&self) -> (OrderedFloat<f64>, OrderedFloat<f64>) {
-        let asin = (BLOCKED_DIST / self.dist_sq.sqrt()).asin();
+        let asin = (self.radius / self.dist_sq.sqrt()).asin();
         (self.angle - asin, self.angle + asin)
     }
+}
+
+pub fn filter_placements_blocked_by_pillars(attendee_pos: Point, placements: &Vec<Point>, pillars: &Vec<Pillar>, prefiltered_ids: &Vec<usize>) -> Vec<usize> {
+    let mut result = vec![];
+
+    for &id in prefiltered_ids {
+        let mut is_blocked = false;
+        let segment = Segment {
+            p1: attendee_pos,
+            p2: placements[id],
+        };
+        for pillar in pillars {
+            if segment.dist(&pillar.center) <= pillar.radius {
+                is_blocked = true;
+                break;
+            }
+        }
+        if !is_blocked {
+            result.push(id);
+        }
+    }
+
+    result
 }
 
 pub fn get_non_blocked_placement_ids(attendee_pos: Point, placements: &Vec<Point>) -> Vec<usize> {
@@ -88,6 +112,7 @@ pub fn get_non_blocked_placement_ids(attendee_pos: Point, placements: &Vec<Point
             angle: OrderedFloat(angle),
             dist_sq: OrderedFloat(dist_sq),
             placement_id,
+            radius: BLOCKED_DIST,
         });
     }
 
@@ -137,7 +162,7 @@ pub fn get_non_blocked_placement_ids(attendee_pos: Point, placements: &Vec<Point
         }
 
         let max_end_angle = max_end_angle_stack.back().unwrap().1;
-        if max_end_angle >= angle_info.angle {
+        if max_end_angle > angle_info.angle {
             is_blocked[i] = true;
         }
 
@@ -167,7 +192,7 @@ pub fn get_non_blocked_placement_ids(attendee_pos: Point, placements: &Vec<Point
         }
 
         let min_start_angle = min_start_angle_stack.back().unwrap().1;
-        if min_start_angle <= angle_info.angle {
+        if min_start_angle < angle_info.angle {
             is_blocked[i] = true;
         }
 
@@ -186,6 +211,7 @@ pub fn get_non_blocked_placement_ids(attendee_pos: Point, placements: &Vec<Point
     }
     non_blocke_placement_ids
 }
+
 
 pub struct AttendeeScoreDetail {
     pub attendee_id: usize,
@@ -304,12 +330,18 @@ impl Input {
             p1: a_pos,
             p2: placements[musician_id],
         };
+        for p in self.pillars.iter() {
+            if segment.dist(&p.center) < p.radius {
+                return Ok(0.0);
+            }
+
+        }
         for i in 0..placements.len() {
             if i == musician_id {
                 continue;
             }
 
-            if segment.dist(&placements[i]) <= BLOCKED_DIST {
+            if segment.dist(&placements[i]) < BLOCKED_DIST {
                 return Ok(0.0);
             }
         }
@@ -318,13 +350,18 @@ impl Input {
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    pub fn score(&self, placements: &Vec<Point>) -> Result<f64> {
+    pub fn score(&self, placements: &Vec<Point>, full_div: bool) -> Result<f64> {
+        let impacts = if full_div {
+            self.calc_playing_together(placements)
+        } else {
+            vec![1.0; self.musicians.len()]
+        };
         let ans = (0..self.attendees.len())
             .into_par_iter()
             .map(|attendee_id| {
                 let mut sum_impact = 0.0;
                 for musician_id in 0..self.musicians.len() {
-                    sum_impact += self.impact(attendee_id, musician_id, placements).unwrap();
+                    sum_impact += (impacts[musician_id] * self.impact(attendee_id, musician_id, placements).unwrap()).ceil();
                 }
                 sum_impact
             })
@@ -333,31 +370,82 @@ impl Input {
         Ok(ans)
     }
 
-    pub fn score_attendee_fast(&self, attendee_id: usize, placements: &Vec<Point>) -> f64 {
+    pub fn score_attendee_fast(&self, attendee_id: usize, placements: &Vec<Point>, impacts: &Vec<f64>) -> f64 {
         let mut sum_impact = 0.0;
 
+        // Musicians同士の衝突のみを考慮
         let non_blocked_placement_ids =
             get_non_blocked_placement_ids(self.attendees[attendee_id].pos(), &placements);
+        // Pillarsによる妨害を考慮
+        let non_blocked_placement_ids = filter_placements_blocked_by_pillars(
+            self.attendees[attendee_id].pos(),
+            &placements,
+            &self.pillars,
+            &non_blocked_placement_ids,
+        );
 
         for placement_id in non_blocked_placement_ids {
             // placement_id equals musician_id here
-            sum_impact += self.raw_impact(attendee_id, placement_id, &placements[placement_id])
+            sum_impact += (impacts[placement_id] * self.raw_impact(attendee_id, placement_id, &placements[placement_id])).ceil()
         }
         sum_impact
     }
 
+    // Playing togetherによる各Musicianの得点倍率を計算する
+    pub fn calc_playing_together(&self, placements: &Vec<Point>) -> Vec<f64> {
+        let mut inst_map = HashMap::new();
+        for (i, &m) in self.musicians.iter().enumerate() {
+            let tar = match inst_map.get_mut(&m) {
+                Some(v) => v,
+                None => {
+                    inst_map.insert(m, Vec::new());
+                    inst_map.get_mut(&m).unwrap()
+                }
+            };
+            tar.push(i);
+        }
+        let mut result = Vec::with_capacity(self.musicians.len());
+        for (i, &m) in self.musicians.iter().enumerate() {
+            let mut dists = vec![];
+            for &j in inst_map.get(&m).unwrap() {
+                if i != j {
+                    let dist = placements[i].euclidean_distance(&placements[j]);
+                    dists.push(dist);
+                }
+            }
+            dists.sort_by(|a, b| b.partial_cmp(a).unwrap());
+            let mut score = 0.0;
+            for &d in dists.iter() {
+                score += 1.0 / d;
+            }
+            result.push(score + 1.0);
+        }
+
+        result
+    }
+
     #[cfg(not(target_arch = "wasm32"))]
-    pub fn score_fast(&self, placements: &Vec<Point>) -> Result<f64> {
+    pub fn score_fast(&self, placements: &Vec<Point>, full_div: bool) -> Result<f64> {
+        let impacts = if full_div {
+            self.calc_playing_together(placements)
+        } else {
+            vec![1.0; self.musicians.len()]
+        };
         let ans = (0..self.attendees.len())
             .into_par_iter()
-            .map(|attendee_id| self.score_attendee_fast(attendee_id, placements))
+            .map(|attendee_id| self.score_attendee_fast(attendee_id, placements, &impacts))
             .sum();
         Ok(ans)
     }
     #[cfg(target_arch = "wasm32")]
-    pub fn score_fast(&self, placements: &Vec<Point>) -> Result<f64> {
+    pub fn score_fast(&self, placements: &Vec<Point>, full_div: bool) -> Result<f64> {
+        let impacts = if full_div {
+            self.calc_playing_together(placements)
+        } else {
+            vec![1.0; self.musicians.len()]
+        };
         let ans = (0..self.attendees.len())
-            .map(|attendee_id| self.score_attendee_fast(attendee_id, placements))
+            .map(|attendee_id| self.score_attendee_fast(attendee_id, placements, &impacts))
             .sum();
         Ok(ans)
     }
@@ -369,10 +457,10 @@ pub struct Solution {
 }
 
 impl Solution {
-    pub fn score(&self, input: &Input) -> Result<f64> {
+    pub fn score(&self, input: &Input, full_div: bool) -> Result<f64> {
         // input.score(&self.placements)
         input.is_valid_placements(&self.placements)?;
-        input.score_fast(&self.placements)
+        input.score_fast(&self.placements, full_div)
     }
 }
 
@@ -470,7 +558,66 @@ mod tests {
         let input: Input = serde_json::from_str(&input_str).unwrap();
         let solution_str = std::fs::read_to_string("./testdata/sample-output.json").unwrap();
         let solution: Solution = serde_json::from_str(&solution_str).unwrap();
-        let score = solution.score(&input).unwrap();
+        let score = solution.score(&input, false).unwrap();
         assert_eq!(score, 5343.0);
+    }
+    // TODO: 公式は5350が正しいスコアと主張しているが、5357になるという報告がDiscord上にあり、怪しい
+    #[test]
+    #[ignore]
+    fn sample_eval_with_full() {
+        let input_str = std::fs::read_to_string("./testdata/sample-input.json").unwrap();
+        let input: Input = serde_json::from_str(&input_str).unwrap();
+        let solution_str = std::fs::read_to_string("./testdata/sample-output.json").unwrap();
+        let solution: Solution = serde_json::from_str(&solution_str).unwrap();
+        let score = solution.score(&input, true).unwrap();
+        assert_eq!(score, 5350.0);
+    }
+    #[test]
+    fn sample_eval2() {
+        let input_str = std::fs::read_to_string("./testdata/problem-1.json").unwrap();
+        let input: Input = serde_json::from_str(&input_str).unwrap();
+        let solution_str = std::fs::read_to_string("./testdata/solution-1.json").unwrap();
+        let solution: Solution = serde_json::from_str(&solution_str).unwrap();
+        let score = solution.score(&input, false).unwrap();
+        assert_eq!(score, 505006687.0);
+    }
+    #[test]
+    fn sample_eval3() {
+        let input_str = std::fs::read_to_string("./testdata/problem-29.json").unwrap();
+        let input: Input = serde_json::from_str(&input_str).unwrap();
+        let solution_str = std::fs::read_to_string("./testdata/solution-29.json").unwrap();
+        let solution: Solution = serde_json::from_str(&solution_str).unwrap();
+        let score = solution.score(&input, false).unwrap();
+        assert_eq!(score, 109646092.0);
+    }
+    #[test]
+    fn sample_full_small_eval() {
+        let input_str = std::fs::read_to_string("./testdata/sample-small-full-input.json").unwrap();
+        let input: Input = serde_json::from_str(&input_str).unwrap();
+        let solution_str = std::fs::read_to_string("./testdata/sample-output.json").unwrap();
+        let solution: Solution = serde_json::from_str(&solution_str).unwrap();
+        let score = solution.score(&input, true).unwrap();
+        assert_eq!(score, 3459.0);
+    }
+    #[test]
+    fn sample_full_eval2() {
+        let input_str = std::fs::read_to_string("./testdata/problem-80.json").unwrap();
+        let input: Input = serde_json::from_str(&input_str).unwrap();
+        let solution_str = std::fs::read_to_string("./testdata/solution-80.json").unwrap();
+        let solution: Solution = serde_json::from_str(&solution_str).unwrap();
+        let score = solution.score(&input, true).unwrap();
+        assert_eq!(score, 18886452.0);
+    }
+
+    // TODO: 公式のジャッジサーバーとはスコアが異なっている
+    #[test]
+    #[ignore]
+    fn sample_full_eval() {
+        let input_str = std::fs::read_to_string("./testdata/sample-full-input.json").unwrap();
+        let input: Input = serde_json::from_str(&input_str).unwrap();
+        let solution_str = std::fs::read_to_string("./testdata/sample-full-output.json").unwrap();
+        let solution: Solution = serde_json::from_str(&solution_str).unwrap();
+        let score = solution.score(&input, true).unwrap();
+        assert_eq!(score, 15894740.0);
     }
 }
