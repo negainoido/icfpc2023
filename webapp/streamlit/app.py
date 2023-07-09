@@ -6,9 +6,11 @@ import requests
 
 import streamlit as st
 from streamlit.runtime.uploaded_file_manager import UploadedFile
+from streamlit.logger import get_logger
 
 NUM_PROBLEM = 90
 ENV = os.getenv("ENV") or "dev"
+logger = get_logger(__name__)
 
 
 class API:
@@ -25,7 +27,7 @@ class API:
             "Content-Type": "application/json",
         }
         response = requests.get(f"{self.url}{endpoint}", data=data, headers=headers)
-        print("response:", response.text)
+        logger.info("response: %s", response.text)
         return response.json()
 
     def show(self):
