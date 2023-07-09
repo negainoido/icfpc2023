@@ -86,16 +86,16 @@ pub fn add(left: usize, right: usize) -> usize {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-pub struct PlacementGenerator {
-    pub input: Input,
+pub struct PlacementGenerator<'a> {
+    pub input: &'a Input,
     pub cartesian_coordinate_candidates: Vec<Point>,
     pub honeycomb_candidates: Vec<Point>,
     rand_gen: Pcg64Mcg,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-impl PlacementGenerator {
-    pub fn new(input: Input, rand_seed: u128) -> Self {
+impl<'a> PlacementGenerator<'a> {
+    pub fn new(input: &'a Input, rand_seed: u128) -> Self {
         let rand_gen = Pcg64Mcg::new(rand_seed);
 
         let cartesian_coordinate_candidates =
