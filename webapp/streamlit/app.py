@@ -52,6 +52,8 @@ components.html(html_string, height=70)
 with st.sidebar:
     components.html(html_string, height=70)
 
+st.markdown("[streamlit](https://icfpc2023.negainoido.com/1)")
+
 st.write("## Submissions")
 st.write("### Summary")
 df_summary = df.dropna(subset=["score"])
