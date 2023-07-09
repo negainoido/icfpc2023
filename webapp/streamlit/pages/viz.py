@@ -96,17 +96,20 @@ ids = list(df["id"])
 solution_id = st.selectbox("id", ids)
 if solution_id:
     solution = api.solution(solution_id)
-    solution = json.loads(solution.get("contents"))
-    problem = Problem.get_from_file(problem_id)
-    viz(problem, solution)
-    st.json(
-        {
-            "room_width": problem.get("room_width"),
-            "room_height": problem.get("room_height"),
-            "stage_width": problem.get("stage_width"),
-            "stage_height": problem.get("stage_height"),
-            "stage_bottom_left": problem.get("stage_bottom_left"),
-            "num_attendees": len(problem.get("attendees")),
-            "num_musicians": len(problem.get("musicians")),
-        }
-    )
+    if solution is None:
+        st.json(None)
+    else:
+        solution = json.loads(solution.get("contents"))
+        problem = Problem.get_from_file(problem_id)
+        viz(problem, solution)
+        st.json(
+            {
+                "room_width": problem.get("room_width"),
+                "room_height": problem.get("room_height"),
+                "stage_width": problem.get("stage_width"),
+                "stage_height": problem.get("stage_height"),
+                "stage_bottom_left": problem.get("stage_bottom_left"),
+                "num_attendees": len(problem.get("attendees")),
+                "num_musicians": len(problem.get("musicians")),
+            }
+        )

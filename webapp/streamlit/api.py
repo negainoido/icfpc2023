@@ -19,29 +19,29 @@ class API:
         else:
             self.url = "https://fastapi-f4mnmafhja-an.a.run.app"
 
-    def _get(self, endpoint: str, data=None):
+    def _get(self, endpoint: str, data=None, params=None):
         headers = {
             "Content-Type": "application/json",
         }
-        response = requests.get(f"{self.url}{endpoint}", data=data, headers=headers)
-        try:
-            return response.json()
-        except:
+        response = requests.get(
+            f"{self.url}{endpoint}", data=data, headers=headers, params=params
+        )
+        if response.status_code != 200:
             logger.error(
-                "failed to get response from %s %s %s",
-                endpoint,
-                data,
+                "response is not ok: %s %s %s",
+                self.url + endpoint,
+                params,
                 response.status_code,
-                exc_info=1,
             )
-            raise
+            return None
+        return response.json()
 
     def show(self):
         data = self._get("/api/solutions/show")
         return data
 
     def solution(self, solution_id: int):
-        data = self._get("/api/solutions", data={"id": solution_id})
+        data = self._get("/api/solutions", params={"id": solution_id})
         return data
 
     def submit(self, problem_id: int, solver: str, uploaded_file: UploadedFile):
