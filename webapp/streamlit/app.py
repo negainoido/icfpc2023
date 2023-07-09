@@ -4,6 +4,7 @@ import pandas
 import requests
 
 import streamlit as st
+import streamlit.components.v1 as components
 from streamlit.runtime.uploaded_file_manager import UploadedFile
 
 NUM_PROBLEM = 90
@@ -54,6 +55,25 @@ df = pandas.DataFrame(
         "timestamp",
     ],
 )
+
+html_string = """
+<h1 id="countdown"></h1>
+<script language="javascript">
+  document.getElementById("countdown").style.color = "red";
+  setInterval(() => {
+      let targetTime = new Date('2023-07-10T21:00:00');
+      let now = new Date();
+      let diffMs = targetTime - now;
+      let h = Math.floor(diffMs / 3600000); // hours
+      let m = Math.floor((diffMs % 3600000) / 60000); // minutes
+      let s = Math.round(((diffMs % 3600000) % 60000) / 1000); // seconds
+      document.getElementById("countdown").innerText = `⏰ ${h}:${m}:${s}`;
+  }, 1000);
+</script>
+"""
+components.html(html_string, height=70)
+with st.sidebar:
+    components.html(html_string, height=70)
 
 st.write("## Submissions")
 st.write("### Summary")
