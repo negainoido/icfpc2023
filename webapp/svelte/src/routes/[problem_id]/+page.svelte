@@ -349,6 +349,8 @@
         console.log(e);
         switch (e.key) {
             case '0':
+            case 'o':
+            case 'O':
                 state.update(prev => {
                     let [zoom, plusx, plusy] = baseDisplayParams(prev.problem);
                     return {
@@ -360,18 +362,21 @@
                 });
                 break;
             case 'c':
+            case 'C':
                 state.update(prev => ({
                     ...prev,
                     colorful: !prev.colorful,
                 }));
                 break;
             case 'r':
+            case 'R':
                 state.update(prev => ({
                     ...prev,
                     ruler: !prev.ruler,
                 }));
                 break;
             case 'a':
+            case 'A':
             case 'h':
                 state.update(prev => ({
                     ...prev, 
@@ -379,6 +384,7 @@
                 }));
             break;
             case 'd':
+            case 'D':
             case 'l':
                 state.update(prev => ({
                     ...prev, 
@@ -386,6 +392,7 @@
                 }));
             break;
             case 'w':
+            case 'W':
             case 'k':
                 state.update(prev => ({
                     ...prev, 
@@ -393,6 +400,7 @@
                 }));
             break;
             case 's':
+            case 'S':
             case 'j':
                 state.update(prev => ({
                     ...prev, 
@@ -400,6 +408,7 @@
                 }));
             break;
             case 'q':
+            case 'Q':
                 state.update(prev => {
                     let newzoom = Math.max(0.001, prev.zoom - 0.1);
                     let ratio = newzoom / prev.zoom;
@@ -414,6 +423,7 @@
                 });
             break;
             case 'e':
+            case 'E':
                 state.update(prev => {
                     let newzoom = prev.zoom + 0.1;
                     let ratio = newzoom / prev.zoom;
@@ -599,11 +609,14 @@
             {/if}
         </label>
         -->
-        <nav class="breadcrumb" aria-label="breadcrumbs">
+        <nav class="breadcrumb is-centered has-bullet-separator" aria-label="breadcrumbs">
             <ul>
-                <li>WASD: 移動</li>
-                <li>hjkl: 移動</li>
-                <li>E/Q: 拡大/縮小</li>
+                <li class="is-active"><a>キー割当</a></li>
+                <li class="is-active"><a>WASD: 移動</a></li>
+                <li class="is-active"><a>E/Q: 拡大/縮小</a></li>
+                <li class="is-active"><a>C: 楽器の色表示</a></li>
+                <li class="is-active"><a>R: 罫線</a></li>
+                <li class="is-active"><a>0: 表示リセット</a></li>
             </ul>
         </nav>
         <div>
