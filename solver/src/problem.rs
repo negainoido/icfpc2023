@@ -51,27 +51,43 @@ impl Attendee {
 const BLOCKED_DIST: f64 = 5.0;
 
 #[derive(Debug, Copy, Clone)]
+enum PlaceId {
+    Musician(usize),
+    Pillar(usize),
+}
+
+#[derive(Debug, Copy, Clone)]
 struct AngleInfo {
     dist_sq: OrderedFloat<f64>,
     angle: OrderedFloat<f64>,
-    placement_id: usize,
+    placement_id: PlaceId,
+    radius: f64,
 }
 
 impl AngleInfo {
     fn get_covered_angle_range(&self) -> (OrderedFloat<f64>, OrderedFloat<f64>) {
-        let asin = (BLOCKED_DIST / self.dist_sq.sqrt()).asin();
+        let asin = (self.radius / self.dist_sq.sqrt()).asin();
         (self.angle - asin, self.angle + asin)
     }
 }
 
-pub fn get_non_blocked_placement_ids(attendee_pos: Point, placements: &Vec<Point>) -> Vec<usize> {
+
+pub fn get_non_blocked_placement_ids(attendee_pos: Point, placements: &Vec<Point>, pillars: &Vec<Pillar>) -> Vec<usize> {
+    use PlaceId::*;
     // Compute nearest musician
-    let mut nearest_place_id = 0;
+    let mut nearest_place_id = Musician(0);
     let mut nearest_distance = OrderedFloat(attendee_pos.euclidean_distance(&placements[0]));
     for placement_id in 1..placements.len() {
         let distance = OrderedFloat(attendee_pos.euclidean_distance(&placements[placement_id]));
         if distance < nearest_distance {
-            nearest_place_id = placement_id;
+            nearest_place_id = Musician(placement_id);
+            nearest_distance = distance
+        }
+    }
+    for (pillar_id, pillar) in pillars.iter().enumerate() {
+        let distance = OrderedFloat(attendee_pos.euclidean_distance(&pillar.center));
+        if distance < nearest_distance {
+            nearest_place_id = Pillar(pillar_id);
             nearest_distance = distance
         }
     }
@@ -87,12 +103,28 @@ pub fn get_non_blocked_placement_ids(attendee_pos: Point, placements: &Vec<Point
         angles.push(AngleInfo {
             angle: OrderedFloat(angle),
             dist_sq: OrderedFloat(dist_sq),
-            placement_id,
+            placement_id: Musician(placement_id),
+            radius: BLOCKED_DIST,
+        });
+    }
+    for (pillar_id, pillar) in pillars.iter().enumerate() {
+        let dx: f64 = pillar.center.x() - attendee_pos.x();
+        let dy: f64 = pillar.center.y() - attendee_pos.y();
+        let angle = dy.atan2(dx);
+        let dist_sq = dx * dx + dy * dy;
+        angles.push(AngleInfo {
+            angle: OrderedFloat(angle),
+            dist_sq: OrderedFloat(dist_sq),
+            placement_id: Pillar(pillar_id),
+            radius: pillar.radius,
         });
     }
 
-    let nearest_place_angle = angles[nearest_place_id].angle;
-    for placement_id in 0..placements.len() {
+    let nearest_place_angle = match nearest_place_id {
+        Musician(id) => angles[id].angle,
+        Pillar(id) => angles[id + placements.len()].angle,
+    };
+    for placement_id in 0..angles.len() {
         if angles[placement_id].angle >= nearest_place_angle {
             angles[placement_id].angle -= nearest_place_angle;
         } else {
@@ -181,7 +213,12 @@ pub fn get_non_blocked_placement_ids(attendee_pos: Point, placements: &Vec<Point
     for i in 0..angles.len() - 1 {
         if !is_blocked[i] {
             let placement_id = angles[i].placement_id;
-            non_blocke_placement_ids.push(placement_id);
+            match placement_id {
+                Musician(id) => {
+                    non_blocke_placement_ids.push(id);
+                },
+                Pillar(_) => {},
+            }
         }
     }
     non_blocke_placement_ids
@@ -337,7 +374,7 @@ impl Input {
         let mut sum_impact = 0.0;
 
         let non_blocked_placement_ids =
-            get_non_blocked_placement_ids(self.attendees[attendee_id].pos(), &placements);
+            get_non_blocked_placement_ids(self.attendees[attendee_id].pos(), &placements, &self.pillars);
 
         for placement_id in non_blocked_placement_ids {
             // placement_id equals musician_id here

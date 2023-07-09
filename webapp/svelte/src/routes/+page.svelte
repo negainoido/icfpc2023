@@ -31,6 +31,7 @@
                 value.problem.stage_bottom_left,
                 value.problem.musicians,
                 value.problem.attendees,
+                value.problem.pillars,
                 value.solution.placements,
             );
             console.log(score);

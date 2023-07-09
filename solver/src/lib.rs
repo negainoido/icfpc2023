@@ -31,6 +31,7 @@ pub fn calc_score(
     stage_bottom_left: Vec<f64>,
     musicians: Vec<usize>,
     attendees: Vec<JsValue>,
+    pillars: Vec<JsValue>,
     placement: Vec<JsValue>,
 ) -> Result<f64, JsValue> {
     use crate::problem::Attendee;
@@ -59,7 +60,13 @@ pub fn calc_score(
                 a
             })
             .collect(),
-        pillars: vec![],
+        pillars: pillars
+            .iter()
+            .map(|p| {
+                let p: Pillar = serde_wasm_bindgen::from_value(p.into()).unwrap();
+                p
+            })
+            .collect(),
     };
 
     solution
