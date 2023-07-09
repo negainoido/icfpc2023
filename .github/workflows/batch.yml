@@ -11,6 +11,7 @@ on:
           - random_exact
           - random_exact_rect
           - two_stage_exact_together
+          - garasubo
       dry-run:
         required: false
         default: false

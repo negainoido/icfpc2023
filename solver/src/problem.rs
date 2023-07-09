@@ -302,6 +302,12 @@ impl Input {
         Ok(())
     }
 
+    pub fn raw_impact_for_instrument(&self, attendee_id: AttendeeId, instrument: usize, musician_pos: &Point) -> f64 {
+        let attendee = &self.attendees[attendee_id];
+        let d = attendee.pos().euclidean_distance(musician_pos);
+        ((1_000_000 as f64) * attendee.tastes[instrument] / (d * d)).ceil()
+    }
+
     // Impact without considering blocking
     pub fn raw_impact(
         &self,
@@ -310,9 +316,7 @@ impl Input {
         musician_pos: &Point,
     ) -> f64 {
         let instrument = self.musicians[musician_id];
-        let attendee = &self.attendees[attendee_id];
-        let d = attendee.pos().euclidean_distance(musician_pos);
-        ((1_000_000 as f64) * attendee.tastes[instrument] / (d * d)).ceil()
+        self.raw_impact_for_instrument(attendee_id, instrument, musician_pos)
     }
 
     pub fn impact(
@@ -350,6 +354,47 @@ impl Input {
         }
 
         Ok(self.raw_impact(attendee_id, musician_id, &placements[musician_id]))
+    }
+
+    // ある地点から見える参加者のIDを返す
+    pub fn get_visible_attendees(&self, point: Point, placements: &Vec<Point>) -> Vec<usize> {
+        let mut result = Vec::new();
+        for (i, attendee) in self.attendees.iter().enumerate() {
+            let segment = Segment {
+                p1: point,
+                p2: attendee.pos(),
+            };
+            let mut blocked = false;
+            for p in self.pillars.iter() {
+                if segment.dist(&p.center) < p.radius {
+                    blocked = true;
+                    break;
+                }
+            }
+            if blocked {
+                continue;
+            }
+            for p in placements.iter() {
+                if segment.dist(p) < BLOCKED_DIST {
+                    blocked = true;
+                    break;
+                }
+            }
+            if !blocked {
+                result.push(i);
+            }
+        }
+
+        result
+    }
+
+    // 特定参加者から得られる特定地点で楽器を演奏した場合のスコア
+    pub fn raw_score_for_instrument(&self, point: Point, instrument: usize, attendee_ids: &Vec<AttendeeId>) -> f64 {
+        let mut result = 0.0;
+        for &attendee_id in  attendee_ids {
+            result += self.raw_impact_for_instrument(attendee_id, instrument, &point);
+        }
+        result
     }
 
     #[cfg(not(target_arch = "wasm32"))]

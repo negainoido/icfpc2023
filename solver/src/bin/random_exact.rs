@@ -45,7 +45,7 @@ fn main() {
     let mut rng = rand::thread_rng();
     let seed = args.rand_seed.unwrap_or(rng.gen::<u128>());
     eprintln!("rand seed: {}", seed);
-    let mut generator = PlacementGenerator::new(input.clone(), seed);
+    let mut generator = PlacementGenerator::new(&input, seed);
 
     let mut best_score = -OrderedFloat::infinity();
     let mut best_placements = vec![];

@@ -124,7 +124,7 @@ fn main() {
         solve(&input)
     } else {
         // Give up
-        let mut generator = PlacementGenerator::new(input.clone(), args.rand_seed);
+        let mut generator = PlacementGenerator::new(&input, args.rand_seed);
         generator.generate()
     };
     let mut solution: Solution = Default::default();

@@ -30,7 +30,7 @@ fn main() {
     let input: Input = serde_json::from_str(&input_str).unwrap();
     let now = std::time::SystemTime::now();
 
-    let generator = solver::PlacementGenerator::new(input.clone(), args.rand_seed);
+    let generator = solver::PlacementGenerator::new(&input, args.rand_seed);
 
     let mut solution: Solution = Default::default();
 
