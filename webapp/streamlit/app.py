@@ -1,15 +1,14 @@
-from io import StringIO
 import os
+from io import StringIO
 
 import pandas
 import requests
 
 import streamlit as st
 import streamlit.components.v1 as components
-from streamlit.runtime.uploaded_file_manager import UploadedFile
-from streamlit.logger import get_logger
-
 from api import API
+from streamlit.logger import get_logger
+from streamlit.runtime.uploaded_file_manager import UploadedFile
 
 st.set_page_config(layout="wide")
 
@@ -52,7 +51,7 @@ components.html(html_string, height=70)
 with st.sidebar:
     components.html(html_string, height=70)
 
-st.markdown("[streamlit](https://icfpc2023.negainoido.com/1)")
+st.markdown("[svelte](https://icfpc2023.negainoido.com/1)")
 
 st.write("## Submissions")
 st.write("### Summary")
@@ -76,18 +75,7 @@ df = df[df["problem_id"] == filter_problem_id]
 st.write(f"{len(df)} records")
 score_min = min(0, float(df["score"].min() or 0))
 score_max = max(1000, float(df["score"].max() or 1000) * 1.1)
-st.dataframe(
-    df,
-    hide_index=True,
-    column_config={
-        "score": st.column_config.ProgressColumn(
-            "score",
-            format="%d",
-            min_value=score_min,
-            max_value=score_max,
-        ),
-    },
-)
+st.dataframe(df, hide_index=True)
 with st.expander("debug"):
     st.write((score_min, score_max))
     st.write(df)

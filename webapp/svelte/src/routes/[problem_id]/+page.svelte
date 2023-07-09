@@ -590,7 +590,7 @@
 <section class="section">
     <div class="container">
         <h1 class="title" id="countdown">⏰</h1>
-        <a href="https://icfpc2023.negainoido.com/streamlit/">streamlit</a>
+        <a rel="external" data-sveltekit-reload href="https://icfpc2023.negainoido.com/streamlit/">streamlit</a>
     </div>
 </section>
 
@@ -630,7 +630,7 @@
                             <td>{r[2]}</td>
                             <td>{r[3]}</td>
                             <td>{r[4]}</td>
-                            <td>{r[5]}</td>
+                            <td>{r[5].toLocaleString()}</td>
                             <td>{r[6]}</td>
                         </tr>
                     {/each}
