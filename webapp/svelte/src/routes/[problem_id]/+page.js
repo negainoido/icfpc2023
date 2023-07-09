@@ -1,5 +1,5 @@
 export function load({params}) {
   return {
-    problem_id: params.problem_id,
+    problem_id: parseInt(params.problem_id),
   };
 }
