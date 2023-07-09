@@ -17,6 +17,7 @@
         solution_id: -1,
         solution_json: '',
         colorful: true,
+        showvolume: true,
         ruler: false,
         zoom: 1.0,
         plusx: 0.0,
@@ -45,6 +46,7 @@
                     solution.volumes.push(1.0);
                 }
             }
+            return;
             score = wasm.calc_score(
                 problem.room_width,
                 problem.room_height,
@@ -309,7 +311,7 @@
                 canvas.lineTo(plusx + zoom * x, plusy + zoom * problem.room_height);
                 canvas.stroke();
             }
-            for (let y = 0; y <= problem.room_width; y += w) {
+            for (let y = 0; y <= problem.room_height; y += w) {
                 canvas.beginPath();
                 canvas.moveTo(plusx, plusy + zoom * y);
                 canvas.lineTo(plusx + zoom * problem.room_width, plusy + zoom * y);
@@ -328,6 +330,13 @@
                 canvas.beginPath();
                 canvas.arc(plusx + zoom * m.x, plusy + zoom * m.y, zoom * 5, 0, 7, false);
                 canvas.fill();
+                if ($state.showvolume && solution.volumes) {
+                    let vol = solution.volumes[i];
+                    canvas.strokeStyle = vol < 5 ? '#fff' : '#000';
+                    canvas.beginPath();
+                    canvas.arc(plusx + zoom * m.x, plusy + zoom * m.y, zoom * 5, 0, 7, false);
+                    canvas.stroke();
+                }
             }
         }
         // pillars
@@ -408,6 +417,13 @@
                     colorful: !prev.colorful,
                 }));
                 break;
+            case 'v':
+            case 'V':
+                state.update((prev) => ({
+                    ...prev,
+                    showvolume: !prev.showvolume,
+                }));
+                break;
             case 'r':
             case 'R':
                 state.update((prev) => ({
@@ -450,7 +466,8 @@
             case 'q':
             case 'Q':
                 state.update((prev) => {
-                    let newzoom = Math.max(0.001, prev.zoom - 0.1);
+                    let newzoom = Math.max(prev.zoom / 2, prev.zoom - 0.1);
+                    console.log(prev.zoom, newzoom);
                     let ratio = newzoom / prev.zoom;
                     let newplusx = ratio * prev.plusx + 800 * (1 - ratio);
                     let newplusy = ratio * prev.plusy + 600 * (1 - ratio);
@@ -465,7 +482,8 @@
             case 'e':
             case 'E':
                 state.update((prev) => {
-                    let newzoom = prev.zoom + 0.1;
+                    let newzoom = Math.min(prev.zoom + 0.05, prev.zoom * 2);
+                    console.log(prev.zoom, newzoom);
                     let ratio = newzoom / prev.zoom;
                     let newplusx = ratio * prev.plusx + 800 * (1 - ratio);
                     let newplusy = ratio * prev.plusy + 600 * (1 - ratio);
@@ -496,6 +514,10 @@
                 const volume = $state.solution.volumes ? $state.solution.volumes[i] : 1.0;
                 if (Math.hypot(x - m.x, y - m.y) <= 5.0) {
                     log.push(`musicians[${i}]=${inst}; (x,y)=(${m.x},${m.y})`);
+                    if ($state.solution.volumes) {
+                        let vol = $state.solution.volumes[i];
+                        log.push(`; volume=${vol}`);
+                    }
                     state.update((prev) => ({
                         ...prev,
                         target_musician_id: i,
@@ -711,6 +733,10 @@
                 楽器で色を変える (C)
             </label>
             <label>
+                <input type="checkbox" bind:checked={$state.showvolume} />
+                ボリュームで縁の色を変える (V)
+            </label>
+            <label>
                 <input type="checkbox" bind:checked={$state.ruler} />
                 罫線 (幅=10) (R)
             </label>
@@ -751,6 +777,7 @@
                     <li class="is-active"><a>E/Q: 拡大/縮小</a></li>
                     <li class="is-active"><a>C: 楽器の色表示</a></li>
                     <li class="is-active"><a>R: 罫線</a></li>
+                    <li class="is-active"><a>V: ボリューム表示</a></li>
                     <li class="is-active"><a>0: 表示リセット</a></li>
                 </ul>
             </nav>
