@@ -189,7 +189,6 @@
             } else {
                 used.push(key);
                 filteredRecords.push(r);
-                if (filteredRecords.length >= 8) break;
             }
         }
         fetch(`https://icfpc2023.negainoido.com/api/problem?problem_id=${problem_id}`, {
@@ -729,6 +728,7 @@
 
     <div class="container">
         {#if filteredRecords.length > 0}
+        <div class="scrollable-table">
             <table class="table">
                 <thead>
                     <tr>
@@ -751,6 +751,7 @@
                     {/each}
                 </tbody>
             </table>
+        </div>
         {:else}
             No records!!
         {/if}
@@ -889,5 +890,9 @@
     @import 'https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css';
     canvas {
         border: 1px black solid;
+    }
+    .scrollable-table {
+        height: 240px;
+        overflow-y: auto;
     }
 </style>
