@@ -12,7 +12,7 @@ import os
 
 def plot(problem_id: int):
     print("problem_id:", problem_id)
-    with open(f"./resource/problems/problem-{problem_id}.json") as f:
+    with open(f"./static/problems/problem-{problem_id}.json") as f:
         problem = json.load(f)
     df = pd.DataFrame(problem["attendees"])
     data = df.tastes.tolist()
@@ -25,7 +25,7 @@ def plot(problem_id: int):
     y = [y for x, y in vis_dims]
     plt.figure()
     plt.scatter(x, y, alpha=0.3)
-    plt.savefig(f"./resource/img/tastes-{problem_id}.png")
+    plt.savefig(f"./static/img/tastes-{problem_id}.png")
 
 
 if __name__ == "__main__":

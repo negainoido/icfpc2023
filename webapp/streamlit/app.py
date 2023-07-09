@@ -2,6 +2,7 @@ from io import StringIO
 import os
 
 import pandas
+import numpy as np
 import requests
 
 import streamlit as st
@@ -58,8 +59,18 @@ st.write("## Submissions")
 st.write("### Summary")
 df_summary = df.dropna(subset=["score"])
 df_summary = df_summary.loc[df_summary.groupby("problem_id")["score"].idxmax()]
-st.dataframe(df_summary, hide_index=True)
+df_summary["thumbnail"] = "./app/static/img/" + df["problem_id"].astype(str) + ".png"
+df_summary["tastes"] = (
+    "./app/static/img/tastes-" + df["problem_id"].astype(str) + ".png"
+)
 score_sum = df_summary["score"][df_summary["score"] > 0].sum()
+df_summary["score_ratio"] = df_summary["score"].astype(int) / score_sum * 100
+
+column_config = {
+    "thumbnail": st.column_config.ImageColumn("thumbnail"),
+    "tastes": st.column_config.ImageColumn("tastes"),
+}
+st.dataframe(df_summary, column_config=column_config)
 st.info(f"Sum score = {score_sum:,}")
 
 st.write("### by problem")

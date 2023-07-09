@@ -8,7 +8,7 @@ NUM_PROBLEM = 90
 class Problem:
     @classmethod
     def get_from_file(cls, problem_id: int):
-        with open(f"./resource/problems/problem-{problem_id}.json", "rt") as f:
+        with open(f"./static/problems/problem-{problem_id}.json", "rt") as f:
             data = json.load(f)
             return data
 
@@ -56,4 +56,4 @@ for i in reversed(range(1, 1 + NUM_PROBLEM)):
     print(i)
     data = Problem.get_from_file(i)
     img = Figure.draw(data)
-    img.save(f"./resource/img/{i}.png")
+    img.save(f"./static/img/{i}.png")

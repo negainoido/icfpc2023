@@ -17,7 +17,7 @@ st.write(":building_construction: [/svelte](https://icfpc2023.negainoido.com/) ã
 class Problem:
     @classmethod
     def get_from_file(cls, problem_id: int):
-        with open(f"./resource/problems/problem-{problem_id}.json", "rt") as f:
+        with open(f"./static/problems/problem-{problem_id}.json", "rt") as f:
             data = json.load(f)
             return data
 
