@@ -62,10 +62,14 @@ df_summary["tastes"] = (
 )
 score_sum = df_summary["score"][df_summary["score"] > 0].sum()
 df_summary["score_ratio"] = df_summary["score"].astype(int) / score_sum * 100
+df_summary["link"] = "https://icfpc2023.negainoido.com/" + df_summary[
+    "problem_id"
+].astype(str)
 
 column_config = {
     "thumbnail": st.column_config.ImageColumn("thumbnail"),
     "tastes": st.column_config.ImageColumn("tastes"),
+    "link": st.column_config.LinkColumn("link", width="small"),
 }
 st.dataframe(df_summary, column_config=column_config, hide_index=True)
 st.info(f"Sum score = {score_sum:,}")
