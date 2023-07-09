@@ -140,9 +140,17 @@
             plusx: 0.0,
             plusy: 0.0,
         }));
+        let used = [];
         for (let r of records) {
-            if (r[1] === problem_id) {
+            let key = r[3] + r[5];
+            if (r[1] !== problem_id) {
+                continue;
+            } else if (used.includes(key)) {
+                continue;
+            } else {
+                used.push(key);
                 filteredRecords.push(r);
+                if (filterRecords.length >= 10) break;
             }
         }
         fetch(`https://icfpc2023.negainoido.com/api/problem?problem_id=${problem_id}`)
@@ -452,20 +460,26 @@
     }
 </script>
 
-<div class="section">
-    <h1 id="countdown">⏰</h1>
-</div>
+<section class="section">
+    <div class="container">
+        <h1 class="title" id="countdown">⏰</h1>
+    </div>
+</section>
 
-<div class="section">
-    <label for="problem_id">problem_id</label>
-    <input id="problem_id" type='number' bind:value={problem_id} on:change={filterRecords} />
-</div>
+<section class="section">
+    <div class="container">
+        <div class="control">
+            <label for="problem_id">problem_id</label>
+            <input id="problem_id" class="input" type='number' bind:value={problem_id} on:change={filterRecords} />
+        </div>
+    </div>
 
-<div class="section">
-<p>{filteredRecords.length} records</p>
+    <div class="container">
+        <p>{filteredRecords.length} records</p>
 {#if filteredRecords.length > 0}
-    <table>
-        <tr>
+    <table class=table>
+        <thead>
+            <tr>
                 <th>id</th>
                 <th>problem_id</th>
                 <th>submission_id</th>
@@ -473,7 +487,9 @@
                 <th>status</th>
                 <th>score</th>
                 <th>ts</th>
-        </tr>
+            </tr>
+        </thead>
+        <tbody>
         {#each filteredRecords as r}
             <tr>
                 <td><button on:click={fetchSolution(r[0])}>{r[0]}</button></td>
@@ -485,12 +501,14 @@
                 <td>{r[6]}</td>
             </tr>
         {/each}
+        </tbody>
     </table>
 {/if}
-</div>
+    </div>
+</section>
 
-<div class="section">
-    <div>
+<section class="section">
+    <div class="container">
         <label>
             <input type='checkbox' bind:checked={$state.colorful} />
             楽器で色を変える (C)
@@ -532,24 +550,29 @@
             <ul>hjkl: 移動</ul>
             <ul>E/Q: 拡大/縮小</ul>
         </div>
+        <div>
+            <canvas id="c" width="1600" height="1200" />
+        </div>
+        <div>
+            <button disabled={$state.solution === null} on:click={downloadSolution}>download solution</button>
+        </div>
     </div>
-    <div>
-        <canvas id="c" width="1600" height="1200" />
-    </div>
-    <div>
-        <button disabled={$state.solution === null} on:click={downloadSolution}>download solution</button>
-    </div>
-</div>
+</section>
 
-<Log />
+<section class="section">
+    <div class="container">
+        <Log />
+    </div>
+</section>
 
 <svelte:window on:keydown={onKeyDown} />
 
 <style>
-    div.section {
-        padding: 10px;
-    }
-    input[type=range] {
-        width: 50%;
-    }
+    @import "https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css";
+    /* div.section { */
+    /*     padding: 10px; */
+    /* } */
+    /* input[type=range] { */
+    /*     width: 50%; */
+    /* } */
 </style>
