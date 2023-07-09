@@ -257,7 +257,8 @@
                 canvas.arc(
                     offsetx + zoom * scale * m.x,
                     offsety + zoom * scale * m.y,
-                    5, 0, 7, false
+                    zoom * scale * 5,
+                    0, 7, false
                 );
                 canvas.fill();
             }
@@ -449,6 +450,18 @@
     <div>
         <canvas id="c" width="1600" height="1200" />
     </div>
+</div>
+
+<div>
+    <b>変更履歴</b>
+    <dl>
+        <dt>07/09 12:32</dt>
+        <dd>ミュージシャンは常に半径 5 で表示される。観客はちっちゃい点のままです</dd>
+        <dt>07/09 12:30</dt>
+        <dd>ミュージシャンの色付け・罫線の表示切り替えもキー (C/R) でできる</dd>
+        <dt>07/09 12:29</dt>
+        <dd>拡大縮小・視点の移動ができる。スライダーまたはキー(WASD/QE)</dd>
+    </dl>
 </div>
 
 <svelte:window on:keydown={onKeyDown} />
