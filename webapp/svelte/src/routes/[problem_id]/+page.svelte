@@ -1,7 +1,7 @@
 <script>
     export let data;
     import { onMount } from 'svelte';
-    import {get, writable} from "svelte/store";
+    import { get, writable } from 'svelte/store';
     import Log from '$lib/Log.svelte';
 
     let wasm;
@@ -23,10 +23,10 @@
     let score = null;
 
     async function calc_score(wasm, problem, solution) {
-        console.log('start calc_score')
+        console.log('start calc_score');
         if (score) {
             // 計算済み
-            console.log('skip calc_score')
+            console.log('skip calc_score');
             return;
         }
         try {
@@ -42,7 +42,7 @@
                 problem.attendees,
                 problem.pillars,
                 solution.placements,
-                is_full,
+                is_full
             );
             console.log('wasm success:', score);
         } catch (err) {
@@ -54,7 +54,7 @@
 
     state.subscribe(async (value) => {
         if (value.problem) {
-            console.log("start draw...");
+            console.log('start draw...');
             await draw(
                 value.problem,
                 value.solution,
@@ -65,9 +65,9 @@
                 value.ruler,
                 value.log
             );
-            console.log("...finish draw");
+            console.log('...finish draw');
         } else {
-            console.log("data not ready; cannot draw");
+            console.log('data not ready; cannot draw');
         }
         if (value.problem && value.solution && wasm) {
             setTimeout(async () => {
@@ -111,7 +111,7 @@
         '#7755bb',
         '#7733dd',
         '#7711ff',
-    ]
+    ];
 
     function updateAddition() {
         if (!wasm) return; // failed
@@ -121,11 +121,11 @@
     function fetchRecords() {
         clear();
         fetch('https://icfpc2023.negainoido.com/api/solutions/show', { credentials: 'include' })
-            .then(data => data.json())
-            .then(data => {
+            .then((data) => data.json())
+            .then((data) => {
                 records = data;
                 filterRecords();
-            })
+            });
     }
 
     /// problem_id ごとの結果を表示する
@@ -155,9 +155,11 @@
                 if (filteredRecords.length >= 8) break;
             }
         }
-        fetch(`https://icfpc2023.negainoido.com/api/problem?problem_id=${problem_id}`, {credentials: 'include'})
-            .then(data => data.json())
-            .then(problem => {
+        fetch(`https://icfpc2023.negainoido.com/api/problem?problem_id=${problem_id}`, {
+            credentials: 'include',
+        })
+            .then((data) => data.json())
+            .then((problem) => {
                 let [zoom, plusx, plusy] = baseDisplayParams(problem);
                 score = 0;
                 state.update((prev) => {
@@ -174,9 +176,11 @@
 
     function fetchSolution(solution_id) {
         clear();
-        fetch(`https://icfpc2023.negainoido.com/api/solutions?id=${solution_id}`, { credentials: 'include' })
-            .then(response => response.json())
-            .then(response => {
+        fetch(`https://icfpc2023.negainoido.com/api/solutions?id=${solution_id}`, {
+            credentials: 'include',
+        })
+            .then((response) => response.json())
+            .then((response) => {
                 if (response['message'] === 'not found') {
                     alert('not found');
                     return;
@@ -221,8 +225,8 @@
         maxx += padding;
         maxy += padding;
         let zoom = Math.min(width / (maxx - minx), height / (maxy - miny));
-        let plusx = 800 - zoom * (minx + maxx) / 2;
-        let plusy = 600 - zoom * (miny + maxy) / 2;
+        let plusx = 800 - (zoom * (minx + maxx)) / 2;
+        let plusy = 600 - (zoom * (miny + maxy)) / 2;
         return [zoom, plusx, plusy];
     }
 
@@ -240,18 +244,8 @@
         canvas.clearRect(0, 0, width, height);
         canvas.strokeStyle = '#000';
         canvas.fillStyle = '#fff';
-        canvas.fillRect(
-            plusx,
-            plusy,
-            zoom * problem.room_width,
-            zoom * problem.room_height
-        );
-        canvas.strokeRect(
-            plusx,
-            plusy,
-            zoom * problem.room_width,
-            zoom * problem.room_height
-        );
+        canvas.fillRect(plusx, plusy, zoom * problem.room_width, zoom * problem.room_height);
+        canvas.strokeRect(plusx, plusy, zoom * problem.room_width, zoom * problem.room_height);
         // stage
         canvas.fillStyle = '#999';
         canvas.fillRect(
@@ -287,12 +281,7 @@
                     canvas.fillStyle = colors[inst % colors.length];
                 }
                 canvas.beginPath();
-                canvas.arc(
-                    plusx + zoom * m.x,
-                    plusy + zoom * m.y,
-                    zoom * 5,
-                    0, 7, false
-                );
+                canvas.arc(plusx + zoom * m.x, plusy + zoom * m.y, zoom * 5, 0, 7, false);
                 canvas.fill();
             }
         }
@@ -305,7 +294,9 @@
                 plusx + zoom * p.center[0],
                 plusy + zoom * p.center[1],
                 zoom * p.radius,
-                0, 7, false
+                0,
+                7,
+                false
             );
             canvas.fill();
             canvas.stroke();
@@ -314,12 +305,7 @@
         canvas.fillStyle = '#a11';
         for (let a of problem.attendees) {
             canvas.beginPath();
-            canvas.arc(
-                plusx + zoom * a.x,
-                plusy + zoom * a.y,
-                1.2,
-                0, 7, false
-            )
+            canvas.arc(plusx + zoom * a.x, plusy + zoom * a.y, 1.2, 0, 7, false);
             canvas.fill();
         }
         // log
@@ -328,19 +314,21 @@
             canvas.font = '24px monospace';
             canvas.fillText(log.join('\n'), 12, 29);
         }
-
     }
 
     function fullScreen() {
-        var canvas = document.getElementById("c");
+        var canvas = document.getElementById('c');
         if (!canvas) return;
         if (canvas.requestFullscreen) {
             canvas.requestFullscreen();
-        } else if (canvas.mozRequestFullScreen) { // Firefox
+        } else if (canvas.mozRequestFullScreen) {
+            // Firefox
             canvas.mozRequestFullScreen();
-        } else if (canvas.webkitRequestFullscreen) { // Chrome, Safari and Opera
+        } else if (canvas.webkitRequestFullscreen) {
+            // Chrome, Safari and Opera
             canvas.webkitRequestFullscreen();
-        } else if (canvas.msRequestFullscreen) { // IE/Edge
+        } else if (canvas.msRequestFullscreen) {
+            // IE/Edge
             canvas.msRequestFullscreen();
         }
     }
@@ -351,7 +339,7 @@
             case '0':
             case 'o':
             case 'O':
-                state.update(prev => {
+                state.update((prev) => {
                     let [zoom, plusx, plusy] = baseDisplayParams(prev.problem);
                     return {
                         ...prev,
@@ -363,14 +351,14 @@
                 break;
             case 'c':
             case 'C':
-                state.update(prev => ({
+                state.update((prev) => ({
                     ...prev,
                     colorful: !prev.colorful,
                 }));
                 break;
             case 'r':
             case 'R':
-                state.update(prev => ({
+                state.update((prev) => ({
                     ...prev,
                     ruler: !prev.ruler,
                 }));
@@ -378,38 +366,38 @@
             case 'a':
             case 'A':
             case 'h':
-                state.update(prev => ({
-                    ...prev, 
+                state.update((prev) => ({
+                    ...prev,
                     plusx: prev.plusx + 40,
                 }));
-            break;
+                break;
             case 'd':
             case 'D':
             case 'l':
-                state.update(prev => ({
-                    ...prev, 
+                state.update((prev) => ({
+                    ...prev,
                     plusx: prev.plusx - 40,
                 }));
-            break;
+                break;
             case 'w':
             case 'W':
             case 'k':
-                state.update(prev => ({
-                    ...prev, 
+                state.update((prev) => ({
+                    ...prev,
                     plusy: prev.plusy + 40,
                 }));
-            break;
+                break;
             case 's':
             case 'S':
             case 'j':
-                state.update(prev => ({
-                    ...prev, 
+                state.update((prev) => ({
+                    ...prev,
                     plusy: prev.plusy - 40,
                 }));
-            break;
+                break;
             case 'q':
             case 'Q':
-                state.update(prev => {
+                state.update((prev) => {
                     let newzoom = Math.max(0.001, prev.zoom - 0.1);
                     let ratio = newzoom / prev.zoom;
                     let newplusx = ratio * prev.plusx + 800 * (1 - ratio);
@@ -421,10 +409,10 @@
                         plusy: newplusy,
                     };
                 });
-            break;
+                break;
             case 'e':
             case 'E':
-                state.update(prev => {
+                state.update((prev) => {
                     let newzoom = prev.zoom + 0.1;
                     let ratio = newzoom / prev.zoom;
                     let newplusx = ratio * prev.plusx + 800 * (1 - ratio);
@@ -436,7 +424,7 @@
                         plusy: newplusy,
                     };
                 });
-            break;
+                break;
         }
     }
 
@@ -463,10 +451,11 @@
             for (let i = 0; i < $state.problem.pillars.length; ++i) {
                 let p = $state.problem.pillars[i];
                 if (Math.hypot(x - p.center[0], y - p.center[1]) <= p.radius) {
-                    log.push(`pillars[${i}]; (x,y,radius)=(${p.center[0]},${p.center[1]},${p.radius})`);
+                    log.push(
+                        `pillars[${i}]; (x,y,radius)=(${p.center[0]},${p.center[1]},${p.radius})`
+                    );
                     break;
                 }
-
             }
         }
         if ($state.problem) {
@@ -476,26 +465,25 @@
                     log.push(`attendees[${i}]; (x,y)=(${m.x},${m.y})`);
                     break;
                 }
-
             }
         }
-        state.update(prev => ({
+        state.update((prev) => ({
             ...prev,
             log: log,
         }));
     }
 
     function clockInit() {
-      document.getElementById("countdown").style.color = "red";
-      setInterval(() => {
-          let targetTime = new Date('2023-07-10T21:00:00');
-          let now = new Date();
-          let diffMs = targetTime - now;
-          let h = Math.floor(diffMs / 3600000); // hours
-          let m = Math.floor((diffMs % 3600000) / 60000); // minutes
-          let s = Math.round(((diffMs % 3600000) % 60000) / 1000); // seconds
-          document.getElementById("countdown").innerText = `⏰ ${h}:${m}:${s}`;
-      }, 1000);
+        document.getElementById('countdown').style.color = 'red';
+        setInterval(() => {
+            let targetTime = new Date('2023-07-10T21:00:00');
+            let now = new Date();
+            let diffMs = targetTime - now;
+            let h = Math.floor(diffMs / 3600000); // hours
+            let m = Math.floor((diffMs % 3600000) / 60000); // minutes
+            let s = Math.round(((diffMs % 3600000) % 60000) / 1000); // seconds
+            document.getElementById('countdown').innerText = `⏰ ${h}:${m}:${s}`;
+        }, 1000);
     }
 
     onMount(async () => {
@@ -508,13 +496,13 @@
     function downloadSolution() {
         const solution = get(state).solution;
         if (!solution) {
-            console.warn("no solution");
+            console.warn('no solution');
             return;
         }
-        const a = document.createElement("a");
-        a.style = "display: none";
+        const a = document.createElement('a');
+        a.style = 'display: none';
         const json = JSON.stringify(solution);
-        const blob = new Blob([json], {type: "application/json"});
+        const blob = new Blob([json], { type: 'application/json' });
         const url = window.URL.createObjectURL(blob);
         a.download = `solution_${problem_id}.json`;
         a.href = url;
@@ -526,6 +514,7 @@
 <section class="section">
     <div class="container">
         <h1 class="title" id="countdown">⏰</h1>
+        <a href="https://icfpc2023.negainoido.com/streamlit/">streamlit</a>
     </div>
 </section>
 
@@ -533,50 +522,56 @@
     <div class="container">
         <div class="control">
             <label for="problem_id">problem_id</label>
-            <input id="problem_id" class="input" type='number' bind:value={problem_id} on:change={filterRecords} />
+            <input
+                id="problem_id"
+                class="input"
+                type="number"
+                bind:value={problem_id}
+                on:change={filterRecords}
+            />
         </div>
     </div>
 
     <div class="container">
-{#if filteredRecords.length > 0}
-    <table class=table>
-        <thead>
-            <tr>
-                <th>id</th>
-                <th>problem_id</th>
-                <th>submission_id</th>
-                <th>solver</th>
-                <th>status</th>
-                <th>score</th>
-                <th>ts</th>
-            </tr>
-        </thead>
-        <tbody>
-        {#each filteredRecords as r}
-            <tr>
-                <td><button on:click={fetchSolution(r[0])}>{r[0]}</button></td>
-                <td>{r[1]}</td>
-                <td>{r[2]}</td>
-                <td>{r[3]}</td>
-                <td>{r[4]}</td>
-                <td>{r[5]}</td>
-                <td>{r[6]}</td>
-            </tr>
-        {/each}
-        </tbody>
-    </table>
-{:else}
-    No records!!
-{/if}
+        {#if filteredRecords.length > 0}
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>id</th>
+                        <th>problem_id</th>
+                        <th>submission_id</th>
+                        <th>solver</th>
+                        <th>status</th>
+                        <th>score</th>
+                        <th>ts</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {#each filteredRecords as r}
+                        <tr>
+                            <td><button on:click={fetchSolution(r[0])}>{r[0]}</button></td>
+                            <td>{r[1]}</td>
+                            <td>{r[2]}</td>
+                            <td>{r[3]}</td>
+                            <td>{r[4]}</td>
+                            <td>{r[5]}</td>
+                            <td>{r[6]}</td>
+                        </tr>
+                    {/each}
+                </tbody>
+            </table>
+        {:else}
+            No records!!
+        {/if}
     </div>
 
     <div class="container">
         <label>
-            <input type='checkbox' bind:checked={$state.colorful} />
+            <input type="checkbox" bind:checked={$state.colorful} />
             楽器で色を変える (C)
         </label>
         <label>
-            <input type='checkbox' bind:checked={$state.ruler} />
+            <input type="checkbox" bind:checked={$state.ruler} />
             罫線 (幅=10) (R)
         </label>
         <br />
@@ -623,7 +618,9 @@
             <canvas id="c" width="1600" height="1200" on:click={clickCanvas} />
         </div>
         <div>
-            <button disabled={$state.solution === null} on:click={downloadSolution}>download solution</button>
+            <button disabled={$state.solution === null} on:click={downloadSolution}
+                >download solution</button
+            >
         </div>
     </div>
 </section>
@@ -637,7 +634,7 @@
 <svelte:window on:keydown={onKeyDown} />
 
 <style>
-    @import "https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css";
+    @import 'https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css';
     canvas {
         border: 1px black solid;
     }
