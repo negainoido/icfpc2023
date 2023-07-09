@@ -20,7 +20,25 @@ struct Args {
 
     #[arg(short, long, default_value_t = 0)]
     rand_seed: u128,
+
+    #[arg(short, long, default_value_t = 100.0)]
+    timeout: f64,
 }
+
+fn get_time() -> f64 {
+    static mut STIME: f64 = -1.0;
+    let t = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap();
+    let ms = t.as_secs() as f64 + t.subsec_nanos() as f64 * 1e-9;
+    unsafe {
+        if STIME < 0.0 {
+            STIME = ms;
+        }
+        ms - STIME
+    }
+}
+
 
 fn generate_first_level_candidates(input: &Input) -> Vec<Point> {
     let x_count = (input.stage_width / 10.0).floor() as usize - 1;
@@ -118,7 +136,7 @@ fn two_stage_optimization(input: &Input) -> Vec<Point> {
     best_placements
 }
 
-fn hill_climbing(input: &Input, placements: &Vec<Point>) -> Vec<Point> {
+fn hill_climbing(input: &Input, placements: &Vec<Point>, timeout: f64) -> Vec<Point> {
     // Compute the original score
     let mut solution: Solution = Default::default();
     solution.placements = placements.clone();
@@ -196,7 +214,7 @@ fn hill_climbing(input: &Input, placements: &Vec<Point>) -> Vec<Point> {
         score_delta
     };
 
-    while has_update {
+    while has_update && get_time() < timeout {
         has_update = false;
         for musician_i in 0..placements.len() {
             for musician_j in 0..placements.len() {
@@ -216,7 +234,7 @@ fn hill_climbing(input: &Input, placements: &Vec<Point>) -> Vec<Point> {
             }
         }
     }
-    dbg!(final_score);
+    eprintln!("Finished hill-climbing: score = {}, elapsed-time = {}", final_score, get_time());
     let mut new_placements = vec![];
     for i in 0..assignments.len() {
         new_placements.push(placements[assignments[i]]);
@@ -224,11 +242,11 @@ fn hill_climbing(input: &Input, placements: &Vec<Point>) -> Vec<Point> {
     new_placements
 }
 
-fn solve(input: &Input) -> Vec<Point> {
+fn solve(input: &Input, timeout: f64) -> Vec<Point> {
     let base_placements = two_stage_optimization(input);
     let best_placements = if input.pillars.len() > 0 {
         // with extension
-        hill_climbing(input, &base_placements)
+        hill_climbing(input, &base_placements, timeout)
     } else {
         base_placements
     };
@@ -242,9 +260,13 @@ fn main() {
 
     let x_count = (input.stage_width / 10.0).floor() as usize - 1;
     let y_count = (input.stage_height / 10.0).floor() as usize - 1;
+
+    // initialize timer
+    get_time();
+
     let best_placements = if x_count * y_count >= input.musicians.len() {
         // Use new strategy!
-        solve(&input)
+        solve(&input, args.timeout)
     } else {
         // Give up
         let mut generator = PlacementGenerator::new(input.clone(), args.rand_seed);
