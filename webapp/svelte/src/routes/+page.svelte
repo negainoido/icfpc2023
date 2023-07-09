@@ -5,7 +5,6 @@
 
     let wasm;
     let problem_id = 1;
-    let solution_id = 1;
     let records = [];
     let filteredRecords = [];
 
@@ -426,6 +425,7 @@
           document.getElementById("countdown").innerText = `⏰ ${h}:${m}:${s}`;
       }, 1000);
     }
+
 
     onMount(async () => {
         fetchRecords();
