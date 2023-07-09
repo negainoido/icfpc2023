@@ -573,16 +573,14 @@ mod tests {
         let score = solution.score(&input, false).unwrap();
         assert_eq!(score, 5343.0);
     }
-    // TODO: 公式は5350が正しいスコアと主張しているが、5357になるという報告がDiscord上にあり、怪しい
     #[test]
-    #[ignore]
     fn sample_eval_with_full() {
         let input_str = std::fs::read_to_string("./testdata/sample-input.json").unwrap();
         let input: Input = serde_json::from_str(&input_str).unwrap();
         let solution_str = std::fs::read_to_string("./testdata/sample-output.json").unwrap();
         let solution: Solution = serde_json::from_str(&solution_str).unwrap();
         let score = solution.score(&input, true).unwrap();
-        assert_eq!(score, 5350.0);
+        assert_eq!(score, 5357.0);
     }
     #[test]
     fn sample_eval2() {
