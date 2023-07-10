@@ -32,7 +32,7 @@
     let mouse = {
         x: 0,
         y: 0,
-        status: 'mouseup',  // 'mousedown'
+        status: 'mouseup', // 'mousedown'
         target_musician_id: null,
     };
 
@@ -66,7 +66,7 @@
                 is_full
             );
             console.log('wasm success:', score);
-            state.update(prev => {
+            state.update((prev) => {
                 return {
                     ...prev,
                     log: ['wasm done'],
@@ -74,7 +74,7 @@
             });
         } catch (err) {
             score = `failed`;
-            state.update(prev => {
+            state.update((prev) => {
                 return {
                     ...prev,
                     log: [`wasm failed: ${err}`],
@@ -220,14 +220,18 @@
     }
 
     function fetchSolution(solution_id, known_score) {
-        history.pushState({}, `/${problem_id}?solution_id=${solution_id}`, `/${problem_id}?solution_id=${solution_id}`);
+        history.pushState(
+            {},
+            `/${problem_id}?solution_id=${solution_id}`,
+            `/${problem_id}?solution_id=${solution_id}`
+        );
         clear();
-        state.update(prev => {
+        state.update((prev) => {
             return {
                 ...prev,
                 solution_id: solution_id,
                 soluiton: null,
-                solution_json: "",
+                solution_json: '',
                 log: [],
             };
         });
@@ -596,7 +600,7 @@
         if (mouse.target_musician_id != null) {
             let mid = mouse.target_musician_id;
             score = null;
-            state.update(state => {
+            state.update((state) => {
                 state.solution.placements[mid].x = x;
                 state.solution.placements[mid].y = y;
                 state.solution_json = JSON.stringify(state.solution, null, 2);
@@ -616,7 +620,7 @@
         if (mouse.target_musician_id != null) {
             let mid = mouse.target_musician_id;
             score = null;
-            state.update(state => {
+            state.update((state) => {
                 state.solution.placements[mid].x = x;
                 state.solution.placements[mid].y = y;
                 return state;
@@ -728,30 +732,31 @@
 
     <div class="container">
         {#if filteredRecords.length > 0}
-        <div class="scrollable-table">
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>id</th>
-                        <th>submission_id</th>
-                        <th>solver</th>
-                        <th>score</th>
-                        <th>ts</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {#each filteredRecords as r}
+            <div class="scrollable-table">
+                <table class="table">
+                    <thead>
                         <tr>
-                            <td><button on:click={fetchSolution(r[0], r[5])}>{r[0]}</button></td>
-                            <td>{r[2]}</td>
-                            <td>{r[3]}</td>
-                            <td>{r[5].toLocaleString()}</td>
-                            <td>{r[6]}</td>
+                            <th>id</th>
+                            <th>submission_id</th>
+                            <th>solver</th>
+                            <th>score</th>
+                            <th>ts</th>
                         </tr>
-                    {/each}
-                </tbody>
-            </table>
-        </div>
+                    </thead>
+                    <tbody>
+                        {#each filteredRecords as r}
+                            <tr>
+                                <td><button on:click={fetchSolution(r[0], r[5])}>{r[0]}</button></td
+                                >
+                                <td>{r[2]}</td>
+                                <td>{r[3]}</td>
+                                <td>{r[5]?.toLocaleString()}</td>
+                                <td>{r[6]}</td>
+                            </tr>
+                        {/each}
+                    </tbody>
+                </table>
+            </div>
         {:else}
             No records!!
         {/if}
@@ -856,7 +861,10 @@
             </nav>
         </div>
         <div>
-            <canvas id="c" width="1600" height="1200"
+            <canvas
+                id="c"
+                width="1600"
+                height="1200"
                 on:click={clickCanvas}
                 on:mousedown={mousedownCanvas}
                 on:mouseup={mouseupCanvas}
