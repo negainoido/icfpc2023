@@ -12,12 +12,12 @@ use std::f64::consts::PI;
 
 #[derive(Debug, Clone, Copy)]
 pub struct Segment {
-    p1: Point,
-    p2: Point,
+    pub p1: Point,
+    pub p2: Point,
 }
 
 impl Segment {
-    fn dist(self, p: &Point) -> f64 {
+    pub fn dist(self, p: &Point) -> f64 {
         let l = Line::new(self.p1, self.p2);
         let d: Point = l.delta().into();
 
