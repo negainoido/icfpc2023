@@ -44,7 +44,10 @@ fn main() {
     // Volume optimize
     let mut tmp_solution = best_solution.clone();
     for i in 0..input.musicians.len() {
-        let mut current_volume = best_solution.volumes.clone().unwrap_or(vec![1.0; input.musicians.len()]);
+        let mut current_volume = best_solution
+            .volumes
+            .clone()
+            .unwrap_or(vec![1.0; input.musicians.len()]);
 
         current_volume[i] = 10.0;
         tmp_solution.volumes = Some(current_volume.clone());
@@ -54,7 +57,7 @@ fn main() {
                     best_score = score;
                     best_solution = tmp_solution.clone();
                     println!("iter {}, score: {}", i, best_score);
-                    continue
+                    continue;
                 }
             }
             Err(e) => {
@@ -69,7 +72,7 @@ fn main() {
                     best_score = score;
                     best_solution = tmp_solution.clone();
                     println!("iter {}, score: {}", i, best_score);
-                    continue
+                    continue;
                 }
             }
             Err(e) => {
