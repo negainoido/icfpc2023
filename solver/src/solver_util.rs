@@ -12,6 +12,14 @@ pub fn yamanobori(
     rand_seed: u128,
 ) -> Vec<Point> {
     let mut rng = rand_pcg::Pcg64Mcg::new(rand_seed);
+    let input = reduce_attendees(input);
+    let mut best_score = input
+        .score_fast(&Solution {
+            placements: best.clone(),
+            volumes: Some(best_volume.clone()),
+        })
+        .unwrap();
+
     while get_time() < timeout {
         let mut current = best.clone();
         let idx = rng.gen_range(0..best.len());
@@ -32,9 +40,12 @@ pub fn yamanobori(
 
         let current_score = input.score_fast(&solution);
         if let Ok(sc) = current_score {
-            if sc > *best_score {
-                eprintln!("score is improved: {} -> {}", *best_score, sc,);
-                *best_score = sc;
+            if sc > best_score {
+                eprintln!(
+                    "score for reduced attendees is improved: {} -> {}",
+                    best_score, sc,
+                );
+                best_score = sc;
                 *best = solution.placements;
             }
         }
