@@ -780,6 +780,12 @@
         window.URL.revokeObjectURL(url);
     }
 
+    function copyToClipboard() {
+        var copyText = document.getElementById("solutionTextarea");
+        copyText.select();
+        document.execCommand("copy");
+    }
+
     function submitSolution() {
         console.log('submit');
         const solution = get(state).solution;
@@ -868,11 +874,18 @@
             </label>
             {#if openjson}
                 <div class="container">
-                    <textarea
-                        style="width: 100%; height: 20vh"
-                        class="textarea is-primary"
-                        bind:value={$state.solution_json}
-                    />
+                    <div style="position: relative; ">
+                        <textarea
+                            style="width: 100%; height: 20vh"
+                            class="textarea is-primary"
+                            id="solutionTextarea"
+                            bind:value={$state.solution_json}
+                        />
+                        <button
+                            style="position: absolute; top: 0; right: 0;"
+                            on:click={copyToClipboard}
+                        >Copy</button>
+                    </div>
                     <div class="field">
                         musician id: <input
                             type="number"
