@@ -159,7 +159,7 @@ pub fn get_non_blocked_placement_ids(attendee_pos: Point, placements: &Vec<Point
     for i in 1..angles.len() {
         let angle_info = angles[i];
         while let Some(&last) = max_end_angle_stack.back() {
-            if last.0 > angle_info.dist_sq {
+            if last.0 > angle_info.dist_sq && max_end_angle_stack.len() > 1 {
                 max_end_angle_stack.pop_back();
             } else {
                 break;
@@ -187,7 +187,7 @@ pub fn get_non_blocked_placement_ids(attendee_pos: Point, placements: &Vec<Point
     for i in (0..angles.len() - 1).rev() {
         let angle_info = angles[i];
         while let Some(&last) = min_start_angle_stack.back() {
-            if last.0 > angle_info.dist_sq {
+            if last.0 > angle_info.dist_sq && min_start_angle_stack.len() > 1 {
                 // dbg!(angle_info.dist_sq);
                 // dbg!(min_start_angle_stack.len());
                 min_start_angle_stack.pop_back();
