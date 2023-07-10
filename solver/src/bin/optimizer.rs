@@ -13,7 +13,7 @@ use std::time::Duration;
 use solver::problem::*;
 use solver::solver_util::volume_optimize;
 
-const PER_COUNT: u128 = 4;
+const PER_COUNT: u128 = 2;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -35,7 +35,7 @@ struct Args {
     rand_seed: u128,
 }
 
-fn make_hanicomob_line(
+fn make_honeycomb_line(
     input: &Input,
     solution: &Solution,
     rnd: &mut Pcg64Mcg,
@@ -49,7 +49,7 @@ fn make_hanicomob_line(
         for j in i + 1..candidates.len() {
             let left = candidates[i];
             let right = candidates[j];
-            if solution.placements[left].euclidean_distance(&solution.placements[right]) < 25.0 {
+            if solution.placements[left].euclidean_distance(&solution.placements[right]) < 15.0 {
                 graph[left].push(right);
                 graph[right].push(left);
             }
@@ -106,29 +106,22 @@ fn make_hanicomob_line(
         Point::new(max_x, max_y),
     ];
     let mut dir = [[1.0, 0.0], [-1.0, 0.0], [0.0, 1.0], [0.0, -1.0]];
-    let dist = 10.0;
+    let dist = 10.0 + rnd.gen_range(0.0..0.5);
     let delta_x = dist / 2.0;
-    let delta_y = dist * f64::sqrt(3.0 / 2.0) + 1e06;
-    let deltas = [
-        [delta_x, delta_y],
-        [dist, 0.0],
-        [delta_x, -delta_y],
-        [delta_x, delta_y],
-        [dist, 0.0],
-        [delta_x, -delta_y],
-    ];
+    let delta_y = dist * f64::sqrt(3.0 / 2.0) + 1e-06;
+    let deltas = vec![[delta_x, delta_y], [-delta_x, delta_y]];
     dir.shuffle(rnd);
     for &start in starts.iter() {
         for &[dx, dy] in dir.iter() {
             let mut points = vec![];
-            points.push(Point::new(min_x, min_y));
             let mut x = start.x();
             let mut y = start.y();
+            points.push(Point::new(x, y));
             for i in 0..cluster.len() - 1 {
-                x += deltas[i][0] * dx;
-                y += deltas[i][1] * dx;
-                x += deltas[i][1] * dy;
-                y += deltas[i][0] * dy;
+                x += deltas[i % 2][0] * dx;
+                y += deltas[i % 2][1] * dx;
+                x += deltas[i % 2][1] * dy;
+                y += deltas[i % 2][0] * dy;
                 points.push(Point::new(x, y));
             }
 
@@ -137,10 +130,12 @@ fn make_hanicomob_line(
                 new_solution.placements[i] = p;
             }
             if input.is_valid_placements(&new_solution.placements).is_ok() {
+                println!("try honeycomb line: {:?}", points);
                 return new_solution;
             }
         }
     }
+    //println!("failed to find honeycomb line");
 
     solution.clone()
 }
@@ -159,6 +154,77 @@ fn random_swap(
 
     (new_solution, left, right)
 }
+fn random_move2(input: &Input, solution: &Solution, rnd: &mut Pcg64Mcg) -> (Solution, usize) {
+    let target = (0..solution.placements.len()).choose(rnd).unwrap();
+    let delta = rnd.gen_range(0.0..1.0);
+    let theta = rnd.gen_range(0.0..2.0 * std::f64::consts::PI);
+    let mut deltas = vec![
+        [delta * f64::cos(theta), delta * f64::sin(theta)],
+        [-delta * f64::cos(theta), delta * f64::sin(theta)],
+        [delta * f64::cos(theta), -delta * f64::sin(theta)],
+        [-delta * f64::cos(theta), -delta * f64::sin(theta)],
+    ];
+
+    deltas.shuffle(rnd);
+    for &d in deltas.iter() {
+        let mut tmp_solution = solution.clone();
+        tmp_solution.placements[target] = Point::new(
+            solution.placements[target].x() + d[0],
+            solution.placements[target].y() + d[1],
+        );
+        if input.is_valid_placements(&tmp_solution.placements).is_ok() {
+            return (tmp_solution, target);
+        }
+    }
+    println!("no valid delta move");
+
+    (solution.clone(), target)
+}
+
+// volumeが低いmusicianを遠くに移動させてみる
+fn random_move3(input: &Input, solution: &Solution, rnd: &mut Pcg64Mcg) -> (Solution, usize) {
+    if solution.volumes.is_none() {
+        return random_move2(input, solution, rnd);
+    }
+    let v0_candidates = solution
+        .volumes
+        .as_ref()
+        .unwrap()
+        .iter()
+        .enumerate()
+        .filter(|(_, &v)| v < 1.0)
+        .map(|(i, _)| i)
+        .collect::<Vec<_>>();
+    if v0_candidates.is_empty() {
+        return random_move2(input, solution, rnd);
+    }
+
+    let target = *v0_candidates.choose(rnd).unwrap();
+    let delta = rnd.gen_range(10.0..100.0);
+    let theta = rnd.gen_range(0.0..2.0 * std::f64::consts::PI);
+    let mut deltas = vec![
+        [delta * f64::cos(theta), delta * f64::sin(theta)],
+        [-delta * f64::cos(theta), delta * f64::sin(theta)],
+        [delta * f64::cos(theta), -delta * f64::sin(theta)],
+        [-delta * f64::cos(theta), -delta * f64::sin(theta)],
+    ];
+    deltas.shuffle(rnd);
+    for &d in deltas.iter() {
+        let mut tmp_solution = solution.clone();
+        tmp_solution.placements[target] = Point::new(
+            solution.placements[target].x() + d[0],
+            solution.placements[target].y() + d[1],
+        );
+        if input.is_valid_placements(&tmp_solution.placements).is_ok() {
+            println!("big delta move");
+            return (tmp_solution, target);
+        }
+    }
+    //println!("no valid delta move");
+
+    return (solution.clone(), target);
+}
+
 fn random_move(
     input: &Input,
     solution: &Solution,
@@ -173,7 +239,7 @@ fn random_move(
     let mut candidates: HashSet<usize> = HashSet::from_iter(musician_map[inst].iter().cloned());
     candidates.remove(&target);
     let tar2 = candidates.iter().choose(rnd).unwrap();
-    let delta = rnd.gen_range(0.0..1.0);
+    let delta = rnd.gen_range(0.0..0.5);
     let mut neighbors = find_neighbor(solution, *tar2, delta);
     neighbors.shuffle(rnd);
     for &n in neighbors.iter() {
@@ -238,7 +304,7 @@ fn find_best(
     let now = std::time::Instant::now();
 
     while now.elapsed() < time {
-        let way = rnd.gen_range(0..3);
+        let way = rnd.gen_range(0..5);
         if way == 0 {
             //println!("swap");
             let (new_solution, l, r) = random_swap(&best_solution, musician_map, &mut rnd);
@@ -288,7 +354,7 @@ fn find_best(
                 }
             }
             if flag {
-                println!("best score: {}", best_score);
+                println!("swap best score: {}", best_score);
             }
         } else if way == 1 {
             // println!("random move");
@@ -320,13 +386,75 @@ fn find_best(
                 }
             }
             if flag {
-                println!("best score: {}", best_score);
+                println!("move best score: {}", best_score);
+            }
+        } else if way == 2 {
+            let (new_solution, tar) = random_move2(&input, &best_solution, &mut rnd);
+            let mut flag = false;
+            match input.score_fast(&new_solution) {
+                Ok(new_score) => {
+                    if new_score > best_score {
+                        best_solution = new_solution.clone();
+                        best_score = new_score;
+                        flag = true;
+                    }
+                }
+                Err(_) => {
+                    println!("invalid solution");
+                }
+            }
+            let solution2 = switch_volume(&new_solution, tar);
+            match input.score_fast(&solution2) {
+                Ok(new_score) => {
+                    if new_score > best_score {
+                        best_solution = solution2.clone();
+                        best_score = new_score;
+                        flag = true;
+                    }
+                }
+                Err(_) => {
+                    println!("invalid solution");
+                }
+            }
+            if flag {
+                println!("delta move best score: {}", best_score);
+            }
+        } else if way == 3 {
+            let (new_solution, tar) = random_move3(&input, &best_solution, &mut rnd);
+            let mut flag = false;
+            match input.score_fast(&new_solution) {
+                Ok(new_score) => {
+                    if new_score > best_score {
+                        best_solution = new_solution.clone();
+                        best_score = new_score;
+                        flag = true;
+                    }
+                }
+                Err(_) => {
+                    println!("invalid solution");
+                }
+            }
+            let solution2 = switch_volume(&new_solution, tar);
+            match input.score_fast(&solution2) {
+                Ok(new_score) => {
+                    if new_score > best_score {
+                        best_solution = solution2.clone();
+                        best_score = new_score;
+                        flag = true;
+                    }
+                }
+                Err(_) => {
+                    println!("invalid solution");
+                }
+            }
+            if flag {
+                println!("big move best score: {}", best_score);
             }
         } else {
             let mut flag = false;
-            println!("hanicomob");
-            let new_solution = make_hanicomob_line(input, &best_solution, &mut rnd, musician_map);
-            let new_solution = volume_optimize(input, &new_solution);
+            //println!("hanicomob");
+            let new_solution = make_honeycomb_line(&input, &best_solution, &mut rnd, musician_map);
+            let new_solution = volume_optimize(&input, &new_solution);
             match input.score_fast(&new_solution) {
                 Ok(new_score) => {
                     if new_score > best_score {
@@ -355,6 +483,7 @@ fn main() {
 
     let solution_str = std::fs::read_to_string(&args.solution).unwrap();
     let original_solution: Solution = serde_json::from_str(&solution_str).unwrap();
+    let original_score = input.score_fast(&original_solution).unwrap();
 
     let mut instruments = HashMap::new();
     for &m in &input.musicians {
@@ -384,8 +513,11 @@ fn main() {
         })
         .max_by(|a, b| a.0.partial_cmp(&b.0).unwrap())
         .unwrap();
+    if best_score == original_score {
+        println!("original solution is best");
+    } else {
+        println!("final best score: {}", best_score);
 
-    println!("final best score: {}", best_score);
-
-    std::fs::write(args.output, serde_json::to_string(&best_solution).unwrap()).unwrap();
+        std::fs::write(args.output, serde_json::to_string(&best_solution).unwrap()).unwrap();
+    }
 }

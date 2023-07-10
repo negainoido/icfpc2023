@@ -8,6 +8,7 @@ use rayon::prelude::*;
 use solver::PlacementGenerator;
 
 use solver::problem::*;
+use solver::solver_util::volume_optimize;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -200,6 +201,7 @@ fn main() {
             }
         }
     }
+    let best_solution = volume_optimize(&input, &best_solution);
 
     std::fs::write(args.output, serde_json::to_string(&best_solution).unwrap()).unwrap();
 }
