@@ -1,11 +1,4 @@
 use clap::Parser;
-use std::collections::{HashMap, HashSet};
-
-use geo::{EuclideanDistance, Point};
-use rand::seq::IteratorRandom;
-use rand_pcg::Pcg64Mcg;
-use rayon::prelude::*;
-use solver::PlacementGenerator;
 
 use solver::problem::*;
 
