@@ -20,7 +20,7 @@ struct Args {
     #[arg(short, long, default_value_t = 0)]
     rand_seed: u128,
 
-    #[arg(short, long, default_value_t = 5.0)]
+    #[arg(short, long, default_value_t = 10.0)]
     social_distance: f64,
 }
 
@@ -43,25 +43,26 @@ fn generate_first_level_candidates_nokogiri(
     social_distance: f64,
 ) -> Vec<Point> {
     let mut candidates = vec![];
+    let r = 10.0;
     let edges = vec![
         (
-            Point::new(1.0, 1.0),   // 初期方向
-            Point::new(1.0, -1.0),  // flip方向
+            Point::new(1.0, r),     // 初期方向
+            Point::new(1.0, -r),    // flip方向
             Point::new(10.0, 10.0), //開始位置
         ),
         (
-            Point::new(-1.0, 1.0),
-            Point::new(1.0, 1.0),
+            Point::new(-r, 1.0),
+            Point::new(r, 1.0),
             Point::new(input.stage_width - 10.0, 10.0),
         ),
         (
-            Point::new(-1.0, -1.0),
-            Point::new(-1.0, 1.0),
+            Point::new(-1.0, -r),
+            Point::new(-1.0, r),
             Point::new(input.stage_width - 10.0, input.stage_height - 10.0),
         ),
         (
-            Point::new(1.0, -1.0),
-            Point::new(-1.0, -1.0),
+            Point::new(r, -1.0),
+            Point::new(-r, -1.0),
             Point::new(10.0, input.stage_height - 10.0),
         ),
     ];
@@ -70,10 +71,11 @@ fn generate_first_level_candidates_nokogiri(
         let mut cur_pos = init_pos.clone() + input.stage_bottom_left;
         let mut counter = 0;
         let mut flip = false;
+        let length = direction.euclidean_distance(&Point::new(0.0, 0.0)) - 1e-7;
         if check_duplicate(&candidates, &cur_pos) {
             candidates.push(cur_pos);
         }
-        cur_pos += direction * f64::sqrt(2.0 + 1e-7) * social_distance;
+        cur_pos += direction / length * social_distance;
         while check_in_stage(input, &cur_pos) {
             if check_duplicate(&candidates, &cur_pos) {
                 candidates.push(cur_pos);
@@ -88,7 +90,7 @@ fn generate_first_level_candidates_nokogiri(
                     direction = dir.clone();
                 }
             }
-            cur_pos += direction * f64::sqrt(2.0 + 1e-7) * social_distance;
+            cur_pos += direction / length * social_distance;
         }
     }
     return candidates;
