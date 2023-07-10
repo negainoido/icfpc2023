@@ -362,7 +362,7 @@ impl Input {
     }
 
     // ある地点から見える参加者のIDを返す
-    pub fn get_visible_attendees(&self, point: Point, placements: &Vec<Point>) -> Vec<usize> {
+    pub fn get_visible_attendees(&self, point: Point, placements: &[Point]) -> Vec<usize> {
         let mut result = Vec::new();
         for (i, attendee) in self.attendees.iter().enumerate() {
             let segment = Segment {

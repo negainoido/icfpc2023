@@ -52,7 +52,7 @@ fn random_swap(
 fn random_move(
     input: &Input,
     solution: &Solution,
-    musician_map: &Vec<Vec<usize>>,
+    musician_map: &[Vec<usize>],
     rnd: &mut Pcg64Mcg,
 ) -> (Solution, usize) {
     let target = (0..solution.placements.len()).choose(rnd).unwrap();
