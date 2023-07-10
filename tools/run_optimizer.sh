@@ -22,6 +22,7 @@ cargo build --release
 popd
 
 echo "tmp_dir: $tmp_dir"
+curl -X POST -H "Authorization: Bearer ${TOKEN}" "http://localhost:8080/api/solutions/update_score"
 for problem_id in $(seq "$start" "$end"); do
   echo "problem id: $problem_id"
   resp=$(curl -H "Authorization: Bearer ${TOKEN}" "http://localhost:8080/api/best_solutions?id=${problem_id}")
@@ -30,9 +31,11 @@ for problem_id in $(seq "$start" "$end"); do
   contents="$(echo "$resp" | jq -r '.contents')"
   echo "$contents" > "$tmp_dir/source-$problem_id.json"
   output="$tmp_dir/output-$problem_id.json"
-  "./solver/target/release/$optimizer" --input "problems/problem-$problem_id.json" --solution "$tmp_dir/source-$problem_id.json" --output "$output"
+  "./solver/target/release/$optimizer" --input "problems/problem-$problem_id.json" --solution "$tmp_dir/source-$problem_id.json" --output "$output" || true
+  [[ -f "$output" ]] || continue
   curl -X POST -H "Authorization: Bearer ${TOKEN}" -F file=@"$output" "http://localhost:8080/api/solutions/submit?id=${problem_id}&solver=${solver}"
 done
+curl -X POST -H "Authorization: Bearer ${TOKEN}" "http://localhost:8080/api/solutions/update_score"
 
 
 
