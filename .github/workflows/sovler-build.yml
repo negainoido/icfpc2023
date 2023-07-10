@@ -17,6 +17,8 @@
         - uses: actions/checkout@v3
         - uses: dtolnay/rust-toolchain@stable
         - uses: Swatinem/rust-cache@v2
+          with:
+            workspaces: "./solver -> target"
         - run: cargo test
     build-wasm:
       runs-on: ubuntu-22.04
@@ -31,6 +33,7 @@
         - uses: Swatinem/rust-cache@v2
           with:
             prefix-key: "wasm-"
+            workspaces: "./solver -> target"
         - run: |
             rustup component add rust-src
             cargo install wasm-pack
