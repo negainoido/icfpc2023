@@ -226,6 +226,7 @@
                 if (query_solution_id) {
                     let solution_id = parseInt(query_solution_id);
                     let known_score = null;
+                    let solvername = null;
                     for (let r of records) {
                         if (r[0] == solution_id && r[1] == problem_id) {
                             found = true;
