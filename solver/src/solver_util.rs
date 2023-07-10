@@ -1,5 +1,5 @@
 use crate::get_time;
-use crate::problem::{Input, Solution};
+use crate::problem::{Input, Segment, Solution};
 use geo::Point;
 use rand::Rng;
 
@@ -40,6 +40,41 @@ pub fn yamanobori(
         }
     }
     best.to_vec()
+}
+
+pub fn reduce_attendees(input: &Input) -> Input {
+    let mut new_attendees = vec![];
+    for attendee in &input.attendees {
+        let mut min_dist: f64 = 1.0e9;
+        for segment in [
+            Segment {
+                p1: input.stage_bottom_left,
+                p2: input.stage_bottom_left + Point::new(input.stage_width, 0.0),
+            },
+            Segment {
+                p1: input.stage_bottom_left,
+                p2: input.stage_bottom_left + Point::new(0.0, input.stage_height),
+            },
+            Segment {
+                p1: input.stage_bottom_left + Point::new(0.0, input.stage_height),
+                p2: input.stage_bottom_left + Point::new(input.stage_width, input.stage_height),
+            },
+            Segment {
+                p1: input.stage_bottom_left + Point::new(input.stage_width, 0.0),
+                p2: input.stage_bottom_left + Point::new(input.stage_width, input.stage_height),
+            },
+        ] {
+            min_dist = min_dist.min(segment.dist(&attendee.pos()));
+        }
+        new_attendees.push((min_dist, attendee));
+    }
+
+    new_attendees.sort_by_key(|k| ordered_float::OrderedFloat(k.0));
+    new_attendees.truncate((new_attendees.len() / 5).max(100));
+
+    let mut input = input.clone();
+    input.attendees = new_attendees.into_iter().map(|v| v.1.clone()).collect();
+    input
 }
 
 pub fn volume_optimize(input: &Input, solution: &Solution) -> Solution {
