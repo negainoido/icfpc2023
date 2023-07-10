@@ -6,9 +6,8 @@ use rand::Rng;
 use rand_pcg::Pcg64Mcg;
 use rayon::prelude::*;
 
-use solver::PlacementGenerator;
 use std::collections::{HashMap, HashSet, VecDeque};
-use std::mem;
+
 use std::time::Duration;
 
 use solver::problem::*;
@@ -56,7 +55,7 @@ fn make_hanicomob_line(
             }
         }
     }
-    if graph[target].len() == 0 {
+    if graph[target].is_empty() {
         return solution.clone();
     }
     let mut cluster = HashSet::new();
@@ -100,7 +99,7 @@ fn make_hanicomob_line(
         .max_by(|a, b| a.partial_cmp(b).unwrap())
         .unwrap();
 
-    let starts = vec![
+    let starts = [
         Point::new(min_x, min_y),
         Point::new(min_x, max_y),
         Point::new(max_x, min_y),
@@ -110,7 +109,7 @@ fn make_hanicomob_line(
     let dist = 10.0;
     let delta_x = dist / 2.0;
     let delta_y = dist * f64::sqrt(3.0 / 2.0) + 1e06;
-    let deltas = vec![
+    let deltas = [
         [delta_x, delta_y],
         [dist, 0.0],
         [delta_x, -delta_y],
@@ -293,7 +292,7 @@ fn find_best(
             }
         } else if way == 1 {
             // println!("random move");
-            let (new_solution, tar) = random_move(&input, &best_solution, musician_map, &mut rnd);
+            let (new_solution, tar) = random_move(input, &best_solution, musician_map, &mut rnd);
             let mut flag = false;
             match input.score_fast(&new_solution) {
                 Ok(new_score) => {
@@ -326,8 +325,8 @@ fn find_best(
         } else {
             let mut flag = false;
             println!("hanicomob");
-            let new_solution = make_hanicomob_line(&input, &best_solution, &mut rnd, musician_map);
-            let new_solution = volume_optimize(&input, &new_solution);
+            let new_solution = make_hanicomob_line(input, &best_solution, &mut rnd, musician_map);
+            let new_solution = volume_optimize(input, &new_solution);
             match input.score_fast(&new_solution) {
                 Ok(new_score) => {
                     if new_score > best_score {
