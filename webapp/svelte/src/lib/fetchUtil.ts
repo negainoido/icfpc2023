@@ -1,5 +1,6 @@
-export function postSolution(id: number, solver: string, solution: object) {
-    return fetch('https://icfpc2023.negainoido.com/api/solutions/submit_json', {
+export function postSolution(problem_id: number, solver: string, solution: object) {
+    // return fetch('https://icfpc2023.negainoido.com/api/solutions/submit_json', {
+    return fetch('http://localhost:8080/api/solutions/submit_json', {
         method: 'POST',
         mode: 'cors',
         credentials: 'include',
@@ -7,9 +8,9 @@ export function postSolution(id: number, solver: string, solution: object) {
             'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-            problem_id: id,
+            problem_id,
             solver,
-            solution,
+            contents: JSON.stringify(solution),
         }),
     })
         .then((data) => data.json());
