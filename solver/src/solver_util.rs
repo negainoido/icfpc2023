@@ -89,48 +89,38 @@ pub fn reduce_attendees(input: &Input, num: usize) -> Input {
 }
 
 pub fn volume_optimize(input: &Input, solution: &Solution) -> Solution {
-    let mut best_solution = solution.clone();
-    let mut best_score = best_solution.score(&input).unwrap();
+    let mut solution = solution.clone();
+    let mut best_score = solution.score(&input).unwrap();
+
+    let original_volumes = solution
+        .volumes
+        .clone()
+        .unwrap_or(vec![1.0; input.musicians.len()]);
+    solution.volumes = Some(original_volumes.clone());
 
     // Volume optimize
-    let mut tmp_solution = best_solution.clone();
     for i in 0..input.musicians.len() {
-        let mut current_volume = best_solution
-            .volumes
-            .clone()
-            .unwrap_or(vec![1.0; input.musicians.len()]);
-
-        current_volume[i] = 10.0;
-        tmp_solution.volumes = Some(current_volume.clone());
-        match tmp_solution.score(&input) {
-            Ok(score) => {
-                if score > best_score {
-                    best_score = score;
-                    best_solution = tmp_solution.clone();
-                    println!("iter {}, score: {}", i, best_score);
-                    continue;
+        for vol in [0.0, 10.0] {
+            if let Some(volumes) = &mut solution.volumes {
+                volumes[i] = vol;
+            }
+            match solution.score(&input) {
+                Ok(score) => {
+                    if score > best_score {
+                        best_score = score;
+                        println!("iter {}, score: {}", i, best_score);
+                        continue;
+                    } else {
+                        if let Some(volumes) = &mut solution.volumes {
+                            volumes[i] = original_volumes[i];
+                        }
+                    }
                 }
-            }
-            Err(e) => {
-                println!("iter {} error exit: {:?}", i, e);
-            }
-        }
-        current_volume[i] = 0.0;
-        tmp_solution.volumes = Some(current_volume.clone());
-        match tmp_solution.score(&input) {
-            Ok(score) => {
-                if score > best_score {
-                    best_score = score;
-                    best_solution = tmp_solution.clone();
-                    println!("iter {}, score: {}", i, best_score);
-                    continue;
+                Err(e) => {
+                    println!("iter {} error exit: {:?}", i, e);
                 }
-            }
-            Err(e) => {
-                println!("iter {} error exit: {:?}", i, e);
             }
         }
     }
-
-    best_solution
+    solution
 }
