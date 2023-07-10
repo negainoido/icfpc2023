@@ -4,6 +4,7 @@
     import { get, writable } from 'svelte/store';
     import Log from '$lib/Log.svelte';
     import { page } from '$app/stores';
+    import { postSolution } from "$lib/fetchUtil";
 
     let wasm;
     let problem_id = data.problem_id;
@@ -701,6 +702,20 @@
         a.click();
         window.URL.revokeObjectURL(url);
     }
+
+    function submitSolution() {
+        console.log('submit');
+        const solution = get(state).solution;
+        const solver = 'hand_solver';
+        postSolution(problem_id, solver, solution)
+            .then((res) => {
+                console.log(res);
+                state.update((prev) => ({
+                    ...prev,
+                    solution_id: res.solution_id,
+                }));
+            });
+    }
 </script>
 
 <section class="section">
@@ -802,6 +817,7 @@
                     </div>
                     <button class="button" on:click={loadSolutionJSON}>show solution</button>
                 </div>
+                <button class="button" on:click={submitSolution}>submit solution</button>
             {/if}
         </div>
         <div class="box">
