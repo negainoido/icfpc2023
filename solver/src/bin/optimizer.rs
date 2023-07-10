@@ -1,13 +1,19 @@
 use clap::Parser;
+use geo::Point;
 use rand::prelude::SliceRandom;
 use rand::seq::IteratorRandom;
+use rand::Rng;
 use rand_pcg::Pcg64Mcg;
 use rayon::prelude::*;
-use std::collections::HashMap;
+use solver::PlacementGenerator;
+use std::collections::{HashMap, HashSet};
+use std::mem;
 use std::time::Duration;
 
 use solver::problem::*;
 use solver::solver_util::volume_optimize;
+
+const PER_COUNT: u128 = 4;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -45,6 +51,47 @@ fn random_swap(
 
     (new_solution, left, right)
 }
+fn random_move(
+    input: &Input,
+    solution: &Solution,
+    musician_map: &Vec<Vec<usize>>,
+    rnd: &mut Pcg64Mcg,
+) -> (Solution, usize) {
+    let mut target = (0..solution.placements.len()).choose(rnd).unwrap();
+    let inst = input.musicians[target];
+    if musician_map[inst].len() == 1 {
+        return (solution.clone(), target);
+    }
+    let mut candidates: HashSet<usize> = HashSet::from_iter(musician_map[inst].iter().cloned());
+    candidates.remove(&target);
+    let tar2 = candidates.iter().choose(rnd).unwrap();
+    let mut neighbors = find_neighbor(solution, *tar2);
+    neighbors.shuffle(rnd);
+    for &n in neighbors.iter() {
+        let mut tmp_solution = solution.clone();
+        tmp_solution.placements[target] = n;
+        if input.is_valid_placements(&tmp_solution.placements).is_ok() {
+            return (tmp_solution, target);
+        }
+    }
+    println!("no valid neighbor");
+
+    (solution.clone(), target)
+}
+fn find_neighbor(solution: &Solution, target: usize) -> Vec<Point> {
+    let point = solution.placements[target];
+    let mut result = vec![];
+    result.push(Point::new(point.x() - 10.0, point.y()));
+    result.push(Point::new(point.x() + 10.0, point.y()));
+    result.push(Point::new(point.x(), point.y() - 10.0));
+    result.push(Point::new(point.x(), point.y() + 10.0));
+    let delta = 10.0 * f64::sqrt(3.0 / 2.0) + 1e06;
+    result.push(Point::new(point.x() + delta, point.y() + 5.0));
+    result.push(Point::new(point.x() - delta, point.y() + 5.0));
+    result.push(Point::new(point.x() + delta, point.y() - 5.0));
+    result.push(Point::new(point.x() - delta, point.y() - 5.0));
+    result
+}
 
 fn switch_volume(solution: &Solution, target: usize) -> Solution {
     let mut new_solution = solution.clone();
@@ -75,54 +122,90 @@ fn find_best(
     let now = std::time::Instant::now();
 
     while now.elapsed() < time {
-        let (new_solution, l, r) = random_swap(&best_solution, musician_map, &mut rnd);
-        let mut flag = false;
-        match input.score_fast(&new_solution) {
-            Ok(new_score) => {
-                if new_score > best_score {
-                    best_solution = new_solution.clone();
-                    best_score = new_score;
-                    flag = true;
+        let way = rnd.gen_range(0..2);
+        if way == 0 {
+            println!("swap");
+            let (new_solution, l, r) = random_swap(&best_solution, musician_map, &mut rnd);
+            let mut flag = false;
+            match input.score_fast(&new_solution) {
+                Ok(new_score) => {
+                    if new_score > best_score {
+                        best_solution = new_solution.clone();
+                        best_score = new_score;
+                        flag = true;
+                    }
+                }
+                Err(_) => {
+                    println!("invalid solution");
                 }
             }
-            Err(_) => {
-                println!("invalid solution");
-            }
-        }
-        let solution2 = switch_volume(&new_solution, l);
-        let mut flag2 = false;
-        match input.score_fast(&solution2) {
-            Ok(new_score) => {
-                if new_score > best_score {
-                    best_solution = solution2.clone();
-                    best_score = new_score;
-                    flag = true;
-                    flag2 = true;
+            let solution2 = switch_volume(&new_solution, l);
+            let mut flag2 = false;
+            match input.score_fast(&solution2) {
+                Ok(new_score) => {
+                    if new_score > best_score {
+                        best_solution = solution2.clone();
+                        best_score = new_score;
+                        flag = true;
+                        flag2 = true;
+                    }
+                }
+                Err(_) => {
+                    println!("invalid solution");
                 }
             }
-            Err(_) => {
-                println!("invalid solution");
+            let solution3 = if flag2 {
+                switch_volume(&solution2, r)
+            } else {
+                switch_volume(&new_solution, r)
+            };
+            match input.score_fast(&solution3) {
+                Ok(new_score) => {
+                    if new_score > best_score {
+                        best_solution = solution3.clone();
+                        best_score = new_score;
+                        flag = true;
+                    }
+                }
+                Err(_) => {
+                    println!("invalid solution");
+                }
             }
-        }
-        let solution3 = if flag2 {
-            switch_volume(&solution2, r)
+            if flag {
+                println!("best score: {}", best_score);
+            }
         } else {
-            switch_volume(&new_solution, r)
-        };
-        match input.score_fast(&solution3) {
-            Ok(new_score) => {
-                if new_score > best_score {
-                    best_solution = solution3.clone();
-                    best_score = new_score;
-                    flag = true;
+            println!("random move");
+            let (new_solution, tar) = random_move(&input, &best_solution, musician_map, &mut rnd);
+            let mut flag = false;
+            match input.score_fast(&new_solution) {
+                Ok(new_score) => {
+                    if new_score > best_score {
+                        best_solution = new_solution.clone();
+                        best_score = new_score;
+                        flag = true;
+                    }
+                }
+                Err(_) => {
+                    println!("invalid solution");
                 }
             }
-            Err(_) => {
-                println!("invalid solution");
+            let solution2 = switch_volume(&new_solution, tar);
+            match input.score_fast(&solution2) {
+                Ok(new_score) => {
+                    if new_score > best_score {
+                        best_solution = solution2.clone();
+                        best_score = new_score;
+                        flag = true;
+                    }
+                }
+                Err(_) => {
+                    println!("invalid solution");
+                }
             }
-        }
-        if flag {
-            println!("best score: {}", best_score);
+            if flag {
+                println!("best score: {}", best_score);
+            }
         }
     }
 
@@ -151,7 +234,7 @@ fn main() {
         panic!("musicians are too few");
     }
     let solution = volume_optimize(&input, &original_solution);
-    let (best_score, best_solution) = (0..4)
+    let (best_score, best_solution) = (0..PER_COUNT)
         .into_par_iter()
         .map(|i| {
             let seed = args.rand_seed + i * 2;
