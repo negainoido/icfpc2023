@@ -19,6 +19,9 @@ struct Args {
 
     #[arg(short, long, default_value_t = 0)]
     rand_seed: u128,
+
+    #[arg(short, long, default_value_t = 5.0)]
+    social_distance: f64,
 }
 
 fn check_in_stage(input: &Input, pos: &Point) -> bool {
@@ -34,7 +37,11 @@ fn check_duplicate(candidates: &Vec<Point>, pos: &Point) -> bool {
 }
 
 // 三角波で初期配置を生成する。
-fn generate_first_level_candidates_nokogiri(input: &Input, wave_length: u8) -> Vec<Point> {
+fn generate_first_level_candidates_nokogiri(
+    input: &Input,
+    wave_length: u8,
+    social_distance: f64,
+) -> Vec<Point> {
     let mut candidates = vec![];
     let edges = vec![
         (
@@ -66,7 +73,7 @@ fn generate_first_level_candidates_nokogiri(input: &Input, wave_length: u8) -> V
         if check_duplicate(&candidates, &cur_pos) {
             candidates.push(cur_pos);
         }
-        cur_pos += direction * f64::sqrt(2.0 + 1e-7) * 5.0;
+        cur_pos += direction * f64::sqrt(2.0 + 1e-7) * social_distance;
         while check_in_stage(input, &cur_pos) {
             if check_duplicate(&candidates, &cur_pos) {
                 candidates.push(cur_pos);
@@ -81,13 +88,13 @@ fn generate_first_level_candidates_nokogiri(input: &Input, wave_length: u8) -> V
                     direction = dir.clone();
                 }
             }
-            cur_pos += direction * f64::sqrt(2.0 + 1e-7) * 5.0;
+            cur_pos += direction * f64::sqrt(2.0 + 1e-7) * social_distance;
         }
     }
     return candidates;
 }
 
-fn generate_first_level_candidates(input: &Input) -> Vec<Point> {
+fn generate_first_level_candidates(input: &Input, social_distance: f64) -> Vec<Point> {
     let x_count = (input.stage_width / 10.0).floor() as usize - 1;
     let y_count = (input.stage_height / 10.0).floor() as usize - 1;
     dbg!(x_count, y_count);
@@ -120,7 +127,7 @@ fn generate_first_level_candidates(input: &Input) -> Vec<Point> {
         }
     }
 
-    let mut candidates = generate_first_level_candidates_nokogiri(input, 1);
+    let mut candidates = generate_first_level_candidates_nokogiri(input, 1, social_distance);
     for level in 2..layered_candidates.len() {
         for candidate in layered_candidates[level].clone() {
             dbg!(candidate, check_duplicate(&candidates, &candidate));
@@ -192,8 +199,8 @@ fn exact_match_candidates(input: &Input, candidates: &Vec<Point>) -> (f64, Vec<P
     (score.0, filtered_candidates, volumes)
 }
 
-fn solve(input: &Input) -> (Vec<Point>, Vec<f64>) {
-    let first_level_candidates = generate_first_level_candidates(input);
+fn solve(input: &Input, social_distance: f64) -> (Vec<Point>, Vec<f64>) {
+    let first_level_candidates = generate_first_level_candidates(input, social_distance);
     // 最初はmusicianよりも多い候補地を用いて最適化を行い、その結果に基づき二段階目の最適化に使用する候補地を列挙
     let (first_level_score, second_level_candidates, _) =
         exact_match_candidates(input, &first_level_candidates);
@@ -213,7 +220,7 @@ fn main() {
     let y_count = (input.stage_height / 10.0).floor() as usize - 1;
     let (best_placements, best_volumes) = if x_count * y_count >= input.musicians.len() {
         // Use new strategy!
-        solve(&input)
+        solve(&input, args.social_distance)
     } else {
         // Give up
         let mut generator = PlacementGenerator::new(&input, args.rand_seed);
