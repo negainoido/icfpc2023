@@ -96,11 +96,12 @@ pub fn volume_optimize(input: &Input, solution: &Solution) -> Solution {
         .volumes
         .clone()
         .unwrap_or(vec![1.0; input.musicians.len()]);
-    solution.volumes = Some(original_volumes.clone());
+    solution.volumes = Some(original_volumes);
 
     // Volume optimize
     for i in 0..input.musicians.len() {
         for vol in [0.0, 10.0] {
+            let tmp = solution.volumes.as_ref().map(|v| v[i]).unwrap_or(1.0);
             if let Some(volumes) = &mut solution.volumes {
                 volumes[i] = vol;
             }
@@ -112,7 +113,7 @@ pub fn volume_optimize(input: &Input, solution: &Solution) -> Solution {
                         continue;
                     } else {
                         if let Some(volumes) = &mut solution.volumes {
-                            volumes[i] = original_volumes[i];
+                            volumes[i] = tmp;
                         }
                     }
                 }
