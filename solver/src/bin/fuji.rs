@@ -85,6 +85,7 @@ fn fuji(
             volumes: Some(best_volume.to_owned()),
         })
         .unwrap();
+    let mut updated = false;
 
     let mut current = best.clone();
     let mut temp: f64 = 1.0;
@@ -95,7 +96,11 @@ fn fuji(
         let dir = rng.gen_range(0..4);
         let dx = [0.0, 1.0, 0.0, -1.0];
         let dy = [1.0, 0.0, -1.0, 0.0];
-        let step = rng.gen_range(1..100) as f64 / 10.0;
+        let step = if temp > temp_min * 10.0 {
+            rng.gen_range(1..100) as f64 / 10.0
+        } else {
+            rng.gen_range(1..100) as f64 / 100.0
+        };
         let x_old = current[idx].x();
         let y_old = current[idx].y();
         current[idx].set_x(x_old + dx[dir] * step);
@@ -120,6 +125,7 @@ fn fuji(
                 );
                 best_score = sc;
                 *best = solution.placements;
+                updated = true;
             } else if ((sc - best_score) / temp).exp() > rng.gen::<f64>() {
                 eprintln!("yaku(temp={}): {} -> {}", temp, best_score, sc);
             } else {
@@ -129,5 +135,6 @@ fn fuji(
         }
         temp = temp_min.max(temp * alpha);
     }
+    assert!(updated);
     best.to_vec()
 }
