@@ -100,7 +100,7 @@ pub fn volume_optimize(input: &Input, solution: &Solution) -> Solution {
 
     // Volume optimize
     for i in 0..input.musicians.len() {
-        for vol in [0.0, 10.0] {
+        for vol in [0.0, 0.1, 9.9, 10.0] {
             let tmp = solution.volumes.as_ref().map(|v| v[i]).unwrap_or(1.0);
             if let Some(volumes) = &mut solution.volumes {
                 volumes[i] = vol;
