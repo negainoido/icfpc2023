@@ -26,7 +26,7 @@ struct Args {
     #[arg(short, long)]
     solution: String,
 
-    #[arg(long, default_value_t = 30)]
+    #[arg(long, default_value_t = 120)]
     time_sec: u64,
 
     #[arg(short, long, default_value_t = 0)]
