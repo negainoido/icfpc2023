@@ -6,7 +6,6 @@ use rand::Rng;
 use rand_pcg::Pcg64Mcg;
 use rayon::prelude::*;
 
-
 use std::collections::{HashMap, HashSet, VecDeque};
 
 use std::time::Duration;
@@ -100,20 +99,24 @@ fn make_hanicomob_line(
         .max_by(|a, b| a.partial_cmp(b).unwrap())
         .unwrap();
 
-    let starts = [Point::new(min_x, min_y),
+    let starts = [
+        Point::new(min_x, min_y),
         Point::new(min_x, max_y),
         Point::new(max_x, min_y),
-        Point::new(max_x, max_y)];
+        Point::new(max_x, max_y),
+    ];
     let mut dir = [[1.0, 0.0], [-1.0, 0.0], [0.0, 1.0], [0.0, -1.0]];
     let dist = 10.0;
     let delta_x = dist / 2.0;
     let delta_y = dist * f64::sqrt(3.0 / 2.0) + 1e06;
-    let deltas = [[delta_x, delta_y],
+    let deltas = [
+        [delta_x, delta_y],
         [dist, 0.0],
         [delta_x, -delta_y],
         [delta_x, delta_y],
         [dist, 0.0],
-        [delta_x, -delta_y]];
+        [delta_x, -delta_y],
+    ];
     dir.shuffle(rnd);
     for &start in starts.iter() {
         for &[dx, dy] in dir.iter() {
