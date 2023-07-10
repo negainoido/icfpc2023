@@ -67,7 +67,7 @@ impl AngleInfo {
 
 pub fn filter_placements_blocked_by_pillars(
     attendee_pos: Point,
-    placements: &Vec<Point>,
+    placements: &[Point],
     pillars: &Vec<Pillar>,
     prefiltered_ids: &Vec<usize>,
 ) -> Vec<usize> {
@@ -362,7 +362,7 @@ impl Input {
     }
 
     // ある地点から見える参加者のIDを返す
-    pub fn get_visible_attendees(&self, point: Point, placements: &Vec<Point>) -> Vec<usize> {
+    pub fn get_visible_attendees(&self, point: Point, placements: &[Point]) -> Vec<usize> {
         let mut result = Vec::new();
         for (i, attendee) in self.attendees.iter().enumerate() {
             let segment = Segment {
@@ -435,7 +435,7 @@ impl Input {
         &self,
         attendee_id: usize,
         solution: &Solution,
-        impacts: &Vec<f64>,
+        impacts: &[f64],
     ) -> f64 {
         let mut sum_impact = 0.0;
         let placements = &solution.placements;
@@ -467,7 +467,7 @@ impl Input {
     }
 
     // Playing togetherによる各Musicianの得点倍率を計算する
-    pub fn calc_playing_together(&self, placements: &Vec<Point>) -> Vec<f64> {
+    pub fn calc_playing_together(&self, placements: &[Point]) -> Vec<f64> {
         let mut inst_map = HashMap::new();
         for (i, &m) in self.musicians.iter().enumerate() {
             let tar = match inst_map.get_mut(&m) {

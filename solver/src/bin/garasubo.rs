@@ -51,7 +51,7 @@ fn main() {
     let stage_center_x = input.stage_bottom_left.x() + input.stage_width / 2.0;
     let stage_center_y = input.stage_bottom_left.y() + input.stage_height / 2.0;
     let stage_center = Point::new(stage_center_x, stage_center_y);
-    let visible_attendees = input.get_visible_attendees(stage_center, &vec![]);
+    let visible_attendees = input.get_visible_attendees(stage_center, &[]);
     for i in 0..instruments.keys().len() {
         popularity.push((
             input.raw_score_for_instrument(stage_center, i, &visible_attendees),

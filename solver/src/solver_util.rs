@@ -6,7 +6,7 @@ use rand::Rng;
 pub fn yamanobori(
     input: &Input,
     best: &mut Vec<Point>,
-    best_volume: &Vec<f64>,
+    best_volume: &[f64],
     timeout: f64,
     rand_seed: u128,
     reduce_num: usize,
@@ -16,7 +16,7 @@ pub fn yamanobori(
     let mut best_score = input
         .score_fast(&Solution {
             placements: best.clone(),
-            volumes: Some(best_volume.clone()),
+            volumes: Some(best_volume.to_owned()),
         })
         .unwrap();
 
@@ -35,7 +35,7 @@ pub fn yamanobori(
         }
         let solution = Solution {
             placements: current,
-            volumes: Some(best_volume.clone()),
+            volumes: Some(best_volume.to_owned()),
         };
 
         let current_score = input.score_fast(&solution);

@@ -133,7 +133,9 @@ fn hill_climbing(input: &Input, placements: &Vec<Point>, timeout: f64) -> Vec<Po
     let mut same_instrument_group: HashMap<usize, Vec<usize>> = HashMap::new();
     for musician_id in 0..input.musicians.len() {
         let instrument = input.musicians[musician_id];
-        if let std::collections::hash_map::Entry::Vacant(e) = same_instrument_group.entry(instrument) {
+        if let std::collections::hash_map::Entry::Vacant(e) =
+            same_instrument_group.entry(instrument)
+        {
             e.insert(vec![musician_id; 1]);
         } else {
             same_instrument_group
@@ -233,7 +235,7 @@ fn hill_climbing(input: &Input, placements: &Vec<Point>, timeout: f64) -> Vec<Po
 
 fn solve(input: &Input, timeout: f64) -> Vec<Point> {
     let base_placements = two_stage_optimization(input);
-    
+
     if !input.pillars.is_empty() {
         // with extension
         hill_climbing(input, &base_placements, timeout)
