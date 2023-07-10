@@ -242,7 +242,7 @@ pub struct Input {
 }
 
 impl Input {
-    fn in_stage(&self, p: &Point) -> bool {
+    pub fn in_stage(&self, p: &Point) -> bool {
         const MUSICIAN_CLOSE_DIST: f64 = 10.0;
         p.x() >= self.stage_bottom_left.x() + MUSICIAN_CLOSE_DIST
             && p.x() <= self.stage_bottom_left.x() + self.stage_width - MUSICIAN_CLOSE_DIST

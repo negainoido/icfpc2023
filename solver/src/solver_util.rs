@@ -1,43 +1,39 @@
 use crate::get_time;
 use crate::problem::{Input, Segment, Solution};
 use geo::{EuclideanDistance, Point};
+use ordered_float::OrderedFloat;
 use rand::Rng;
 
-
-struct PlayTogetherIndex {
-
-}
+struct PlayTogetherIndex {}
 
 impl PlayTogetherIndex {
     fn new(_input: &Input, _placements: &Vec<Point>) -> Self {
-        PlayTogetherIndex {
-
-        }
+        PlayTogetherIndex {}
     }
 
     fn get(&self, _i: usize) -> f64 {
         1.0
     }
 
-    fn move_musician(&mut self, _musician_i: usize, _new_point: Point)  {
-
-    }
+    fn move_musician(&mut self, _musician_i: usize, _new_point: Point) {}
 }
 
 struct AttendeeIndex {
     musician_point: Point,
     tastes: Vec<f64>,
-    angles: Vec<f64>,
+    sorted_angles: Vec<(OrderedFloat<f64>, usize)>,
     impact: f64,
-    cover_counts: Vec<i32>
+    cover_counts: Vec<i32>,
 }
 
 impl AttendeeIndex {
     fn create(musician_id: usize, musician_point: Point, input: &Input) -> Self {
         let mut tastes = vec![];
-        let mut angles = vec![];
+        // let mut angles = vec![];
         let mut impact = 0.0;
         let instrument_id = input.musicians[musician_id];
+
+        let mut sorted_angles = vec![];
         for i in 0..input.attendees.len() {
             let taste = input.attendees[i].tastes[instrument_id];
             let distance = input.attendees[i].pos().euclidean_distance(&musician_point);
@@ -48,16 +44,23 @@ impl AttendeeIndex {
             let dx = input.attendees[i].x - musician_point.x();
             let dy = input.attendees[i].y - musician_point.y();
             let angle = dy.atan2(dx);
-            angles.push(angle);
-        }
+            // angles.push(angle);
 
+            sorted_angles.push((OrderedFloat(angle) - 2.0 * std::f64::consts::PI, i));
+            sorted_angles.push((OrderedFloat(angle), i));
+            sorted_angles.push((OrderedFloat(angle) + 2.0 * std::f64::consts::PI, i));
+        }
+        // 番兵
+        sorted_angles.push((OrderedFloat(-4.0 * std::f64::consts::PI), 0));
+        sorted_angles.push((OrderedFloat(4.0 * std::f64::consts::PI), 0));
+        sorted_angles.sort();
 
         AttendeeIndex {
             musician_point,
             tastes,
-            angles,
+            sorted_angles,
             impact,
-            cover_counts: vec![0; input.attendees.len()]
+            cover_counts: vec![0; input.attendees.len()],
         }
     }
 
@@ -75,30 +78,33 @@ impl AttendeeIndex {
         let distance = point.euclidean_distance(&self.musician_point);
         let angle = dy.atan2(dx);
         let asin = (5.0 / distance).asin();
-        let (angle_left, angle_right) = (angle - asin, angle + asin);
+        let (angle_left, angle_right) = (OrderedFloat(angle - asin), OrderedFloat(angle + asin));
 
-        for i in 0..self.tastes.len() {
-            let mut hit = false;
-            for offset in -1..=1 {
-                let a_angle = self.angles[i] + offset as f64 * std::f64::consts::PI * 2.0;
-                if angle_left < a_angle && a_angle < angle_right {
-                    hit = true;
-                }
+        let mut lb = 0;
+        let mut ub = self.sorted_angles.len();
+        while ub - lb > 1 {
+            let mb = (ub + lb) / 2;
+            if self.sorted_angles[mb].0 <= angle_left {
+                lb = mb;
+            } else {
+                ub = mb;
+            }
+        }
+        let mut cursor = ub;
+        while cursor < self.sorted_angles.len() && self.sorted_angles[cursor].0 < angle_right {
+            let index = self.sorted_angles[cursor].1;
+            let current = self.cover_counts[index];
+            self.cover_counts[index] += value;
+            assert!(self.cover_counts[index] >= 0);
+
+            if current == 0 && self.cover_counts[index] > 0 {
+                self.impact -= self.tastes[index];
             }
 
-            if hit {
-                let current = self.cover_counts[i];
-                self.cover_counts[i] += value;
-                assert!(self.cover_counts[i] >= 0);
-
-                if current == 0 && self.cover_counts[i] > 0 {
-                    self.impact -= self.tastes[i];
-                }
-
-                if current > 0 && self.cover_counts[i] == 0 {
-                    self.impact += self.tastes[i];
-                }
+            if current > 0 && self.cover_counts[index] == 0 {
+                self.impact += self.tastes[index];
             }
+            cursor += 1;
         }
     }
 
@@ -107,19 +113,18 @@ impl AttendeeIndex {
     }
 }
 
-
 struct ImpactIndex {
     input: Input,
     placements: Vec<Point>,
     attendee_indexes: Vec<AttendeeIndex>,
 }
 
-
 impl ImpactIndex {
     fn new(input: &Input, placements: &Vec<Point>) -> Self {
         let mut attendee_indexes = vec![];
         for musician_i in 0..input.musicians.len() {
-            let mut attendee_index = AttendeeIndex::create(musician_i, placements[musician_i], input);
+            let mut attendee_index =
+                AttendeeIndex::create(musician_i, placements[musician_i], input);
             for musician_j in 0..input.musicians.len() {
                 if musician_i != musician_j {
                     attendee_index.increase(placements[musician_j]);
@@ -127,14 +132,18 @@ impl ImpactIndex {
             }
             attendee_indexes.push(attendee_index);
         }
-        ImpactIndex {input: input.clone(), placements: placements.clone(), attendee_indexes}
+        ImpactIndex {
+            input: input.clone(),
+            placements: placements.clone(),
+            attendee_indexes,
+        }
     }
 
     fn get(&self, i: usize) -> f64 {
         self.attendee_indexes[i].get_impact()
     }
 
-    fn move_musician(&mut self, musician_i: usize, new_point: Point)  {
+    fn move_musician(&mut self, musician_i: usize, new_point: Point) {
         let old_point = self.placements[musician_i];
         for musician_j in 0..self.input.musicians.len() {
             if musician_i == musician_j {
@@ -144,7 +153,8 @@ impl ImpactIndex {
             self.attendee_indexes[musician_j].increase(new_point);
         }
         self.placements[musician_i] = new_point;
-        self.attendee_indexes[musician_i] = AttendeeIndex::create(musician_i, new_point, &self.input);
+        self.attendee_indexes[musician_i] =
+            AttendeeIndex::create(musician_i, new_point, &self.input);
         for musician_j in 0..self.input.musicians.len() {
             if musician_i != musician_j {
                 self.attendee_indexes[musician_i].increase(self.placements[musician_j]);
@@ -187,17 +197,53 @@ impl ScoringIndex {
     fn get_score(&self) -> f64 {
         let mut score = 0.0;
         for i in 0..self.input.musicians.len() {
-            score += (self.volumes[i] * self.play_together_index.get(i) * self.impact_index.get(i)).ceil();
+            score += (self.volumes[i] * self.play_together_index.get(i) * self.impact_index.get(i))
+                .ceil();
         }
         score
     }
 
-    fn move_musician(&mut self, musician_i: usize, new_point: Point)  {
-        self.play_together_index.move_musician(musician_i, new_point);
-        self.impact_index.move_musician(musician_i, new_point);
+    fn is_valid_move(&self, musician_i: usize, new_point: Point) -> bool {
+        // Check musician is in stage
+        if !self.input.in_stage(&new_point) {
+            return false;
+        }
+
+        // Check distance from room walls
+        const MUSICIAN_CLOSE_DIST: f64 = 10.0;
+        if !((MUSICIAN_CLOSE_DIST <= new_point.x()
+            && new_point.x() <= self.input.room_width - MUSICIAN_CLOSE_DIST)
+            && (MUSICIAN_CLOSE_DIST <= new_point.y()
+                && new_point.y() <= self.input.room_height - MUSICIAN_CLOSE_DIST))
+        {
+            return false;
+        }
+
+        // Check ditances between musicians
+        for musician_j in 0..self.input.musicians.len() {
+            if musician_i == musician_j {
+                continue;
+            }
+
+            let dist = new_point.euclidean_distance(&self.impact_index.placements[musician_j]);
+            if dist < MUSICIAN_CLOSE_DIST {
+                return false;
+            }
+        }
+        true
+    }
+
+    fn move_musician(&mut self, musician_i: usize, new_point: Point) -> bool {
+        if self.is_valid_move(musician_i, new_point) {
+            self.play_together_index
+                .move_musician(musician_i, new_point);
+            self.impact_index.move_musician(musician_i, new_point);
+            true
+        } else {
+            false
+        }
     }
 }
-
 
 pub fn yamanobori(
     input: &Input,
@@ -230,13 +276,16 @@ pub fn yamanobori(
         *current[idx].x_mut() += dx[dir] * step;
         *current[idx].y_mut() += dy[dir] * step;
 
-        if input.is_valid_placements(&current).is_err() {
-            continue;
-        }
+        // if input.is_valid_placements(&current).is_err() {
+        //     continue;
+        // }
 
         let old_point = best[idx];
         let new_point = current[idx];
-        scoring_index.move_musician(idx, new_point);
+        let move_success = scoring_index.move_musician(idx, new_point);
+        if !move_success {
+            continue;
+        }
 
         // let solution = Solution {
         //     placements: current,
@@ -244,13 +293,14 @@ pub fn yamanobori(
         // };
         // let current_score = input.score_fast(&solution);
 
-
         // if let Ok(sc) = current_score {
         let sc = scoring_index.get_score();
         if sc > best_score {
             eprintln!(
                 "score for reduced attendees is improved (time = {}): {} -> {}",
-                get_time(), best_score, sc,
+                get_time(),
+                best_score,
+                sc,
             );
             best_score = sc;
             *best = current;
