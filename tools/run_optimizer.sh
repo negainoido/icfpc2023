@@ -16,7 +16,7 @@ tmp_dir="$(mktemp -d)"
 TOKEN=$(gcloud auth print-access-token)
 
 echo "tmp_dir: $tmp_dir"
-for problem_id in $(seq 57 57); do
+for problem_id in $(seq 1 90); do
   echo "problem id: $problem_id"
   resp=$(curl -H "Authorization: Bearer ${TOKEN}" "http://localhost:8080/api/best_solutions?id=${problem_id}&ts=${TS}")
   echo "target id: $(echo "$resp" | jq -r '.id')"
