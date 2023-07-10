@@ -3,9 +3,7 @@ use rand::prelude::SliceRandom;
 use rand::seq::IteratorRandom;
 use rand_pcg::Pcg64Mcg;
 use rayon::prelude::*;
-use solver::PlacementGenerator;
 use std::collections::HashMap;
-use std::mem;
 use std::time::Duration;
 
 use solver::problem::*;
@@ -71,7 +69,6 @@ fn find_best(
     seed: u128,
     time: Duration,
 ) -> (f64, Solution) {
-    let full = input.pillars.len() > 0;
     let mut best_solution = solution.clone();
     let mut best_score = input.score_fast(&best_solution).unwrap();
     let mut rnd = Pcg64Mcg::new(seed);
