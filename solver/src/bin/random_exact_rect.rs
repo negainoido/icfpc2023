@@ -130,7 +130,6 @@ fn generate_first_level_candidates(input: &Input, social_distance: f64) -> Vec<P
     let mut candidates = generate_first_level_candidates_nokogiri(input, 1, social_distance);
     for level in 2..layered_candidates.len() {
         for candidate in layered_candidates[level].clone() {
-            dbg!(candidate, check_duplicate(&candidates, &candidate));
             if check_duplicate(&candidates, &candidate) {
                 candidates.push(candidate);
             }
