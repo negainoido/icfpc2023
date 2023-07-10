@@ -133,7 +133,7 @@ pub fn get_non_blocked_placement_ids(attendee_pos: Point, placements: &Vec<Point
     angles.sort_by_key(|&angle_info| (angle_info.angle, angle_info.dist_sq));
     assert!(angles[0].angle.abs() < 1e-10);
 
-    let mut last_element = angles[0].clone();
+    let mut last_element = angles[0];
     last_element.angle += 2.0 * PI;
     angles.push(last_element);
 
@@ -310,7 +310,7 @@ impl Input {
     ) -> f64 {
         let attendee = &self.attendees[attendee_id];
         let d = attendee.pos().euclidean_distance(musician_pos);
-        ((1_000_000 as f64) * attendee.tastes[instrument] / (d * d)).ceil()
+        (1_000_000_f64 * attendee.tastes[instrument] / (d * d)).ceil()
     }
 
     // Impact without considering blocking
@@ -443,11 +443,11 @@ impl Input {
 
         // Musicians同士の衝突のみを考慮
         let non_blocked_placement_ids =
-            get_non_blocked_placement_ids(self.attendees[attendee_id].pos(), &placements);
+            get_non_blocked_placement_ids(self.attendees[attendee_id].pos(), placements);
         // Pillarsによる妨害を考慮
         let non_blocked_placement_ids = filter_placements_blocked_by_pillars(
             self.attendees[attendee_id].pos(),
-            &placements,
+            placements,
             &self.pillars,
             &non_blocked_placement_ids,
         );
@@ -509,7 +509,7 @@ impl Input {
         };
         let ans = (0..self.attendees.len())
             .into_par_iter()
-            .map(|attendee_id| self.score_attendee_fast(attendee_id, &solution, &impacts))
+            .map(|attendee_id| self.score_attendee_fast(attendee_id, solution, &impacts))
             .sum();
         Ok(ans)
     }
@@ -538,7 +538,7 @@ impl Solution {
     pub fn score(&self, input: &Input) -> Result<f64> {
         // input.score(&self.placements)
         input.is_valid_placements(&self.placements)?;
-        input.score_fast(&self)
+        input.score_fast(self)
     }
 }
 

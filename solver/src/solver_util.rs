@@ -89,7 +89,7 @@ pub fn reduce_attendees(input: &Input, num: usize) -> Input {
 
 pub fn volume_optimize(input: &Input, solution: &Solution) -> Solution {
     let mut solution = solution.clone();
-    let mut best_score = solution.score(&input).unwrap();
+    let mut best_score = solution.score(input).unwrap();
 
     let original_volumes = solution
         .volumes
@@ -104,16 +104,14 @@ pub fn volume_optimize(input: &Input, solution: &Solution) -> Solution {
             if let Some(volumes) = &mut solution.volumes {
                 volumes[i] = vol;
             }
-            match solution.score(&input) {
+            match solution.score(input) {
                 Ok(score) => {
                     if score > best_score {
                         best_score = score;
                         println!("iter {}, score: {}", i, best_score);
                         continue;
-                    } else {
-                        if let Some(volumes) = &mut solution.volumes {
-                            volumes[i] = tmp;
-                        }
+                    } else if let Some(volumes) = &mut solution.volumes {
+                        volumes[i] = tmp;
                     }
                 }
                 Err(e) => {

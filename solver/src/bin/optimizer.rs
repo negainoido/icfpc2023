@@ -5,9 +5,9 @@ use rand::seq::IteratorRandom;
 use rand::Rng;
 use rand_pcg::Pcg64Mcg;
 use rayon::prelude::*;
-use solver::PlacementGenerator;
+
 use std::collections::{HashMap, HashSet};
-use std::mem;
+
 use std::time::Duration;
 
 use solver::problem::*;
@@ -45,9 +45,7 @@ fn random_swap(
     let target_insts = (target_insts[0], target_insts[1]);
     let left = *musician_map[target_insts.0].choose(rnd).unwrap();
     let right = *musician_map[target_insts.1].choose(rnd).unwrap();
-    let tmp = new_solution.placements[left];
-    new_solution.placements[left] = new_solution.placements[right];
-    new_solution.placements[right] = tmp;
+    new_solution.placements.swap(left, right);
 
     (new_solution, left, right)
 }
@@ -57,7 +55,7 @@ fn random_move(
     musician_map: &Vec<Vec<usize>>,
     rnd: &mut Pcg64Mcg,
 ) -> (Solution, usize) {
-    let mut target = (0..solution.placements.len()).choose(rnd).unwrap();
+    let target = (0..solution.placements.len()).choose(rnd).unwrap();
     let inst = input.musicians[target];
     if musician_map[inst].len() == 1 {
         return (solution.clone(), target);
@@ -176,7 +174,7 @@ fn find_best(
             }
         } else {
             println!("random move");
-            let (new_solution, tar) = random_move(&input, &best_solution, musician_map, &mut rnd);
+            let (new_solution, tar) = random_move(input, &best_solution, musician_map, &mut rnd);
             let mut flag = false;
             match input.score_fast(&new_solution) {
                 Ok(new_score) => {

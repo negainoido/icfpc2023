@@ -124,9 +124,9 @@ impl<'a> PlacementGenerator<'a> {
         let rand_gen = Pcg64Mcg::new(rand_seed);
 
         let cartesian_coordinate_candidates =
-            PlacementGenerator::cartesian_coordinate_candidates(&input);
+            PlacementGenerator::cartesian_coordinate_candidates(input);
 
-        let honeycomb_candidates = PlacementGenerator::honeycomb_candidates(&input);
+        let honeycomb_candidates = PlacementGenerator::honeycomb_candidates(input);
 
         PlacementGenerator {
             input,
@@ -185,12 +185,10 @@ impl<'a> PlacementGenerator<'a> {
                 self.honeycomb_candidates.clone()
             } else if self.honeycomb_candidates.len() < self.input.musicians.len() {
                 self.cartesian_coordinate_candidates.clone()
+            } else if self.rand_gen.gen_bool(0.5) {
+                self.honeycomb_candidates.clone()
             } else {
-                if self.rand_gen.gen_bool(0.5) {
-                    self.honeycomb_candidates.clone()
-                } else {
-                    self.cartesian_coordinate_candidates.clone()
-                }
+                self.cartesian_coordinate_candidates.clone()
             };
 
         candidates.shuffle(&mut self.rand_gen);

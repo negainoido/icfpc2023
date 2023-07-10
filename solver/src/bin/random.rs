@@ -61,10 +61,8 @@ fn main() {
                     break;
                 }
             }
-        } else {
-            if iter > args.iteration {
-                break;
-            }
+        } else if iter > args.iteration {
+            break;
         }
         iter += 1;
     }
