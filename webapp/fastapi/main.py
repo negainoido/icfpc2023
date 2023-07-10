@@ -19,6 +19,7 @@ app.add_middleware(
         "http://icfpc2023.negainoido.com",
         "https://icfpc2023.negainoido.com",
         "http://localhost",
+        "http://localhost:3000",
         "http://localhost:8000",
         "http://localhost:8080",
         "http://localhost:8888",
