@@ -25,7 +25,11 @@ function run_and_eval() {
     local output="output/${problem/problem/answer}"
     local score="${output/\.json/.score.txt}"
     local submission="${output/\.json/.submission.json}"
-    $BIN/$SOLVER --input $input --output $output
+    error=0
+    $BIN/$SOLVER --input $input --output $output || error=$?
+    if [[ $error != 0 ]]; then
+      return;
+    fi
     $BIN/evaluator --input $input --solution $output | tee $score
     if [[ "$DRY_RUN" == "false" ]]; then
         curl -X POST -F file=@"${output}" \
