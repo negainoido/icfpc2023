@@ -265,8 +265,10 @@ pub fn yamanobori(
     let mut scoring_index = ScoringIndex::new(&input, best, &best_volume.to_vec());
     dbg!(best_score);
     dbg!(scoring_index.get_score());
+    let mut count = 0;
 
     while get_time() < timeout {
+        count += 1;
         let mut current = best.clone();
         let idx = rng.gen_range(0..best.len());
         let dir = rng.gen_range(0..4);
@@ -290,8 +292,9 @@ pub fn yamanobori(
         let sc = scoring_index.get_score();
         if sc > best_score {
             eprintln!(
-                "score for reduced attendees is improved (time = {}): {} -> {}",
+                "score for reduced attendees is improved (time = {}, count = {}): {} -> {}",
                 get_time(),
+                count,
                 best_score,
                 sc,
             );
