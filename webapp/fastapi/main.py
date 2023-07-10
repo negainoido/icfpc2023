@@ -320,6 +320,20 @@ def post_submit(id: int, file: UploadFile, solver: str = "unknown"):
     return {"submission_id": submission_id}
 
 
+class Solution(BaseModel):
+    problem_id: int
+    solver: str
+    contents: str
+
+
+@app.post("/api/solutions/submit_json")
+def post_submit_json(solution: Solution):
+    # read uploaded file
+    submission_id = submit_solution_to_icfpc(solution.id, solution.content)
+    scores.upload(id, submission_id, solution.solver, solution.content)
+    return {"submission_id": submission_id}
+
+
 @app.get("/api/solutions")
 def get_solutions(id: int):
     item = scores.get_solution(id)
