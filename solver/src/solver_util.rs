@@ -5,7 +5,6 @@ use rand::Rng;
 
 pub fn yamanobori(
     input: &Input,
-    best_score: &mut f64,
     best: &mut Vec<Point>,
     best_volume: &Vec<f64>,
     timeout: f64,
