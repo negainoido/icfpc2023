@@ -407,6 +407,16 @@ impl Input {
         result
     }
 
+    // 特定のmusiciansが得られるスコアを計算する
+    // play together, volumeの影響は考慮しない
+    pub fn raw_score_for_musician(&self, musician_id: MusicianId, placements: &Vec<Point>) -> f64 {
+        let placement = placements[musician_id];
+        let mut placements = placements.clone();
+        placements.remove(musician_id);
+        let attendee_ids = self.get_visible_attendees(placement, &placements);
+        self.raw_score_for_instrument(placement, self.musicians[musician_id], &attendee_ids)
+    }
+
     #[cfg(not(target_arch = "wasm32"))]
     pub fn score(&self, placements: &Vec<Point>) -> Result<f64> {
         let full_div = !self.pillars.is_empty();

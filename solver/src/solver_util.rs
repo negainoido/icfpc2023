@@ -87,6 +87,46 @@ pub fn reduce_attendees(input: &Input, num: usize) -> Input {
     input
 }
 
+// volumeを0.0か10.0の２択で最適化
+pub fn volume_optimize_fast(input: &Input, solution: &Solution) -> Solution {
+    let mut solution = solution.clone();
+    let mut best_score = solution.score(input).unwrap();
+
+    let original_volumes = solution
+        .volumes
+        .clone()
+        .unwrap_or(vec![1.0; input.musicians.len()]);
+    solution.volumes = Some(original_volumes);
+
+    // Volume optimize
+    for i in 0..input.musicians.len() {
+        let score = input.raw_score_for_musician(i, &solution.placements);
+        let tmp = solution.volumes.as_ref().map(|v| v[i]).unwrap_or(1.0);
+        if let Some(volumes) = &mut solution.volumes {
+            if score < 0.0 {
+                volumes[i] = 0.0;
+            } else {
+                volumes[i] = 10.0;
+            }
+        }
+        match solution.score(input) {
+            Ok(score) => {
+                if score > best_score {
+                    best_score = score;
+                    println!("iter {}, score: {}", i, best_score);
+                    continue;
+                } else if let Some(volumes) = &mut solution.volumes {
+                    volumes[i] = tmp;
+                }
+            }
+            Err(e) => {
+                println!("iter {} error exit: {:?}", i, e);
+            }
+        }
+    }
+    solution
+}
+
 pub fn volume_optimize(input: &Input, solution: &Solution) -> Solution {
     let mut solution = solution.clone();
     let mut best_score = solution.score(input).unwrap();

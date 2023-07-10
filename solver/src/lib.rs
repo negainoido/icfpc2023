@@ -1,6 +1,8 @@
 pub mod problem;
 
 #[cfg(not(target_arch = "wasm32"))]
+pub mod garasubo_util;
+#[cfg(not(target_arch = "wasm32"))]
 pub mod solver_util;
 #[cfg(target_arch = "wasm32")]
 mod wasm_util;
