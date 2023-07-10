@@ -48,6 +48,7 @@ fn main() {
             .volumes
             .unwrap_or(vec![10.0; input.musicians.len()]),
         args.timeout,
+        seed,
     );
 
     let solution = Solution {
