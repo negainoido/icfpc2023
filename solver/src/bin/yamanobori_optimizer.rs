@@ -22,6 +22,9 @@ struct Args {
 
     #[arg(short, long)]
     rand_seed: Option<u128>,
+
+    #[arg(short, long)]
+    reduced_attendee: Option<usize>,
 }
 
 fn main() {
@@ -49,6 +52,7 @@ fn main() {
             .unwrap_or(vec![10.0; input.musicians.len()]),
         args.timeout,
         seed,
+        args.reduced_attendee.unwrap_or(input.attendees.len()),
     );
 
     let solution = Solution {
