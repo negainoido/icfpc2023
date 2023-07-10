@@ -13,6 +13,7 @@
     let openjson = false;
     let debug = "";
     let editorname = 'hand';
+    let submitresult = "";
 
     let state = writable({
         problem: null,
@@ -786,10 +787,16 @@
             .then((res) => {
                 console.log(res);
                 debug += JSON.stringify(res);
+                submitresult = JSON.stringify(res);
                 state.update((prev) => ({
                     ...prev,
                     solution_id: res.solution_id,
                 }));
+            })
+            .catch((err) => {
+                console.warn(err);
+                debug += err.toString();
+                submitresult = err.toString();
             });
     }
 </script>
@@ -903,6 +910,13 @@
                         </a>
                     </div>
                 </div>
+                {#if submitresult}
+                <div class="field">
+                    <div class="control">
+                        <label class="label">{submitresult}</label>
+                    </div>
+                </div>
+                {/if}
             {/if}
         </div>
         <div class="box">
