@@ -44,7 +44,7 @@ fn main() {
     // Volume optimize
     let mut tmp_solution = best_solution.clone();
     for i in 0..input.musicians.len() {
-        let mut current_volume = best_solution.volumes.get_or_insert(vec![1.0; input.musicians.len()]).clone();
+        let mut current_volume = best_solution.volumes.clone().unwrap_or(vec![1.0; input.musicians.len()]);
 
         current_volume[i] = 10.0;
         tmp_solution.volumes = Some(current_volume.clone());

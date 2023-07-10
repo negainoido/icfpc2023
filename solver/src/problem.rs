@@ -453,7 +453,7 @@ impl Input {
 
         for placement_id in non_blocked_placement_ids {
             let volume = match volumes {
-                Some(v) => v[self.musicians[placement_id]],
+                Some(v) => v[placement_id],
                 None => 1.0,
             };
             // placement_id equals musician_id here
