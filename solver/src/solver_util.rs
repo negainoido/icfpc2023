@@ -4,18 +4,46 @@ use geo::{EuclideanDistance, Point};
 use ordered_float::OrderedFloat;
 use rand::Rng;
 
-struct PlayTogetherIndex {}
+struct PlayTogetherIndex {
+    enabled: bool,
+    placements: Vec<Point>,
+    musicians: Vec<usize>,
+    play_together_scores: Vec<f64>,
+}
 
 impl PlayTogetherIndex {
-    fn new(_input: &Input, _placements: &Vec<Point>) -> Self {
-        PlayTogetherIndex {}
+    fn new(input: &Input, placements: &Vec<Point>) -> Self {
+        PlayTogetherIndex {
+            enabled: input.pillars.len() > 0,
+            placements: placements.clone(),
+            musicians: input.musicians.clone(),
+            play_together_scores: vec![1.0; placements.len()]
+        }
     }
 
-    fn get(&self, _i: usize) -> f64 {
-        1.0
+    fn get(&self, i: usize) -> f64 {
+        self.play_together_scores[i]
     }
 
-    fn move_musician(&mut self, _musician_i: usize, _new_point: Point) {}
+    fn move_musician(&mut self, musician_i: usize, new_point: Point) {
+        if !self.enabled {
+            return;
+        }
+
+        let old_point = self.placements[musician_i];
+
+        self.play_together_scores[musician_i] = 1.0;
+        for musician_j in 0..self.placements {
+            if musician_i != musician_j && self.musicians[musician_i] == self.musicians[musician_j] {
+                let old_dist = old_point.euclidean_distance(&self.placements[musician_j]);
+                let new_dist = new_point.euclidean_distance(&self.placements[musician_j]);
+                self.play_together_scores[musician_j] -= 1.0 / old_dist;
+                self.play_together_scores[musician_j] += 1.0 / new_dist;
+                self.play_together_scores[musician_i] += 1.0 / new_dist;
+            }
+        }
+        self.placements[musician_i] = new_point;
+    }
 }
 
 struct AttendeeIndex {
