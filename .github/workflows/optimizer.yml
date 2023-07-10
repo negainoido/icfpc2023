@@ -29,4 +29,4 @@ jobs:
           PNUM: ${{ inputs.batch-size }}
           DRY_RUN: ${{ inputs.dry-run }}
         run: |
-          bash ../tools/run_optimizer.sh
+          bash ../tools/run_optimizer2.sh
