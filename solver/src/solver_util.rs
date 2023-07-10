@@ -9,8 +9,9 @@ pub fn yamanobori(
     best: &mut Vec<Point>,
     best_volume: &Vec<f64>,
     timeout: f64,
+    rand_seed: u128,
 ) -> Vec<Point> {
-    let mut rng = rand::thread_rng();
+    let mut rng = rand_pcg::Pcg64Mcg::new(rand_seed);
     while get_time() < timeout {
         let mut current = best.clone();
         let idx = rng.gen_range(0..best.len());
