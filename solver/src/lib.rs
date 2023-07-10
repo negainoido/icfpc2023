@@ -100,7 +100,7 @@ pub fn calc_score(
     };
 
     solution
-        .score(&input, is_full)
+        .score(&input)
         .map_err(|e| JsValue::from_str(&format!("{}", e)))
 }
 
