@@ -97,7 +97,7 @@ fn main() {
                 }
 
                 // ステージ上の候補地点からランダムに良さそうな箇所を選ぶ
-                let mut best_point = available_points.iter().choose(&mut rnd).unwrap().clone();
+                let mut best_point = *available_points.iter().choose(&mut rnd).unwrap();
                 let tmp_visible_attendees =
                     input.get_visible_attendees(candidates[best_point], &current_solution);
                 let mut best_score = input.raw_score_for_instrument(
@@ -106,7 +106,7 @@ fn main() {
                     &tmp_visible_attendees,
                 );
                 for _ in 0..PICK_POINTS_COUNT * 10 {
-                    let point = available_points.iter().choose(&mut rnd).unwrap().clone();
+                    let point = *available_points.iter().choose(&mut rnd).unwrap();
                     let tmp_visible_attendees =
                         input.get_visible_attendees(candidates[point], &current_solution);
                     let score = input.raw_score_for_instrument(
