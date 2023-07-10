@@ -1,5 +1,5 @@
 export function postSolution(id: number, solver: string, solution: object) {
-    return fetch('https://icfpc2023.negainoido.com/api/submit_json', {
+    return fetch('https://icfpc2023.negainoido.com/api/solutions/submit_json', {
         method: 'POST',
         mode: 'cors',
         credentials: 'include',
