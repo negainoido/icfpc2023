@@ -14,6 +14,7 @@
     let debug = "";
     let editorname = 'hand';
     let submitresult = "";
+    let wasm_temporary_disable = false;
 
     let state = writable({
         problem: null,
@@ -61,7 +62,7 @@
 
     async function calc_score(wasm, problem, solution) {
         console.log('start calc_score');
-        if (score != null) {
+        if (wasm_temporary_disable || score != null) {
             // 計算済み
             console.log('skip calc_score');
             return;
@@ -945,6 +946,10 @@
             <label>
                 <input type="checkbox" bind:checked={$state.ruler} />
                 罫線 (幅=10) (R)
+            </label>
+            <label>
+                <input type="checkbox" bind:checked={wasm_temporary_disable} />
+                一時的にwasmをオフ
             </label>
             <br />
             <!--
