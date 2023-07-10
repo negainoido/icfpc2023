@@ -42,6 +42,9 @@ html_string = """
       let h = Math.floor(diffMs / 3600000); // hours
       let m = Math.floor((diffMs % 3600000) / 60000); // minutes
       let s = Math.round(((diffMs % 3600000) % 60000) / 1000); // seconds
+      h = String(h).padStart(2, '0');
+      m = String(m).padStart(2, '0');
+      s = String(s).padStart(2, '0');
       document.getElementById("countdown").innerText = `⏰ ${h}:${m}:${s}`;
   }, 1000);
 </script>
