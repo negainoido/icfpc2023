@@ -1,6 +1,7 @@
 use clap::Parser;
 
 use solver::problem::*;
+use solver::solver_util::volume_optimize;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -13,7 +14,7 @@ struct Args {
     output: String,
 
     #[arg(short, long)]
-    source: String,
+    solution: String,
 
     #[arg(long, default_value_t = 10)]
     iteration: i32,
@@ -27,52 +28,11 @@ fn main() {
     let input_str = std::fs::read_to_string(args.input).unwrap();
     let input: Input = serde_json::from_str(&input_str).unwrap();
 
-    let solution_str = std::fs::read_to_string(&args.source).unwrap();
+    let solution_str = std::fs::read_to_string(&args.solution).unwrap();
     let original_solution: Solution = serde_json::from_str(&solution_str).unwrap();
 
-    let full = input.pillars.len() > 0;
-    let mut best_solution = original_solution.clone();
-    let mut best_score = best_solution.score(&input, full).unwrap();
+    let best_solution = volume_optimize(&input, &original_solution);
 
-    // Volume optimize
-    let mut tmp_solution = best_solution.clone();
-    for i in 0..input.musicians.len() {
-        let mut current_volume = best_solution
-            .volumes
-            .clone()
-            .unwrap_or(vec![1.0; input.musicians.len()]);
-
-        current_volume[i] = 10.0;
-        tmp_solution.volumes = Some(current_volume.clone());
-        match tmp_solution.score(&input, full) {
-            Ok(score) => {
-                if score > best_score {
-                    best_score = score;
-                    best_solution = tmp_solution.clone();
-                    println!("iter {}, score: {}", i, best_score);
-                    continue;
-                }
-            }
-            Err(e) => {
-                println!("iter {} error exit: {:?}", i, e);
-            }
-        }
-        current_volume[i] = 0.0;
-        tmp_solution.volumes = Some(current_volume.clone());
-        match tmp_solution.score(&input, full) {
-            Ok(score) => {
-                if score > best_score {
-                    best_score = score;
-                    best_solution = tmp_solution.clone();
-                    println!("iter {}, score: {}", i, best_score);
-                    continue;
-                }
-            }
-            Err(e) => {
-                println!("iter {} error exit: {:?}", i, e);
-            }
-        }
-    }
 
     std::fs::write(args.output, serde_json::to_string(&best_solution).unwrap()).unwrap();
 }
