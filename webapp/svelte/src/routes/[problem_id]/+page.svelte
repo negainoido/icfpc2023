@@ -4,16 +4,16 @@
     import { get, writable } from 'svelte/store';
     import Log from '$lib/Log.svelte';
     import { page } from '$app/stores';
-    import { postSolution } from "$lib/fetchUtil";
+    import { postSolution } from '$lib/fetchUtil';
 
     let wasm;
     let problem_id = data.problem_id;
     let records = [];
     let filteredRecords = [];
     let openjson = false;
-    let debug = "";
+    let debug = '';
     let editorname = 'hand';
-    let submitresult = "";
+    let submitresult = '';
     let wasm_temporary_disable = false;
 
     let state = writable({
@@ -44,10 +44,10 @@
         target_musician_x: 0.0,
         target_musician_y: 0.0,
     };
-    let edit_history = [];  // list of (musician_id, (old_x, old_y), (new_x, new_y))
-    let edit_redo = [];  // list of (musician_id, (old_x, old_y), (new_x, new_y))
+    let edit_history = []; // list of (musician_id, (old_x, old_y), (new_x, new_y))
+    let edit_redo = []; // list of (musician_id, (old_x, old_y), (new_x, new_y))
 
-    function canvasLog(msg, append=false) {
+    function canvasLog(msg, append = false) {
         state.update((prev) => {
             return {
                 ...prev,
@@ -556,7 +556,6 @@
             case 'X':
                 redoEdit();
                 break;
-
         }
     }
 
@@ -653,7 +652,12 @@
             score = null;
             editorname = editorname.replace('(edit)', '') + '(edit)';
             edit_history.push([mid, [mouse.target_musician_x, mouse.target_musician_y], [x, y]]);
-            canvasLog(`edit musicians[${mid}]: ${[mouse.target_musician_x, mouse.target_musician_y]} -> ${[x, y]}`);
+            canvasLog(
+                `edit musicians[${mid}]: ${[
+                    mouse.target_musician_x,
+                    mouse.target_musician_y,
+                ]} -> ${[x, y]}`
+            );
             state.update((state) => {
                 state.solution.placements[mid].x = x;
                 state.solution.placements[mid].y = y;
@@ -694,7 +698,7 @@
         }
         let [mid, [old_x, old_y], [new_x, new_y]] = edit_history.pop();
         edit_redo.push([mid, [old_x, old_y], [new_x, new_y]]);
-        canvasLog(`Undo musicians[${mid}]`)
+        canvasLog(`Undo musicians[${mid}]`);
         state.update((state) => {
             state.solution.placements[mid].x = old_x;
             state.solution.placements[mid].y = old_y;
@@ -709,7 +713,7 @@
         }
         let [mid, [old_x, old_y], [new_x, new_y]] = edit_redo.pop();
         edit_history.push([mid, [old_x, old_y], [new_x, new_y]]);
-        canvasLog(`Redo musicians[${mid}]`)
+        canvasLog(`Redo musicians[${mid}]`);
         state.update((state) => {
             state.solution.placements[mid].x = new_x;
             state.solution.placements[mid].y = new_y;
@@ -726,6 +730,9 @@
             let h = Math.floor(diffMs / 3600000); // hours
             let m = Math.floor((diffMs % 3600000) / 60000); // minutes
             let s = Math.round(((diffMs % 3600000) % 60000) / 1000); // seconds
+            h = String(h).padStart(2, '0');
+            m = String(m).padStart(2, '0');
+            s = String(s).padStart(2, '0');
             document.getElementById('countdown').innerText = `⏰ ${h}:${m}:${s}`;
         }, 1000);
     }
@@ -793,9 +800,9 @@
     }
 
     function copyToClipboard() {
-        var copyText = document.getElementById("solutionTextarea");
+        var copyText = document.getElementById('solutionTextarea');
         copyText.select();
-        document.execCommand("copy");
+        document.execCommand('copy');
     }
 
     function submitSolution() {
@@ -862,7 +869,10 @@
                     <tbody>
                         {#each filteredRecords as r}
                             <tr>
-                                <td><button on:click={fetchSolution(r[0], r[5], r[3])}>{r[0]}</button></td
+                                <td
+                                    ><button on:click={fetchSolution(r[0], r[5], r[3])}
+                                        >{r[0]}</button
+                                    ></td
                                 >
                                 <td>{r[2]}</td>
                                 <td>{r[3]}</td>
@@ -895,8 +905,8 @@
                         />
                         <button
                             style="position: absolute; top: 0; right: 0;"
-                            on:click={copyToClipboard}
-                        >Copy</button>
+                            on:click={copyToClipboard}>Copy</button
+                        >
                     </div>
                     <div class="field">
                         musician id: <input
@@ -923,24 +933,24 @@
                             on:change={updateSolutionJson}
                         />
                     </div>
-                    <button class="button is-primary" on:click={loadSolutionJSON}>show/update solution</button>
+                    <button class="button is-primary" on:click={loadSolutionJSON}
+                        >show/update solution</button
+                    >
                 </div>
                 <div class="field has-addons">
                     <div class="control">
                         <input class="input" type="text" bind:value={editorname} />
                     </div>
                     <div class="control">
-                        <a class="button is-info" on:click={submitSolution}>
-                            submit solution
-                        </a>
+                        <a class="button is-info" on:click={submitSolution}> submit solution </a>
                     </div>
                 </div>
                 {#if submitresult}
-                <div class="field">
-                    <div class="control">
-                        <label class="label">{submitresult}</label>
+                    <div class="field">
+                        <div class="control">
+                            <label class="label">{submitresult}</label>
+                        </div>
                     </div>
-                </div>
                 {/if}
             {/if}
         </div>
@@ -1031,14 +1041,14 @@
             />
         </div>
         {#if debug}
-        <div class="box">
-            <textarea
-                style="width: 100%; height: 20vh"
-                class="textarea is-primary"
-                bind:value={debug}
-                disabled
-            />
-        </div>
+            <div class="box">
+                <textarea
+                    style="width: 100%; height: 20vh"
+                    class="textarea is-primary"
+                    bind:value={debug}
+                    disabled
+                />
+            </div>
         {/if}
     </div>
 </section>
