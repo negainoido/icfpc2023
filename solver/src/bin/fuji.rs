@@ -27,6 +27,9 @@ struct Args {
 
     #[arg(short, long)]
     reduced_attendee: Option<usize>,
+
+    #[arg(short, long, default_value_t = 0.98)]
+    alpha: f64,
 }
 
 fn main() {
@@ -53,6 +56,7 @@ fn main() {
         args.timeout,
         seed,
         args.reduced_attendee.unwrap_or(input.attendees.len()),
+        args.alpha,
     );
 
     let solution = Solution {
@@ -71,6 +75,7 @@ fn fuji(
     timeout: f64,
     rand_seed: u128,
     reduce_num: usize,
+    alpha: f64,
 ) -> Vec<Point> {
     let mut rng = rand_pcg::Pcg64Mcg::new(rand_seed);
     let input = reduce_attendees(input, reduce_num);
@@ -84,14 +89,13 @@ fn fuji(
     let mut current = best.clone();
     let mut temp: f64 = 1.0;
     let temp_min: f64 = 0.00001;
-    let alpha = 0.9;
 
     while get_time() < timeout {
         let idx = rng.gen_range(0..best.len());
         let dir = rng.gen_range(0..4);
         let dx = [0.0, 1.0, 0.0, -1.0];
         let dy = [1.0, 0.0, -1.0, 0.0];
-        let step = rng.gen_range(1..100) as f64;
+        let step = rng.gen_range(1..100) as f64 / 10.0;
         let x_old = current[idx].x();
         let y_old = current[idx].y();
         current[idx].set_x(x_old + dx[dir] * step);
