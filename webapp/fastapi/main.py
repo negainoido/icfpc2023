@@ -3,13 +3,12 @@ import os
 
 import pymysql
 import requests
+from fastapi import FastAPI, Response, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from google.cloud import storage
 from google.cloud.sql.connector import Connector
 from pydantic import BaseModel
-
-from fastapi import FastAPI, UploadFile, Response
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.middleware.gzip import GZipMiddleware
 
 secrets = json.loads(os.environ.get("SECRET", ""))
 app = FastAPI()
@@ -330,8 +329,10 @@ class Solution(BaseModel):
 @app.post("/api/solutions/submit_json")
 def post_submit_json(solution: Solution):
     # read uploaded file
-    submission_id = submit_solution_to_icfpc(solution.id, solution.content)
-    scores.upload(id, submission_id, solution.solver, solution.content)
+    submission_id = submit_solution_to_icfpc(solution.problem_id, solution.contents)
+    scores.upload(
+        solution.problem_id, submission_id, solution.solver, solution.contents
+    )
     return {"submission_id": submission_id}
 
 

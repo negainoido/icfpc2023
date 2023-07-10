@@ -11,6 +11,8 @@
     let records = [];
     let filteredRecords = [];
     let openjson = false;
+    let debug = "";
+    let editorname = 'hand_solver';
 
     let state = writable({
         problem: null,
@@ -760,10 +762,10 @@
     function submitSolution() {
         console.log('submit');
         const solution = get(state).solution;
-        const solver = 'hand_solver';
-        postSolution(problem_id, solver, solution)
+        postSolution(problem_id, editorname, solution)
             .then((res) => {
                 console.log(res);
+                debug = res;
                 state.update((prev) => ({
                     ...prev,
                     solution_id: res.solution_id,
@@ -844,7 +846,7 @@
                         class="textarea is-primary"
                         bind:value={$state.solution_json}
                     />
-                    <div>
+                    <div class="field">
                         musician id: <input
                             type="number"
                             bind:value={$state.target_musician_id}
@@ -869,9 +871,18 @@
                             on:change={updateSolutionJson}
                         />
                     </div>
-                    <button class="button" on:click={loadSolutionJSON}>show solution</button>
+                    <button class="button is-primary" on:click={loadSolutionJSON}>show/update solution</button>
                 </div>
-                <button class="button" on:click={submitSolution}>submit solution</button>
+                <div class="field has-addons">
+                    <div class="control">
+                        <input class="input" type="text" bind:value={editorname} />
+                    </div>
+                    <div class="control">
+                        <a class="button is-info" on:click={submitSolution}>
+                            submit solution
+                        </a>
+                    </div>
+                </div>
             {/if}
         </div>
         <div class="box">
@@ -955,6 +966,16 @@
                 bind:value={$state.log}
             />
         </div>
+        {#if debug}
+        <div class="box">
+            <textarea
+                style="width: 100%; height: 20vh"
+                class="textarea is-primary"
+                bind:value={debug}
+                disabled
+            />
+        </div>
+        {/if}
     </div>
 </section>
 
