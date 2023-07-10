@@ -1,5 +1,5 @@
 use clap::Parser;
-use geo::Point;
+use geo::{EuclideanDistance, Point};
 use ordered_float::OrderedFloat;
 use pathfinding::kuhn_munkres::kuhn_munkres;
 use pathfinding::matrix::Matrix;
@@ -19,6 +19,72 @@ struct Args {
 
     #[arg(short, long, default_value_t = 0)]
     rand_seed: u128,
+}
+
+fn check_in_stage(input: &Input, pos: &Point) -> bool {
+    input.in_stage(pos)
+}
+fn check_duplicate(candidates: &Vec<Point>, pos: &Point) -> bool {
+    for p in candidates {
+        if p.euclidean_distance(pos) < 10.0 {
+            return false;
+        }
+    }
+    true
+}
+
+// 三角波で初期配置を生成する。
+fn generate_first_level_candidates_nokogiri(input: &Input, wave_length: u8) -> Vec<Point> {
+    let mut candidates = vec![];
+    let edges = vec![
+        (
+            Point::new(1.0, 1.0),   // 初期方向
+            Point::new(1.0, -1.0),  // flip方向
+            Point::new(10.0, 10.0), //開始位置
+        ),
+        (
+            Point::new(-1.0, 1.0),
+            Point::new(1.0, 1.0),
+            Point::new(input.stage_width - 10.0, 10.0),
+        ),
+        (
+            Point::new(-1.0, -1.0),
+            Point::new(-1.0, 1.0),
+            Point::new(input.stage_width - 10.0, input.stage_height - 10.0),
+        ),
+        (
+            Point::new(1.0, -1.0),
+            Point::new(-1.0, -1.0),
+            Point::new(10.0, input.stage_height - 10.0),
+        ),
+    ];
+    for (dir, flip_dir, init_pos) in edges {
+        let mut direction = dir.clone();
+        let mut cur_pos = init_pos.clone() + input.stage_bottom_left;
+        let mut counter = 0;
+        let mut flip = false;
+        if check_duplicate(&candidates, &cur_pos) {
+            candidates.push(cur_pos);
+        }
+        cur_pos += direction * f64::sqrt(2.0 + 1e-7) * 5.0;
+        while check_in_stage(input, &cur_pos) {
+            if check_duplicate(&candidates, &cur_pos) {
+                candidates.push(cur_pos);
+            }
+            counter += 1;
+            if counter == wave_length {
+                flip = !flip;
+                counter = 0;
+                if flip {
+                    direction = flip_dir.clone();
+                } else {
+                    direction = dir.clone();
+                }
+            }
+            cur_pos += direction * f64::sqrt(2.0 + 1e-7) * 5.0;
+        }
+    }
+    return candidates;
 }
 
 fn generate_first_level_candidates(input: &Input) -> Vec<Point> {
@@ -54,9 +120,15 @@ fn generate_first_level_candidates(input: &Input) -> Vec<Point> {
         }
     }
 
-    let mut candidates = vec![];
-    for level in 0..layered_candidates.len() {
-        candidates.extend(layered_candidates[level].clone());
+    let mut candidates = generate_first_level_candidates_nokogiri(input, 1);
+    for level in 2..layered_candidates.len() {
+        for candidate in layered_candidates[level].clone() {
+            dbg!(candidate, check_duplicate(&candidates, &candidate));
+            if check_duplicate(&candidates, &candidate) {
+                candidates.push(candidate);
+            }
+        }
+        // candidates.extend(layered_candidates[level].clone());
         if candidates.len() >= input.musicians.len() {
             break;
         }
