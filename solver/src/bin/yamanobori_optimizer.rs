@@ -37,7 +37,7 @@ fn main() {
     let seed = args.rand_seed.unwrap_or(rng.gen::<u128>());
     eprintln!("rand seed: {}", seed);
 
-    let mut best_score = input.score_fast(&solution, false).unwrap();
+    let mut best_score = input.score_fast(&solution).unwrap();
     let volumes = solution.volumes.clone();
 
     let placements = yamanobori(

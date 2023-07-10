@@ -125,7 +125,7 @@ fn hill_climbing(input: &Input, placements: &Vec<Point>, timeout: f64) -> Vec<Po
     // Compute the original score
     let mut solution: Solution = Default::default();
     solution.placements = placements.clone();
-    let initial_score = solution.score(&input, true).unwrap();
+    let initial_score = solution.score(&input).unwrap();
     let mut final_score = initial_score;
     dbg!(initial_score);
 
@@ -264,6 +264,6 @@ fn main() {
     let mut solution: Solution = Default::default();
     solution.placements = best_placements.clone();
     input.is_valid_placements(&best_placements).unwrap();
-    eprintln!("Solver score: {}", solution.score(&input, true).unwrap());
+    eprintln!("Solver score: {}", solution.score(&input).unwrap());
     std::fs::write(args.output, serde_json::to_string(&solution).unwrap()).unwrap();
 }

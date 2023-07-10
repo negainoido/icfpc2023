@@ -20,7 +20,7 @@ fn main() -> Result<()> {
     let solution_str = std::fs::read_to_string(args.solution)?;
     let solution: Solution = serde_json::from_str(&solution_str)?;
 
-    match solution.score(&input, false) {
+    match solution.score(&input) {
         Ok(score) => println!("Score: {}", score),
         Err(e) => {
             println!("Invalid solution: {:#}", e);

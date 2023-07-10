@@ -1,12 +1,9 @@
-use std::collections::HashMap;
-use std::mem;
-use std::time::Duration;
 use clap::Parser;
+use rand::prelude::SliceRandom;
 use rand::seq::IteratorRandom;
 use rand_pcg::Pcg64Mcg;
-use rayon::prelude::*;
-use solver::PlacementGenerator;
-use rand::prelude::SliceRandom;
+use std::collections::HashMap;
+use std::time::Duration;
 
 use solver::problem::*;
 use solver::solver_util::volume_optimize;
@@ -38,7 +35,6 @@ fn main() {
 
     let solution_str = std::fs::read_to_string(&args.solution).unwrap();
     let original_solution: Solution = serde_json::from_str(&solution_str).unwrap();
-    let full = input.pillars.len() > 0;
     let mut rnd = Pcg64Mcg::new(args.rand_seed);
 
     let mut instruments = HashMap::new();
@@ -56,7 +52,7 @@ fn main() {
     }
     println!("musicians: {:?}", musician_map);
     let mut best_solution = volume_optimize(&input, &original_solution);
-    let mut best_score = input.score_fast(&best_solution, full).unwrap();
+    let mut best_score = input.score_fast(&best_solution).unwrap();
     let now = std::time::Instant::now();
 
     while now.elapsed() < Duration::from_secs(30) {
@@ -70,7 +66,7 @@ fn main() {
         new_solution.placements[left] = new_solution.placements[right];
         new_solution.placements[right] = tmp;
         let mut flag = false;
-        match input.score_fast(&new_solution, full) {
+        match input.score_fast(&new_solution) {
             Ok(new_score) => {
                 if new_score > best_score {
                     best_solution = new_solution.clone();

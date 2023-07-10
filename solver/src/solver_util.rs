@@ -1,7 +1,7 @@
-use geo::Point;
-use rand::Rng;
 use crate::get_time;
 use crate::problem::{Input, Solution};
+use geo::Point;
+use rand::Rng;
 
 pub fn yamanobori(
     input: &Input,
@@ -29,9 +29,7 @@ pub fn yamanobori(
             volumes: Some(best_volume.clone()),
         };
 
-        let full_div = input.pillars.len() > 0;
-
-        let current_score = input.score_fast(&solution, full_div);
+        let current_score = input.score_fast(&solution);
         if let Ok(sc) = current_score {
             if sc > *best_score {
                 eprintln!("score is improved: {} -> {}", *best_score, sc,);
@@ -44,10 +42,8 @@ pub fn yamanobori(
 }
 
 pub fn volume_optimize(input: &Input, solution: &Solution) -> Solution {
-
-    let full = input.pillars.len() > 0;
     let mut best_solution = solution.clone();
-    let mut best_score = best_solution.score(&input, full).unwrap();
+    let mut best_score = best_solution.score(&input).unwrap();
 
     // Volume optimize
     let mut tmp_solution = best_solution.clone();
@@ -59,7 +55,7 @@ pub fn volume_optimize(input: &Input, solution: &Solution) -> Solution {
 
         current_volume[i] = 10.0;
         tmp_solution.volumes = Some(current_volume.clone());
-        match tmp_solution.score(&input, full) {
+        match tmp_solution.score(&input) {
             Ok(score) => {
                 if score > best_score {
                     best_score = score;
@@ -74,7 +70,7 @@ pub fn volume_optimize(input: &Input, solution: &Solution) -> Solution {
         }
         current_volume[i] = 0.0;
         tmp_solution.volumes = Some(current_volume.clone());
-        match tmp_solution.score(&input, full) {
+        match tmp_solution.score(&input) {
             Ok(score) => {
                 if score > best_score {
                     best_score = score;
