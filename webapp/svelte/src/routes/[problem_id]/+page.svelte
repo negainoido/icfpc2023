@@ -221,13 +221,28 @@
                     };
                 });
                 let query_solution_id = $page.url.searchParams.get('solution_id');
+                let found = false;
                 if (query_solution_id) {
                     let solution_id = parseInt(query_solution_id);
                     let known_score = null;
                     for (let r of records) {
-                        if (r[0] == solution_id) known_score = r[5];
+                        if (r[0] == solution_id && r[1] == problem_id) {
+                            found = true;
+                            known_score = r[5];
+                            break;
+                        }
                     }
                     fetchSolution(solution_id, known_score);
+                }
+                if (!found) {
+                    // problem_id の中で一番良い solution をデフォルトで表示させる
+                    for (let r of records) {
+                        if (r[1] == problem_id) {
+                            let solution_id = r[0];
+                            fetchSolution(solution_id, r[5]);
+                            break;
+                        }
+                    }
                 }
             });
     }
