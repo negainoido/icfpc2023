@@ -1,13 +1,14 @@
 use clap::Parser;
-use geo::Point;
+use geo::{EuclideanDistance, Point};
 use rand::prelude::SliceRandom;
 use rand::seq::IteratorRandom;
 use rand::Rng;
 use rand_pcg::Pcg64Mcg;
 use rayon::prelude::*;
 
-use std::collections::{HashMap, HashSet};
-
+use solver::PlacementGenerator;
+use std::collections::{HashMap, HashSet, VecDeque};
+use std::mem;
 use std::time::Duration;
 
 use solver::problem::*;
@@ -33,6 +34,116 @@ struct Args {
 
     #[arg(short, long, default_value_t = 0)]
     rand_seed: u128,
+}
+
+fn make_hanicomob_line(
+    input: &Input,
+    solution: &Solution,
+    rnd: &mut Pcg64Mcg,
+    musician_map: &Vec<Vec<usize>>,
+) -> Solution {
+    let target = (0..input.musicians.len()).choose(rnd).unwrap();
+    let inst = input.musicians[target];
+    let candidates = &musician_map[inst];
+    let mut graph = vec![Vec::new(); input.musicians.len()];
+    for i in 0..candidates.len() {
+        for j in i + 1..candidates.len() {
+            let left = candidates[i];
+            let right = candidates[j];
+            if solution.placements[left].euclidean_distance(&solution.placements[right]) < 25.0 {
+                graph[left].push(right);
+                graph[right].push(left);
+            }
+        }
+    }
+    if graph[target].len() == 0 {
+        return solution.clone();
+    }
+    let mut cluster = HashSet::new();
+    let mut queue = VecDeque::new();
+    queue.push_back(target);
+    while let Some(cur) = queue.pop_front() {
+        if cluster.contains(&cur) {
+            continue;
+        }
+        cluster.insert(cur);
+        if cluster.len() >= 7 {
+            break;
+        }
+        for &next in &graph[cur] {
+            queue.push_back(next);
+        }
+    }
+    let cluster = cluster.into_iter().collect::<Vec<_>>();
+    if cluster.len() < 2 {
+        return solution.clone();
+    }
+
+    let min_x = cluster
+        .iter()
+        .map(|&i| solution.placements[i].x())
+        .min_by(|a, b| a.partial_cmp(b).unwrap())
+        .unwrap();
+    let max_x = cluster
+        .iter()
+        .map(|&i| solution.placements[i].x())
+        .max_by(|a, b| a.partial_cmp(b).unwrap())
+        .unwrap();
+    let min_y = cluster
+        .iter()
+        .map(|&i| solution.placements[i].y())
+        .min_by(|a, b| a.partial_cmp(b).unwrap())
+        .unwrap();
+    let max_y = cluster
+        .iter()
+        .map(|&i| solution.placements[i].y())
+        .max_by(|a, b| a.partial_cmp(b).unwrap())
+        .unwrap();
+
+    let starts = vec![
+        Point::new(min_x, min_y),
+        Point::new(min_x, max_y),
+        Point::new(max_x, min_y),
+        Point::new(max_x, max_y),
+    ];
+    let mut dir = [[1.0, 0.0], [-1.0, 0.0], [0.0, 1.0], [0.0, -1.0]];
+    let dist = 10.0;
+    let delta_x = dist / 2.0;
+    let delta_y = dist * f64::sqrt(3.0 / 2.0) + 1e06;
+    let deltas = vec![
+        [delta_x, delta_y],
+        [dist, 0.0],
+        [delta_x, -delta_y],
+        [delta_x, delta_y],
+        [dist, 0.0],
+        [delta_x, -delta_y],
+    ];
+    dir.shuffle(rnd);
+    for &start in starts.iter() {
+        for &[dx, dy] in dir.iter() {
+            let mut points = vec![];
+            points.push(Point::new(min_x, min_y));
+            let mut x = start.x();
+            let mut y = start.y();
+            for i in 0..cluster.len() - 1 {
+                x += deltas[i][0] * dx;
+                y += deltas[i][1] * dx;
+                x += deltas[i][1] * dy;
+                y += deltas[i][0] * dy;
+                points.push(Point::new(x, y));
+            }
+
+            let mut new_solution = solution.clone();
+            for (&i, &p) in cluster.iter().zip(points.iter()) {
+                new_solution.placements[i] = p;
+            }
+            if input.is_valid_placements(&new_solution.placements).is_ok() {
+                return new_solution;
+            }
+        }
+    }
+
+    solution.clone()
 }
 
 fn random_swap(
@@ -63,7 +174,8 @@ fn random_move(
     let mut candidates: HashSet<usize> = HashSet::from_iter(musician_map[inst].iter().cloned());
     candidates.remove(&target);
     let tar2 = candidates.iter().choose(rnd).unwrap();
-    let mut neighbors = find_neighbor(solution, *tar2);
+    let delta = rnd.gen_range(0.0..1.0);
+    let mut neighbors = find_neighbor(solution, *tar2, delta);
     neighbors.shuffle(rnd);
     for &n in neighbors.iter() {
         let mut tmp_solution = solution.clone();
@@ -76,19 +188,25 @@ fn random_move(
 
     (solution.clone(), target)
 }
-fn find_neighbor(solution: &Solution, target: usize) -> Vec<Point> {
+fn find_neighbor(solution: &Solution, target: usize, delta: f64) -> Vec<Point> {
     let point = solution.placements[target];
-    let delta = 10.0 * f64::sqrt(3.0 / 2.0) + 1e06;
-    vec![
-        Point::new(point.x() - 10.0, point.y()),
-        Point::new(point.x() + 10.0, point.y()),
-        Point::new(point.x(), point.y() - 10.0),
-        Point::new(point.x(), point.y() + 10.0),
-        Point::new(point.x() + delta, point.y() + 5.0),
-        Point::new(point.x() - delta, point.y() + 5.0),
-        Point::new(point.x() + delta, point.y() - 5.0),
-        Point::new(point.x() - delta, point.y() - 5.0),
-    ]
+    let mut result = vec![];
+    let dist = 10.0 + delta;
+    result.push(Point::new(point.x() - dist, point.y()));
+    result.push(Point::new(point.x() + dist, point.y()));
+    result.push(Point::new(point.x(), point.y() - dist));
+    result.push(Point::new(point.x(), point.y() + dist));
+    let dx = dist / 2.0;
+    let dy = dist * f64::sqrt(3.0 / 2.0) + 1e-06;
+    result.push(Point::new(point.x() + dx, point.y() + dy));
+    result.push(Point::new(point.x() - dx, point.y() + dy));
+    result.push(Point::new(point.x() + dx, point.y() - dy));
+    result.push(Point::new(point.x() - dx, point.y() - dy));
+    result.push(Point::new(point.x() + dy, point.y() + dx));
+    result.push(Point::new(point.x() - dy, point.y() + dx));
+    result.push(Point::new(point.x() + dy, point.y() - dx));
+    result.push(Point::new(point.x() - dy, point.y() - dx));
+    result
 }
 
 fn switch_volume(solution: &Solution, target: usize) -> Solution {
@@ -114,15 +232,16 @@ fn find_best(
     seed: u128,
     time: Duration,
 ) -> (f64, Solution) {
+    println!("my seed is {}", seed);
     let mut best_solution = solution.clone();
     let mut best_score = input.score_fast(&best_solution).unwrap();
     let mut rnd = Pcg64Mcg::new(seed);
     let now = std::time::Instant::now();
 
     while now.elapsed() < time {
-        let way = rnd.gen_range(0..2);
+        let way = rnd.gen_range(0..3);
         if way == 0 {
-            println!("swap");
+            //println!("swap");
             let (new_solution, l, r) = random_swap(&best_solution, musician_map, &mut rnd);
             let mut flag = false;
             match input.score_fast(&new_solution) {
@@ -172,9 +291,9 @@ fn find_best(
             if flag {
                 println!("best score: {}", best_score);
             }
-        } else {
-            println!("random move");
-            let (new_solution, tar) = random_move(input, &best_solution, musician_map, &mut rnd);
+        } else if way == 1 {
+            // println!("random move");
+            let (new_solution, tar) = random_move(&input, &best_solution, musician_map, &mut rnd);
             let mut flag = false;
             match input.score_fast(&new_solution) {
                 Ok(new_score) => {
@@ -203,6 +322,26 @@ fn find_best(
             }
             if flag {
                 println!("best score: {}", best_score);
+            }
+        } else {
+            let mut flag = false;
+            println!("hanicomob");
+            let new_solution = make_hanicomob_line(&input, &best_solution, &mut rnd, musician_map);
+            let new_solution = volume_optimize(&input, &new_solution);
+            match input.score_fast(&new_solution) {
+                Ok(new_score) => {
+                    if new_score > best_score {
+                        best_solution = new_solution;
+                        best_score = new_score;
+                        flag = true;
+                    }
+                }
+                Err(_) => {
+                    println!("invalid solution");
+                }
+            }
+            if flag {
+                println!("hanicomb best score: {}", best_score);
             }
         }
     }
@@ -235,7 +374,7 @@ fn main() {
     let (best_score, best_solution) = (0..PER_COUNT)
         .into_par_iter()
         .map(|i| {
-            let seed = args.rand_seed + i * 2;
+            let seed = args.rand_seed + i * 4;
             find_best(
                 &input,
                 &solution,
