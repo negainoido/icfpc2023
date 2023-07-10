@@ -27,6 +27,7 @@
         target_musician_x: 0.0,
         target_musician_y: 0.0,
         target_musician_volume: 1.0,
+        wasm_state: '...', // 'running', 'done', 'failed'
     });
     let score = null;
     let mouse = {
@@ -34,16 +35,35 @@
         y: 0,
         status: 'mouseup', // 'mousedown'
         target_musician_id: null,
+        target_musician_x: 0.0,
+        target_musician_y: 0.0,
     };
+    let edit_history = [];  // list of (musician_id, (old_x, old_y), (new_x, new_y))
+    let edit_redo = [];  // list of (musician_id, (old_x, old_y), (new_x, new_y))
+
+    function canvasLog(msg, append=false) {
+        state.update((prev) => {
+            return {
+                ...prev,
+                log: append ? prev.log.concat(msg) : [msg],
+            };
+        });
+    }
+
+    /// 無理やり再描画させる
+    function canvasRefresh() {
+        state.update((prev) => prev);
+    }
 
     async function calc_score(wasm, problem, solution) {
         console.log('start calc_score');
-        if (score) {
+        if (score != null) {
             // 計算済み
             console.log('skip calc_score');
             return;
         }
         try {
+            state.update((prev) => ({ ...prev, wasm_state: 'running' }));
             // console.log(problem, solution);
             const is_full = problem_id > 55;
             if (!solution.volumes) {
@@ -66,46 +86,36 @@
                 is_full
             );
             console.log('wasm success:', score);
-            state.update((prev) => {
-                return {
-                    ...prev,
-                    log: ['wasm done'],
-                };
-            });
+            state.update((prev) => ({ ...prev, wasm_state: 'done' }));
         } catch (err) {
             score = `failed`;
-            state.update((prev) => {
-                return {
-                    ...prev,
-                    log: [`wasm failed: ${err}`],
-                };
-            });
+            state.update((prev) => ({ ...prev, wasm_state: `failed: ${err}` }));
             console.warn(err);
             // wasm = null;
         }
     }
 
-    state.subscribe(async (value) => {
-        if (value.problem) {
+    state.subscribe(async (state) => {
+        if (state.problem) {
             console.log('start draw...');
             await draw(
-                value.problem,
-                value.solution,
-                value.colorful,
-                value.zoom,
-                value.plusx,
-                value.plusy,
-                value.ruler,
-                value.log
+                state.problem,
+                state.solution,
+                state.colorful,
+                state.zoom,
+                state.plusx,
+                state.plusy,
+                state.ruler,
+                state.log
             );
             console.log('...finish draw');
         } else {
             console.log('data not ready; cannot draw');
         }
-        if (value.problem && value.solution && wasm) {
+        if (state.problem && state.solution && wasm) {
             if (mouse.status === 'mouseup') {
                 setTimeout(async () => {
-                    await calc_score(wasm, value.problem, value.solution);
+                    await calc_score(wasm, state.problem, state.solution);
                 }, 100);
             }
         } else {
@@ -389,6 +399,7 @@
                 `problem: ${problem_id}`,
                 `solution: ${$state.solution_id}`,
                 `score: ${score != null ? score.toLocaleString() : null}`,
+                `wasm: ${$state.wasm_state}`,
             ].concat(log);
             for (let i = 0; i < lines.length; ++i) {
                 canvas.fillText(lines[i], 12, 29 * (i + 1));
@@ -511,6 +522,15 @@
                     };
                 });
                 break;
+            case 'z':
+            case 'Z':
+                undoEdit();
+                break;
+            case 'x':
+            case 'X':
+                redoEdit();
+                break;
+
         }
     }
 
@@ -590,16 +610,20 @@
                 let inst = $state.problem.musicians[i];
                 if (Math.hypot(x - m.x, y - m.y) <= 5.0) {
                     mouse.target_musician_id = i;
+                    mouse.target_musician_x = m.x;
+                    mouse.target_musician_y = m.y;
                 }
             }
         }
     }
     function mouseupCanvas(event) {
-        if (!event.shiftKey) return;
+        // if (!event.shiftKey) return;
         let [x, y] = mousePos(event);
         if (mouse.target_musician_id != null) {
             let mid = mouse.target_musician_id;
             score = null;
+            edit_history.push([mid, [mouse.target_musician_x, mouse.target_musician_y], [x, y]]);
+            canvasLog(`edit musicians[${mid}]: ${[mouse.target_musician_x, mouse.target_musician_y]} -> ${[x, y]}`);
             state.update((state) => {
                 state.solution.placements[mid].x = x;
                 state.solution.placements[mid].y = y;
@@ -626,6 +650,36 @@
                 return state;
             });
         }
+    }
+
+    function undoEdit() {
+        if (edit_history.length == 0) {
+            canvasLog('Cannot undo; this is oldest');
+            return;
+        }
+        let [mid, [old_x, old_y], [new_x, new_y]] = edit_history.pop();
+        edit_redo.push([mid, [old_x, old_y], [new_x, new_y]]);
+        canvasLog(`Undo musicians[${mid}]`)
+        state.update((state) => {
+            state.solution.placements[mid].x = old_x;
+            state.solution.placements[mid].y = old_y;
+            return state;
+        });
+    }
+
+    function redoEdit() {
+        if (edit_redo.length == 0) {
+            canvasLog('Cannot redo; this is newest');
+            return;
+        }
+        let [mid, [old_x, old_y], [new_x, new_y]] = edit_redo.pop();
+        edit_history.push([mid, [old_x, old_y], [new_x, new_y]]);
+        canvasLog(`Redo musicians[${mid}]`)
+        state.update((state) => {
+            state.solution.placements[mid].x = new_x;
+            state.solution.placements[mid].y = new_y;
+            return state;
+        });
     }
 
     function clockInit() {
@@ -857,6 +911,8 @@
                     <li class="is-active"><a>V: ボリューム表示</a></li>
                     <li class="is-active"><a>0: 表示リセット</a></li>
                     <li class="is-active"><a>Shift+ドラッグ: 演奏者移動</a></li>
+                    <li class="is-active"><a>Z: Undo</a></li>
+                    <li class="is-active"><a>X: Redo</a></li>
                 </ul>
             </nav>
         </div>
