@@ -45,7 +45,6 @@ fn main() {
         musician_map[m].push(i);
     }
     println!("musicians: {:?}", musician_map);
-    let full_div = input.pillars.len() > 0;
 
     // 各楽器のそれっぽい人気度を計算
     let mut popularity = Vec::with_capacity(instruments.keys().len());
@@ -188,7 +187,7 @@ fn main() {
         }
         solution.volumes = Some(volumes);
 
-        match solution.score(&input, full_div) {
+        match solution.score(&input) {
             Ok(score) => {
                 if score > best_score {
                     best_score = score;

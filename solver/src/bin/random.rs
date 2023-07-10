@@ -38,13 +38,13 @@ fn main() {
 
     let mut rnd = Pcg64Mcg::new(args.rand_seed);
     let mut best_solution = solution.clone();
-    let mut best_score = solution.score(&input, false).unwrap();
+    let mut best_score = solution.score(&input).unwrap();
     println!("initial score: {}", best_score);
     let mut iter = 0;
     loop {
         solution.placements.shuffle(&mut rnd);
 
-        match solution.score(&input, false) {
+        match solution.score(&input) {
             Ok(score) => {
                 if score > best_score {
                     best_score = score;

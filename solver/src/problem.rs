@@ -408,7 +408,8 @@ impl Input {
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    pub fn score(&self, placements: &Vec<Point>, full_div: bool) -> Result<f64> {
+    pub fn score(&self, placements: &Vec<Point>) -> Result<f64> {
+        let full_div = !self.pillars.is_empty();
         let impacts = if full_div {
             self.calc_playing_together(placements)
         } else {
@@ -499,7 +500,8 @@ impl Input {
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    pub fn score_fast(&self, solution: &Solution, full_div: bool) -> Result<f64> {
+    pub fn score_fast(&self, solution: &Solution) -> Result<f64> {
+        let full_div = !self.pillars.is_empty();
         let impacts = if full_div {
             self.calc_playing_together(&solution.placements)
         } else {
@@ -512,7 +514,8 @@ impl Input {
         Ok(ans)
     }
     #[cfg(target_arch = "wasm32")]
-    pub fn score_fast(&self, solution: &Solution, full_div: bool) -> Result<f64> {
+    pub fn score_fast(&self, solution: &Solution) -> Result<f64> {
+        let full_div = !self.pillars.is_empty();
         let impacts = if full_div {
             self.calc_playing_together(&solution.placements)
         } else {
@@ -532,10 +535,10 @@ pub struct Solution {
 }
 
 impl Solution {
-    pub fn score(&self, input: &Input, full_div: bool) -> Result<f64> {
+    pub fn score(&self, input: &Input) -> Result<f64> {
         // input.score(&self.placements)
         input.is_valid_placements(&self.placements)?;
-        input.score_fast(&self, full_div)
+        input.score_fast(&self)
     }
 }
 
@@ -633,16 +636,17 @@ mod tests {
         let input: Input = serde_json::from_str(&input_str).unwrap();
         let solution_str = std::fs::read_to_string("./testdata/sample-output.json").unwrap();
         let solution: Solution = serde_json::from_str(&solution_str).unwrap();
-        let score = solution.score(&input, false).unwrap();
+        let score = solution.score(&input).unwrap();
         assert_eq!(score, 5343.0);
     }
     #[test]
     fn sample_eval_with_full() {
-        let input_str = std::fs::read_to_string("./testdata/sample-input.json").unwrap();
+        let input_str =
+            std::fs::read_to_string("./testdata/sample-input-with-pillars.json").unwrap();
         let input: Input = serde_json::from_str(&input_str).unwrap();
         let solution_str = std::fs::read_to_string("./testdata/sample-output.json").unwrap();
         let solution: Solution = serde_json::from_str(&solution_str).unwrap();
-        let score = solution.score(&input, true).unwrap();
+        let score = solution.score(&input).unwrap();
         assert_eq!(score, 5357.0);
     }
     #[test]
@@ -651,7 +655,7 @@ mod tests {
         let input: Input = serde_json::from_str(&input_str).unwrap();
         let solution_str = std::fs::read_to_string("./testdata/solution-1.json").unwrap();
         let solution: Solution = serde_json::from_str(&solution_str).unwrap();
-        let score = solution.score(&input, false).unwrap();
+        let score = solution.score(&input).unwrap();
         assert_eq!(score, 505006687.0);
     }
     #[test]
@@ -660,7 +664,7 @@ mod tests {
         let input: Input = serde_json::from_str(&input_str).unwrap();
         let solution_str = std::fs::read_to_string("./testdata/solution-29.json").unwrap();
         let solution: Solution = serde_json::from_str(&solution_str).unwrap();
-        let score = solution.score(&input, false).unwrap();
+        let score = solution.score(&input).unwrap();
         assert_eq!(score, 109646092.0);
     }
     #[test]
@@ -669,7 +673,7 @@ mod tests {
         let input: Input = serde_json::from_str(&input_str).unwrap();
         let solution_str = std::fs::read_to_string("./testdata/sample-output.json").unwrap();
         let solution: Solution = serde_json::from_str(&solution_str).unwrap();
-        let score = solution.score(&input, true).unwrap();
+        let score = solution.score(&input).unwrap();
         assert_eq!(score, 3459.0);
     }
     #[test]
@@ -678,7 +682,7 @@ mod tests {
         let input: Input = serde_json::from_str(&input_str).unwrap();
         let solution_str = std::fs::read_to_string("./testdata/solution-80.json").unwrap();
         let solution: Solution = serde_json::from_str(&solution_str).unwrap();
-        let score = solution.score(&input, true).unwrap();
+        let score = solution.score(&input).unwrap();
         assert_eq!(score, 18886452.0);
     }
 
@@ -690,7 +694,7 @@ mod tests {
         let input: Input = serde_json::from_str(&input_str).unwrap();
         let solution_str = std::fs::read_to_string("./testdata/sample-full-output.json").unwrap();
         let solution: Solution = serde_json::from_str(&solution_str).unwrap();
-        let score = solution.score(&input, true).unwrap();
+        let score = solution.score(&input).unwrap();
         assert_eq!(score, 15894740.0);
     }
 }

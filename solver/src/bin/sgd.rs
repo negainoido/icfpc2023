@@ -42,7 +42,7 @@ fn main() {
     }
 
     let mut best_solution = solution.clone();
-    let mut best_score = solution.score(&input, false).unwrap();
+    let mut best_score = solution.score(&input).unwrap();
     println!("initial score: {}", best_score);
 
     let mut permutation = vec![];
@@ -64,7 +64,7 @@ fn main() {
             solution.placements[*k] += g;
         }
 
-        let score = solution.score(&input, false);
+        let score = solution.score(&input);
         println!("iter {}, score: {:?}", i, score);
         match score {
             Ok(score) => {

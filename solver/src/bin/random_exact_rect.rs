@@ -151,6 +151,6 @@ fn main() {
     solution.placements = best_placements.clone();
     solution.volumes = Some(best_volumes);
     input.is_valid_placements(&best_placements).unwrap();
-    eprintln!("Solver score: {}", solution.score(&input, false).unwrap());
+    eprintln!("Solver score: {}", solution.score(&input).unwrap());
     std::fs::write(args.output, serde_json::to_string(&solution).unwrap()).unwrap();
 }
