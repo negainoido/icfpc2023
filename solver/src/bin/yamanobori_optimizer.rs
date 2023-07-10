@@ -54,6 +54,7 @@ fn main() {
         placements,
         volumes,
     };
+    let solution = volume_optimize(&input, &solution);
 
     std::fs::write(args.output, serde_json::to_string(&solution).unwrap()).unwrap()
 }
