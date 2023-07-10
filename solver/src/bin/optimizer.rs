@@ -78,17 +78,17 @@ fn random_move(
 }
 fn find_neighbor(solution: &Solution, target: usize) -> Vec<Point> {
     let point = solution.placements[target];
-    let mut result = vec![];
-    result.push(Point::new(point.x() - 10.0, point.y()));
-    result.push(Point::new(point.x() + 10.0, point.y()));
-    result.push(Point::new(point.x(), point.y() - 10.0));
-    result.push(Point::new(point.x(), point.y() + 10.0));
     let delta = 10.0 * f64::sqrt(3.0 / 2.0) + 1e06;
-    result.push(Point::new(point.x() + delta, point.y() + 5.0));
-    result.push(Point::new(point.x() - delta, point.y() + 5.0));
-    result.push(Point::new(point.x() + delta, point.y() - 5.0));
-    result.push(Point::new(point.x() - delta, point.y() - 5.0));
-    result
+    vec![
+        Point::new(point.x() - 10.0, point.y()),
+        Point::new(point.x() + 10.0, point.y()),
+        Point::new(point.x(), point.y() - 10.0),
+        Point::new(point.x(), point.y() + 10.0),
+        Point::new(point.x() + delta, point.y() + 5.0),
+        Point::new(point.x() - delta, point.y() + 5.0),
+        Point::new(point.x() + delta, point.y() - 5.0),
+        Point::new(point.x() - delta, point.y() - 5.0),
+    ]
 }
 
 fn switch_volume(solution: &Solution, target: usize) -> Solution {
