@@ -12,7 +12,7 @@
     let filteredRecords = [];
     let openjson = false;
     let debug = "";
-    let editorname = 'hand_solver';
+    let editorname = 'hand';
 
     let state = writable({
         problem: null,
@@ -229,17 +229,19 @@
                         if (r[0] == solution_id && r[1] == problem_id) {
                             found = true;
                             known_score = r[5];
+                            solvername = r[3];
                             break;
                         }
                     }
-                    fetchSolution(solution_id, known_score);
+                    fetchSolution(solution_id, known_score, solvername);
                 }
                 if (!found) {
                     // problem_id の中で一番良い solution をデフォルトで表示させる
                     for (let r of records) {
                         if (r[1] == problem_id) {
                             let solution_id = r[0];
-                            fetchSolution(solution_id, r[5]);
+                            let solvername = r[3];
+                            fetchSolution(solution_id, r[5], solvername);
                             break;
                         }
                     }
@@ -247,12 +249,13 @@
             });
     }
 
-    function fetchSolution(solution_id, known_score) {
+    function fetchSolution(solution_id, known_score, solvername) {
         history.pushState(
             {},
             `/${problem_id}?solution_id=${solution_id}`,
             `/${problem_id}?solution_id=${solution_id}`
         );
+        editorname = solvername;
         clear();
         state.update((prev) => {
             return {
@@ -640,6 +643,7 @@
         if (mouse.target_musician_id != null) {
             let mid = mouse.target_musician_id;
             score = null;
+            editorname = editorname.replace('(edit)', '') + '(edit)';
             edit_history.push([mid, [mouse.target_musician_x, mouse.target_musician_y], [x, y]]);
             canvasLog(`edit musicians[${mid}]: ${[mouse.target_musician_x, mouse.target_musician_y]} -> ${[x, y]}`);
             state.update((state) => {
@@ -722,6 +726,7 @@
 
     function loadSolutionJSON() {
         score = null;
+        editorname = editorname.replace('(edit)', '') + '(edit)';
         state.update((prev) => ({
             ...prev,
             solution_id: -1,
@@ -780,7 +785,7 @@
         postSolution(problem_id, editorname, solution)
             .then((res) => {
                 console.log(res);
-                debug = res;
+                debug += JSON.stringify(res);
                 state.update((prev) => ({
                     ...prev,
                     solution_id: res.solution_id,
@@ -832,7 +837,7 @@
                     <tbody>
                         {#each filteredRecords as r}
                             <tr>
-                                <td><button on:click={fetchSolution(r[0], r[5])}>{r[0]}</button></td
+                                <td><button on:click={fetchSolution(r[0], r[5], r[3])}>{r[0]}</button></td
                                 >
                                 <td>{r[2]}</td>
                                 <td>{r[3]}</td>
