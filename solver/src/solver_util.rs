@@ -363,7 +363,7 @@ pub fn reduce_attendees(input: &Input, num: usize) -> Input {
         new_attendees.push((min_dist, attendee));
     }
 
-    new_attendees.sort_by_key(|k| ordered_float::OrderedFloat(k.0));
+    new_attendees.sort_by_key(|k| OrderedFloat(k.0));
     new_attendees.truncate(num);
     let mut input = input.clone();
     input.attendees = new_attendees.into_iter().map(|v| v.1.clone()).collect();
