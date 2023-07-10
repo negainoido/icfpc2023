@@ -765,6 +765,7 @@
         postSolution(problem_id, editorname, solution)
             .then((res) => {
                 console.log(res);
+                debug = res;
                 state.update((prev) => ({
                     ...prev,
                     solution_id: res.solution_id,
@@ -965,6 +966,7 @@
                 bind:value={$state.log}
             />
         </div>
+        {#if debug}
         <div class="box">
             <textarea
                 style="width: 100%; height: 20vh"
@@ -973,6 +975,7 @@
                 disabled
             />
         </div>
+        {/if}
     </div>
 </section>
 
