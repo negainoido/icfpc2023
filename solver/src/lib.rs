@@ -1,8 +1,9 @@
 pub mod problem;
+
+#[cfg(not(target_arch = "wasm32"))]
+pub mod solver_util;
 #[cfg(target_arch = "wasm32")]
 mod wasm_util;
-#[cfg(not(target_arch = "wasm32"))]
-mod solver_util;
 
 use anyhow::Context;
 use geo::Point;
@@ -230,7 +231,6 @@ pub fn is_lightning(path: &str) -> anyhow::Result<bool> {
     let id = get_id(path)?;
     Ok(id <= 55)
 }
-
 
 #[cfg(test)]
 mod tests {
