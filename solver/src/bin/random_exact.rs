@@ -68,7 +68,7 @@ fn main() {
         let (_, assignments) = kuhn_munkres(&matrix);
         let mut new_placements = vec![];
         for assignment in assignments {
-            new_placements.push(placements[assignment].clone());
+            new_placements.push(placements[assignment]);
         }
         solution.placements = new_placements.clone();
         let new_score = solution.score(&input).unwrap();

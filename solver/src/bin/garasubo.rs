@@ -8,6 +8,7 @@ use rayon::prelude::*;
 use solver::PlacementGenerator;
 
 use solver::problem::*;
+use solver::solver_util::volume_optimize;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -51,7 +52,7 @@ fn main() {
     let stage_center_x = input.stage_bottom_left.x() + input.stage_width / 2.0;
     let stage_center_y = input.stage_bottom_left.y() + input.stage_height / 2.0;
     let stage_center = Point::new(stage_center_x, stage_center_y);
-    let visible_attendees = input.get_visible_attendees(stage_center, &vec![]);
+    let visible_attendees = input.get_visible_attendees(stage_center, &[]);
     for i in 0..instruments.keys().len() {
         popularity.push((
             input.raw_score_for_instrument(stage_center, i, &visible_attendees),
@@ -97,7 +98,7 @@ fn main() {
                 }
 
                 // ステージ上の候補地点からランダムに良さそうな箇所を選ぶ
-                let mut best_point = available_points.iter().choose(&mut rnd).unwrap().clone();
+                let mut best_point = *available_points.iter().choose(&mut rnd).unwrap();
                 let tmp_visible_attendees =
                     input.get_visible_attendees(candidates[best_point], &current_solution);
                 let mut best_score = input.raw_score_for_instrument(
@@ -106,7 +107,7 @@ fn main() {
                     &tmp_visible_attendees,
                 );
                 for _ in 0..PICK_POINTS_COUNT * 10 {
-                    let point = available_points.iter().choose(&mut rnd).unwrap().clone();
+                    let point = *available_points.iter().choose(&mut rnd).unwrap();
                     let tmp_visible_attendees =
                         input.get_visible_attendees(candidates[point], &current_solution);
                     let score = input.raw_score_for_instrument(
@@ -200,6 +201,7 @@ fn main() {
             }
         }
     }
+    let best_solution = volume_optimize(&input, &best_solution);
 
     std::fs::write(args.output, serde_json::to_string(&best_solution).unwrap()).unwrap();
 }

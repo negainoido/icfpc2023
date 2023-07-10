@@ -248,7 +248,7 @@ impl ScoringIndex {
 pub fn yamanobori(
     input: &Input,
     best: &mut Vec<Point>,
-    best_volume: &Vec<f64>,
+    best_volume: &[f64],
     timeout: f64,
     rand_seed: u128,
     reduce_num: usize,
@@ -258,11 +258,11 @@ pub fn yamanobori(
     let mut best_score = input
         .score_fast(&Solution {
             placements: best.clone(),
-            volumes: Some(best_volume.clone()),
+            volumes: Some(best_volume.to_owned()),
         })
         .unwrap();
 
-    let mut scoring_index = ScoringIndex::new(&input, best, best_volume);
+    let mut scoring_index = ScoringIndex::new(&input, best, &best_volume.to_vec());
     dbg!(best_score);
     dbg!(scoring_index.get_score());
 
@@ -287,13 +287,6 @@ pub fn yamanobori(
             continue;
         }
 
-        // let solution = Solution {
-        //     placements: current,
-        //     volumes: Some(best_volume.clone()),
-        // };
-        // let current_score = input.score_fast(&solution);
-
-        // if let Ok(sc) = current_score {
         let sc = scoring_index.get_score();
         if sc > best_score {
             eprintln!(
@@ -308,7 +301,6 @@ pub fn yamanobori(
         } else {
             scoring_index.move_musician(idx, old_point);
         }
-        // }
     }
     best.to_vec()
 }
@@ -349,7 +341,7 @@ pub fn reduce_attendees(input: &Input, num: usize) -> Input {
 
 pub fn volume_optimize(input: &Input, solution: &Solution) -> Solution {
     let mut solution = solution.clone();
-    let mut best_score = solution.score(&input).unwrap();
+    let mut best_score = solution.score(input).unwrap();
 
     let original_volumes = solution
         .volumes
@@ -364,16 +356,14 @@ pub fn volume_optimize(input: &Input, solution: &Solution) -> Solution {
             if let Some(volumes) = &mut solution.volumes {
                 volumes[i] = vol;
             }
-            match solution.score(&input) {
+            match solution.score(input) {
                 Ok(score) => {
                     if score > best_score {
                         best_score = score;
                         println!("iter {}, score: {}", i, best_score);
                         continue;
-                    } else {
-                        if let Some(volumes) = &mut solution.volumes {
-                            volumes[i] = tmp;
-                        }
+                    } else if let Some(volumes) = &mut solution.volumes {
+                        volumes[i] = tmp;
                     }
                 }
                 Err(e) => {

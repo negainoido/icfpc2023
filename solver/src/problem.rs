@@ -67,7 +67,7 @@ impl AngleInfo {
 
 pub fn filter_placements_blocked_by_pillars(
     attendee_pos: Point,
-    placements: &Vec<Point>,
+    placements: &[Point],
     pillars: &Vec<Pillar>,
     prefiltered_ids: &Vec<usize>,
 ) -> Vec<usize> {
@@ -133,7 +133,7 @@ pub fn get_non_blocked_placement_ids(attendee_pos: Point, placements: &Vec<Point
     angles.sort_by_key(|&angle_info| (angle_info.angle, angle_info.dist_sq));
     assert!(angles[0].angle.abs() < 1e-10);
 
-    let mut last_element = angles[0].clone();
+    let mut last_element = angles[0];
     last_element.angle += 2.0 * PI;
     angles.push(last_element);
 
@@ -310,7 +310,7 @@ impl Input {
     ) -> f64 {
         let attendee = &self.attendees[attendee_id];
         let d = attendee.pos().euclidean_distance(musician_pos);
-        ((1_000_000 as f64) * attendee.tastes[instrument] / (d * d)).ceil()
+        (1_000_000_f64 * attendee.tastes[instrument] / (d * d)).ceil()
     }
 
     // Impact without considering blocking
@@ -362,7 +362,7 @@ impl Input {
     }
 
     // ある地点から見える参加者のIDを返す
-    pub fn get_visible_attendees(&self, point: Point, placements: &Vec<Point>) -> Vec<usize> {
+    pub fn get_visible_attendees(&self, point: Point, placements: &[Point]) -> Vec<usize> {
         let mut result = Vec::new();
         for (i, attendee) in self.attendees.iter().enumerate() {
             let segment = Segment {
@@ -435,7 +435,7 @@ impl Input {
         &self,
         attendee_id: usize,
         solution: &Solution,
-        impacts: &Vec<f64>,
+        impacts: &[f64],
     ) -> f64 {
         let mut sum_impact = 0.0;
         let placements = &solution.placements;
@@ -443,11 +443,11 @@ impl Input {
 
         // Musicians同士の衝突のみを考慮
         let non_blocked_placement_ids =
-            get_non_blocked_placement_ids(self.attendees[attendee_id].pos(), &placements);
+            get_non_blocked_placement_ids(self.attendees[attendee_id].pos(), placements);
         // Pillarsによる妨害を考慮
         let non_blocked_placement_ids = filter_placements_blocked_by_pillars(
             self.attendees[attendee_id].pos(),
-            &placements,
+            placements,
             &self.pillars,
             &non_blocked_placement_ids,
         );
@@ -467,7 +467,7 @@ impl Input {
     }
 
     // Playing togetherによる各Musicianの得点倍率を計算する
-    pub fn calc_playing_together(&self, placements: &Vec<Point>) -> Vec<f64> {
+    pub fn calc_playing_together(&self, placements: &[Point]) -> Vec<f64> {
         let mut inst_map = HashMap::new();
         for (i, &m) in self.musicians.iter().enumerate() {
             let tar = match inst_map.get_mut(&m) {
@@ -509,7 +509,7 @@ impl Input {
         };
         let ans = (0..self.attendees.len())
             .into_par_iter()
-            .map(|attendee_id| self.score_attendee_fast(attendee_id, &solution, &impacts))
+            .map(|attendee_id| self.score_attendee_fast(attendee_id, solution, &impacts))
             .sum();
         Ok(ans)
     }
@@ -538,7 +538,7 @@ impl Solution {
     pub fn score(&self, input: &Input) -> Result<f64> {
         // input.score(&self.placements)
         input.is_valid_placements(&self.placements)?;
-        input.score_fast(&self)
+        input.score_fast(self)
     }
 }
 

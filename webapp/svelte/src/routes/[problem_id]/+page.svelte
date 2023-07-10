@@ -14,6 +14,7 @@
     let debug = "";
     let editorname = 'hand';
     let submitresult = "";
+    let wasm_temporary_disable = false;
 
     let state = writable({
         problem: null,
@@ -37,6 +38,7 @@
     let mouse = {
         x: 0,
         y: 0,
+        oncanvas: false,
         status: 'mouseup', // 'mousedown'
         target_musician_id: null,
         target_musician_x: 0.0,
@@ -61,7 +63,7 @@
 
     async function calc_score(wasm, problem, solution) {
         console.log('start calc_score');
-        if (score != null) {
+        if (wasm_temporary_disable || score != null) {
             // 計算済み
             console.log('skip calc_score');
             return;
@@ -448,6 +450,7 @@
     }
 
     function onKeyDown(e) {
+        if (!mouse.oncanvas) return;
         switch (e.key) {
             case '0':
             case 'o':
@@ -568,6 +571,7 @@
     }
 
     function clickCanvas(event) {
+        mouse.oncanvas = true;
         let [x, y] = mousePos(event);
         let log = [];
         if ($state.solution && $state.solution.placements) {
@@ -619,6 +623,7 @@
     }
 
     function mousedownCanvas(event) {
+        mouse.oncanvas = true;
         if (!event.shiftKey) return;
         let [x, y] = mousePos(event);
         mouse = {
@@ -640,6 +645,7 @@
         }
     }
     function mouseupCanvas(event) {
+        mouse.oncanvas = true;
         // if (!event.shiftKey) return;
         let [x, y] = mousePos(event);
         if (mouse.target_musician_id != null) {
@@ -663,6 +669,7 @@
         };
     }
     function mousemoveCanvas(event) {
+        mouse.oncanvas = true;
         if (!event.shiftKey) return;
         let [x, y] = mousePos(event);
         if (mouse.target_musician_id != null) {
@@ -674,6 +681,10 @@
                 return state;
             });
         }
+    }
+    function mouseoutCanvas(event) {
+        mouse.oncanvas = false;
+        console.log(mouse);
     }
 
     function undoEdit() {
@@ -946,6 +957,10 @@
                 <input type="checkbox" bind:checked={$state.ruler} />
                 罫線 (幅=10) (R)
             </label>
+            <label>
+                <input type="checkbox" bind:checked={wasm_temporary_disable} />
+                一時的にwasmをオフ
+            </label>
             <br />
             <!--
         <button on:click={fullScreen}>全画面表示</button>
@@ -1000,6 +1015,7 @@
                 on:mousedown={mousedownCanvas}
                 on:mouseup={mouseupCanvas}
                 on:mousemove={mousemoveCanvas}
+                on:mouseout={mouseoutCanvas}
             />
         </div>
         <div>

@@ -73,10 +73,10 @@ fn create_matching_matrix(input: &Input, candidates: &&Vec<Point>) -> Matrix<Ord
     let mut reachable_candidates = vec![];
     for attendee_id in 0..input.attendees.len() {
         let attendee_pos = input.attendees[attendee_id].pos();
-        let non_blocked_candidate_ids = get_non_blocked_placement_ids(attendee_pos, &candidates);
+        let non_blocked_candidate_ids = get_non_blocked_placement_ids(attendee_pos, candidates);
         let candidate_ids = filter_placements_blocked_by_pillars(
             attendee_pos,
-            &candidates,
+            candidates,
             &input.pillars,
             &non_blocked_candidate_ids,
         );
@@ -104,7 +104,7 @@ fn exact_match_candidates(input: &Input, candidates: &Vec<Point>) -> (f64, Vec<P
     let (score, assignments) = kuhn_munkres(&matrix);
     let mut filtered_candidates = vec![];
     for assignment in assignments {
-        filtered_candidates.push(candidates[assignment].clone());
+        filtered_candidates.push(candidates[assignment]);
     }
     (score.0, filtered_candidates)
 }
@@ -125,7 +125,7 @@ fn hill_climbing(input: &Input, placements: &Vec<Point>, timeout: f64) -> Vec<Po
     // Compute the original score
     let mut solution: Solution = Default::default();
     solution.placements = placements.clone();
-    let initial_score = solution.score(&input).unwrap();
+    let initial_score = solution.score(input).unwrap();
     let mut final_score = initial_score;
     dbg!(initial_score);
 
@@ -133,13 +133,15 @@ fn hill_climbing(input: &Input, placements: &Vec<Point>, timeout: f64) -> Vec<Po
     let mut same_instrument_group: HashMap<usize, Vec<usize>> = HashMap::new();
     for musician_id in 0..input.musicians.len() {
         let instrument = input.musicians[musician_id];
-        if same_instrument_group.contains_key(&instrument) {
+        if let std::collections::hash_map::Entry::Vacant(e) =
+            same_instrument_group.entry(instrument)
+        {
+            e.insert(vec![musician_id; 1]);
+        } else {
             same_instrument_group
                 .get_mut(&instrument)
                 .unwrap()
                 .push(musician_id);
-        } else {
-            same_instrument_group.insert(instrument, vec![musician_id; 1]);
         }
     }
 
@@ -233,13 +235,13 @@ fn hill_climbing(input: &Input, placements: &Vec<Point>, timeout: f64) -> Vec<Po
 
 fn solve(input: &Input, timeout: f64) -> Vec<Point> {
     let base_placements = two_stage_optimization(input);
-    let best_placements = if input.pillars.len() > 0 {
+
+    if !input.pillars.is_empty() {
         // with extension
         hill_climbing(input, &base_placements, timeout)
     } else {
         base_placements
-    };
-    best_placements
+    }
 }
 
 fn main() {

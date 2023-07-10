@@ -69,10 +69,10 @@ fn exact_match_candidates(input: &Input, candidates: &Vec<Point>) -> (f64, Vec<P
     let mut reachable_candidates = vec![];
     for attendee_id in 0..input.attendees.len() {
         let attendee_pos = input.attendees[attendee_id].pos();
-        let non_blocked_candidate_ids = get_non_blocked_placement_ids(attendee_pos, &candidates);
+        let non_blocked_candidate_ids = get_non_blocked_placement_ids(attendee_pos, candidates);
         let candidate_ids = filter_placements_blocked_by_pillars(
             attendee_pos,
-            &candidates,
+            candidates,
             &input.pillars,
             &non_blocked_candidate_ids,
         );
@@ -109,7 +109,7 @@ fn exact_match_candidates(input: &Input, candidates: &Vec<Point>) -> (f64, Vec<P
     let mut volumes = vec![];
     for assignment_id in 0..assignments.len() {
         let assignment = assignments[assignment_id];
-        filtered_candidates.push(candidates[assignment].clone());
+        filtered_candidates.push(candidates[assignment]);
         if matrix[(assignment_id, assignment)].0 == 0.0 {
             volumes.push(0.0);
         } else {
