@@ -9,7 +9,7 @@ use solver::garasubo_util;
 use std::time::Duration;
 
 use solver::problem::*;
-use solver::solver_util::volume_optimize;
+use solver::solver_util::{volume_optimize, volume_optimize_fast};
 
 const PER_COUNT: u128 = 2;
 
@@ -26,7 +26,7 @@ struct Args {
     #[arg(short, long)]
     solution: String,
 
-    #[arg(long, default_value_t = 30)]
+    #[arg(long, default_value_t = 180)]
     time_sec: u64,
 
     #[arg(short, long, default_value_t = 0)]
@@ -49,7 +49,7 @@ fn find_best(
     let mut count = 0;
     while now.elapsed() < time {
         count += 1;
-        let way = rnd.gen_range(0..5);
+        let way = rnd.gen_range(0..6);
         if way == 0 {
             //println!("swap");
             let (new_solution, l, r) =
@@ -166,7 +166,7 @@ fn find_best(
             if flag {
                 println!("delta move best score: {}", best_score);
             }
-        } else if way == 3 {
+        } else if way < 5 {
             let (new_solution, tar) = garasubo_util::random_move3(&input, &best_solution, &mut rnd);
             let mut flag = false;
             match input.score_fast(&new_solution) {
@@ -202,7 +202,7 @@ fn find_best(
             //println!("hanicomob");
             let new_solution =
                 garasubo_util::make_honeycomb_line(&input, &best_solution, &mut rnd, musician_map);
-            let new_solution = volume_optimize(&input, &new_solution);
+            let new_solution = volume_optimize_fast(&input, &new_solution);
             match input.score_fast(&new_solution) {
                 Ok(new_score) => {
                     if new_score > best_score {

@@ -1,0 +1,32 @@
+on:
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  eval-batch:
+    permissions:
+      contents: read
+      checks: write
+    runs-on: [self-hosted, linux, x64, batch]
+    defaults:
+      run:
+        working-directory: ./solver
+    steps:
+      - uses: actions/checkout@v3
+      - name: Print env variables
+        run: printenv
+      - name: Print gcloud accounts
+        run: gcloud auth list
+      - name: cargo build
+        run: cargo build --release
+      - name: run optimizer
+        id: batch
+        env:
+          PNUM: ${{ inputs.batch-size }}
+          DRY_RUN: ${{ inputs.dry-run }}
+        run: |
+          bash ../tools/run_optimizer.sh
