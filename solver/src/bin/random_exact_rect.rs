@@ -19,6 +19,9 @@ struct Args {
 
     #[arg(short, long, default_value_t = 0)]
     rand_seed: u128,
+
+    #[arg(short, long, default_value_t = 30.0)]
+    timeout: f64,
 }
 
 fn generate_first_level_candidates(input: &Input) -> Vec<Point> {
@@ -56,6 +59,9 @@ fn generate_first_level_candidates(input: &Input) -> Vec<Point> {
 
     let mut candidates = vec![];
     for level in 0..layered_candidates.len() {
+        if level == 1 {
+            continue;
+        }
         candidates.extend(layered_candidates[level].clone());
         if candidates.len() >= input.musicians.len() {
             break;
@@ -120,16 +126,27 @@ fn exact_match_candidates(input: &Input, candidates: &Vec<Point>) -> (f64, Vec<P
     (score.0, filtered_candidates, volumes)
 }
 
-fn solve(input: &Input) -> (Vec<Point>, Vec<f64>) {
+fn solve(input: &Input, timeout: f64) -> (Vec<Point>, Vec<f64>) {
     let first_level_candidates = generate_first_level_candidates(input);
     // 最初はmusicianよりも多い候補地を用いて最適化を行い、その結果に基づき二段階目の最適化に使用する候補地を列挙
     let (first_level_score, second_level_candidates, _) =
         exact_match_candidates(input, &first_level_candidates);
     dbg!(first_level_score);
-    let (second_level_score, best_placements, best_volumes) =
+    let (second_level_score, mut best_placements, best_volumes) =
         exact_match_candidates(input, &second_level_candidates);
     dbg!(second_level_score);
-    (best_placements, best_volumes)
+
+    (
+        solver_util::yamanobori(
+            input,
+            &mut best_placements,
+            &best_volumes,
+            timeout,
+            0u128,
+            input.attendees.len(),
+        ),
+        best_volumes,
+    )
 }
 
 fn main() {
@@ -141,7 +158,7 @@ fn main() {
     let y_count = (input.stage_height / 10.0).floor() as usize - 1;
     let (best_placements, best_volumes) = if x_count * y_count >= input.musicians.len() {
         // Use new strategy!
-        solve(&input)
+        solve(&input, args.timeout)
     } else {
         // Give up
         let mut generator = PlacementGenerator::new(&input, args.rand_seed);
